@@ -939,8 +939,8 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
   }, [selectedDocs, selectedExisting, selectedExistingLabels, suggestedDocs])
 
   return (
-    <Box className="min-h-screen bg-gradient-to-b from-white to-zinc-50">
-      <Container maxWidth="lg" className="py-12">
+    <Box className="min-h-screen bg-white">
+      <Box className="h-screen">
         <AnimatePresence initial={false} mode="wait">
           {mode === 'landing' && (
             <motion.div
@@ -949,8 +949,10 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}
+              className="bg-gradient-to-b from-white to-zinc-50 min-h-screen"
             >
-              <VStack spacing={12} align="center">
+              <Container maxWidth="lg" className="py-12">
+                <VStack spacing={12} align="center">
                 <VStack spacing={4} align="start" className="w-full max-w-3xl">
                   <Wand2 className="w-6 h-6 text-purple-600" />
                   <Heading as="h1" size="xl" className="text-foreground-900 text-left">
@@ -1061,9 +1063,10 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
                         </Text>
                       </Box>
                     ))}
-            </Box>
-            </Box>
-              </VStack>
+                </Box>
+                </Box>
+                </VStack>
+              </Container>
             </motion.div>
           )}
           
@@ -1074,28 +1077,70 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}
+              className="flex h-screen bg-white"
             >
-              <Box className="relative w-full transition-all duration-300 ease-out" style={{ 
+              {/* Left Sidebar */}
+              <Box className="w-64 bg-white border-r border-gray-200 flex flex-col">
+                <Box className="p-4 border-b border-gray-200">
+                  <Text size="lg" className="font-semibold text-gray-900">GENIE AI</Text>
+                  <Text size="sm" className="text-gray-500">New Project</Text>
+                </Box>
+                <Box className="flex-1 p-4">
+                  <VStack spacing={2} align="start">
+                    <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-3">
+                      <Plus className="w-4 h-4" />
+                      <Text size="sm">New Task</Text>
+                    </button>
+                    <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-3">
+                      <FileText className="w-4 h-4" />
+                      <Text size="sm">Vaults</Text>
+                    </button>
+                    <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-3">
+                      <FileText className="w-4 h-4" />
+                      <Text size="sm">Templates</Text>
+                    </button>
+                    <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-3">
+                      <FileText className="w-4 h-4" />
+                      <Text size="sm">Projects</Text>
+                    </button>
+                  </VStack>
+                  
+                  <Box className="mt-6">
+                    <Text size="sm" className="text-gray-500 mb-2">Recent Projects</Text>
+                    <VStack spacing={1} align="start">
+                      {['New Project', 'Setting up business', 'Procuring raw materials', 'Renewal of MSA', 'Supplier onboarding', 'Project 5'].map((project, i) => (
+                        <button key={i} className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100">
+                          <Text size="sm" className={i === 0 ? "text-blue-600 font-medium" : "text-gray-700"}>{project}</Text>
+                        </button>
+                      ))}
+                    </VStack>
+                  </Box>
+                </Box>
+                <Box className="p-4 border-t border-gray-200">
+                  <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-3">
+                    <Text size="sm">⚙️ Settings & members</Text>
+                  </button>
+                  <Text size="xs" className="text-purple-600 mt-2">🔮 2 docs left for this month</Text>
+                </Box>
+              </Box>
+
+              {/* Chat section */}
+              <Box className="flex-1 flex flex-col bg-white" style={{ 
                 marginRight: workbenchOpen ? '320px' : '0px' 
               }}>
-                {/* Chat section */}
-                <Box className="relative max-w-3xl mx-auto">
-                  {/* Glow */}
-                  <Box className="absolute -inset-6 rounded-[36px] bg-gradient-to-br from-purple-200/50 via-purple-300/40 to-purple-400/30 blur-3xl pointer-events-none" />
-                  <motion.div layoutId="promptCard">
-                    <Box className="relative rounded-[24px] bg-white/90 backdrop-blur border border-purple-100 shadow-xl overflow-hidden">
-                      {/* Chat scroll area */}
-                      <Box ref={chatScrollRef} className="h-[56vh] md:h-[60vh] p-6 overflow-auto scroll-smooth">
-                        <VStack spacing={6} align="start" className="min-h-full justify-end">
-                          {messages.map((m) => (
-                            <Flex key={m.id} justify={m.role === 'user' ? 'end' : 'start'} className="w-full">
-                              <Box
-                                className={
-                                  m.role === 'user'
-                                    ? 'bg-purple-100 text-purple-900 rounded-2xl px-4 py-2 max-w-[75%]'
-                                    : 'bg-zinc-100 text-foreground-900 rounded-2xl px-4 py-2 max-w-[75%]'
-                                }
-                              >
+                <motion.div layoutId="promptCard" className="flex-1 flex flex-col">
+                    {/* Chat scroll area */}
+                    <Box ref={chatScrollRef} className="flex-1 p-6 overflow-auto">
+                      <VStack spacing={6} align="start" className="min-h-full justify-end">
+                        {messages.map((m) => (
+                          <Flex key={m.id} justify={m.role === 'user' ? 'end' : 'start'} className="w-full">
+                            <Box
+                              className={
+                                m.role === 'user'
+                                  ? 'bg-gray-100 text-gray-900 rounded-2xl px-4 py-3 max-w-[70%]'
+                                  : 'bg-gray-50 text-gray-900 rounded-2xl px-4 py-3 max-w-[70%]'
+                              }
+                            >
                                 {m.role === 'assistant' ? (
                                   m.id === MESSAGE_IDS.ASSISTANT_DRAFT_SETTINGS ? (
                                     <VStack spacing={4} align="start">
@@ -1342,23 +1387,22 @@ We'll get to the details next.`
                         </VStack>
               </Box>
 
-                      {/* Composer */}
-                      <Box className="border-t border-purple-100 bg-white/80">
-                        <Box className="p-4">
-                          <Flex justify="between" align="center" className="gap-3">
-                            <Flex align="center" gap={3}>
-                              <Button variant="light" size="sm">
-                                <Paperclip className="w-5 h-5" />
-                  </Button>
-                              <Button variant="light" size="sm">
-                                <Link2 className="w-5 h-5" />
-                  </Button>
-                            </Flex>
-                            <Flex className="flex-1">
-                              <Textarea
-                                minRows={1}
-                                value={prompt}
-                                onValueChange={(val) => setPrompt(val)}
+                    {/* Composer */}
+                    <Box className="border-t border-gray-200 bg-white p-4">
+                      <Flex justify="between" align="center" className="gap-3">
+                        <Flex align="center" gap={3}>
+                          <Button variant="light" size="sm">
+                            <Paperclip className="w-4 h-4 text-gray-500" />
+                          </Button>
+                          <Button variant="light" size="sm">
+                            <Link2 className="w-4 h-4 text-gray-500" />
+                          </Button>
+                        </Flex>
+                        <Box className="flex-1 mx-4">
+                          <Textarea
+                            minRows={1}
+                            value={prompt}
+                            onValueChange={(val) => setPrompt(val)}
                                 onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                                   if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault()
@@ -1456,17 +1500,21 @@ Skip for now`
                                     }
                                   }
                                 }}
-                                placeholder={'Type your message'}
-                                classNames={{ inputWrapper: 'rounded-2xl', input: 'text-foreground-900' }}
-                              />
-                            </Flex>
-                            <Flex align="center" gap={2}>
-                              <Button variant="light" size="sm">
-                                <Mic className="w-5 h-5" />
-                  </Button>
-                              <Button
-                                variant="gradient"
-                                size="md"
+                            placeholder="Type your message"
+                            classNames={{ 
+                              inputWrapper: 'border border-gray-300 rounded-full bg-white', 
+                              input: 'text-gray-900' 
+                            }}
+                          />
+                        </Box>
+                        <Flex align="center" gap={2}>
+                          <Button variant="light" size="sm">
+                            <Mic className="w-4 h-4 text-gray-500" />
+                          </Button>
+                          <Button
+                            variant="solid"
+                            size="md"
+                            className="bg-purple-600 hover:bg-purple-700 text-white rounded-full"
                                 onPress={() => {
                                   if (prompt.trim()) {
                                     const text = prompt.trim()
@@ -1561,92 +1609,89 @@ Skip for now`
                                     setPrompt('')
                                   }
                                 }}
-                              >
-                                <ArrowUp className="w-5 h-5" />
-                  </Button>
-                </Flex>
-                          </Flex>
-                        </Box>
-                      </Box>
+                          >
+                            <ArrowUp className="w-4 h-4" />
+                          </Button>
+                        </Flex>
+                      </Flex>
                     </Box>
                   </motion.div>
               </Box>
-
-              {/* Right workbench panel - Fixed position */}
-              <AnimatePresence>
-                {workbenchOpen && (
-                  <motion.aside
-                    initial={{ x: 320, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: 320, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="fixed top-0 right-0 w-[320px] h-full bg-white border-l border-gray-200 shadow-lg z-10"
-                  >
-                    <Box className="h-full flex flex-col">
-                      {/* Tab Header */}
-                      <Box className="border-b border-gray-100 px-6 pt-6 pb-4">
-                        <Flex gap={6}>
-                          <button className="pb-3 text-sm font-medium text-gray-900 border-b-2 border-gray-900 relative">
-                            Documents
-                          </button>
-                          <button className="pb-3 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
-                            Rules
-                          </button>
-                        </Flex>
-                      </Box>
-
-                      {/* Content */}
-                      <Box className="flex-1 p-6 overflow-auto">
-                        <VStack spacing={8} align="start" className="h-full">
-                          {/* Creating Section */}
-                          <Box className="w-full">
-                            <Text size="sm" className="mb-4 text-gray-900 font-normal">Creating:</Text>
-                            {createDocs.map((doc, i) => (
-                              <Flex key={i} align="center" justify="between" className="py-2">
-                                <Flex align="center" gap={3}>
-                                  <Box className="w-4 h-5 flex items-center justify-center">
-                                    <FileText className="w-4 h-4 text-blue-500" />
-                                  </Box>
-                                  <Text size="sm" className="text-gray-900">{doc}.docx</Text>
-                                </Flex>
-                                <Text size="xs" className="text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
-                                  Draft
-                                </Text>
-                              </Flex>
-                            ))}
-                          </Box>
-
-                          {/* Based on Section */}
-                          <Box className="w-full">
-                            <Text size="sm" className="mb-4 text-gray-900 font-normal">Based on:</Text>
-                            {basedOnDocs.slice(0, 1).map((doc, i) => (
-                              <Flex key={i} align="center" gap={3} className="py-2">
-                                <Box className="w-4 h-5 flex items-center justify-center">
-                                  <FileText className="w-4 h-4 text-blue-500" />
-                                </Box>
-                                <Text size="sm" className="text-gray-900">{doc}.docx</Text>
-                              </Flex>
-                            ))}
-                          </Box>
-
-                          {/* Spacer to push drag area to bottom */}
-                          <Box className="flex-1" />
-
-                          {/* Drag Area */}
-                          <Box className="w-full border-2 border-dashed border-gray-200 rounded-lg py-12 px-6 text-center bg-gray-50">
-                            <Text size="sm" className="text-gray-400 leading-relaxed">
-                              Drag documents to import in this project
-                            </Text>
-                          </Box>
-                        </VStack>
-                      </Box>
-                    </Box>
-                  </motion.aside>
-                )}
-              </AnimatePresence>
-              </Box>
             </motion.div>
           )}
+
+          {/* Right workbench panel - Fixed position (outside chat mode for all modes) */}
+          <AnimatePresence>
+            {workbenchOpen && (
+              <motion.aside
+                initial={{ x: 320, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 320, opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="fixed top-0 right-0 w-[320px] h-full bg-white border-l border-gray-200 shadow-lg z-10"
+              >
+                <Box className="h-full flex flex-col">
+                  {/* Tab Header */}
+                  <Box className="border-b border-gray-100 px-6 pt-6 pb-4">
+                    <Flex gap={6}>
+                      <button className="pb-3 text-sm font-medium text-gray-900 border-b-2 border-gray-900 relative">
+                        Documents
+                      </button>
+                      <button className="pb-3 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
+                        Rules
+                      </button>
+                    </Flex>
+                  </Box>
+
+                  {/* Content */}
+                  <Box className="flex-1 p-6 overflow-auto">
+                    <VStack spacing={8} align="start" className="h-full">
+                      {/* Creating Section */}
+                      <Box className="w-full">
+                        <Text size="sm" className="mb-4 text-gray-900 font-normal">Creating:</Text>
+                        {createDocs.map((doc, i) => (
+                          <Flex key={i} align="center" justify="between" className="py-2">
+                            <Flex align="center" gap={3}>
+                              <Box className="w-4 h-5 flex items-center justify-center">
+                                <FileText className="w-4 h-4 text-blue-500" />
+                              </Box>
+                              <Text size="sm" className="text-gray-900">{doc}.docx</Text>
+                            </Flex>
+                            <Text size="xs" className="text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
+                              Draft
+                            </Text>
+                          </Flex>
+                        ))}
+                      </Box>
+
+                      {/* Based on Section */}
+                      <Box className="w-full">
+                        <Text size="sm" className="mb-4 text-gray-900 font-normal">Based on:</Text>
+                        {basedOnDocs.slice(0, 1).map((doc, i) => (
+                          <Flex key={i} align="center" gap={3} className="py-2">
+                            <Box className="w-4 h-5 flex items-center justify-center">
+                              <FileText className="w-4 h-4 text-blue-500" />
+                            </Box>
+                            <Text size="sm" className="text-gray-900">{doc}.docx</Text>
+                          </Flex>
+                        ))}
+                      </Box>
+
+                      {/* Spacer to push drag area to bottom */}
+                      <Box className="flex-1" />
+
+                      {/* Drag Area */}
+                      <Box className="w-full border-2 border-dashed border-gray-200 rounded-lg py-12 px-6 text-center bg-gray-50">
+                        <Text size="sm" className="text-gray-400 leading-relaxed">
+                          Drag documents to import in this project
+                        </Text>
+                      </Box>
+                    </VStack>
+                  </Box>
+                </Box>
+              </motion.aside>
+            )}
+          </AnimatePresence>
 
           {mode === 'document' && (
             <motion.div
@@ -1745,7 +1790,7 @@ Skip for now`
             </motion.div>
           )}
         </AnimatePresence>
-      </Container>
+      </Box>
     </Box>
   )
 }
