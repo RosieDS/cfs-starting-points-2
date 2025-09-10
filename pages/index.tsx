@@ -1077,10 +1077,13 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}
-              className="flex h-screen bg-white"
+              className="grid h-screen bg-white"
+              style={{ 
+                gridTemplateColumns: workbenchOpen ? '1fr 3fr 2fr' : '1fr 5fr'
+              }}
             >
               {/* Left Sidebar */}
-              <Box className="w-64 bg-white border-r border-gray-200 flex flex-col">
+              <Box className="bg-white border-r border-gray-200 flex flex-col">
                 <Box className="p-4 border-b border-gray-200">
                   <Text size="lg" className="font-semibold text-gray-900">GENIE AI</Text>
                   <Text size="sm" className="text-gray-500">New Project</Text>
@@ -1125,9 +1128,7 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
               </Box>
 
               {/* Chat section */}
-              <Box className="flex-1 flex flex-col bg-white max-w-xl mx-auto" style={{ 
-                marginRight: workbenchOpen ? '420px' : '0px' 
-              }}>
+              <Box className="flex flex-col bg-white">
                 <motion.div layoutId="promptCard" className="flex-1 flex flex-col">
                     {/* Chat scroll area */}
                     <Box ref={chatScrollRef} className="flex-1 p-6 overflow-auto">
@@ -1617,81 +1618,81 @@ Skip for now`
                     </Box>
                   </motion.div>
               </Box>
-            </motion.div>
-          )}
 
-          {/* Right workbench panel - Fixed position (outside chat mode for all modes) */}
-          <AnimatePresence>
-            {workbenchOpen && (
-              <motion.aside
-                initial={{ x: 420, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: 420, opacity: 0 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="fixed top-0 right-0 w-[420px] h-full bg-white border-l border-gray-200 shadow-lg z-10"
-              >
-                <Box className="h-full flex flex-col">
-                  {/* Tab Header */}
-                  <Box className="border-b border-gray-100 px-6 pt-6 pb-4">
-                    <Flex gap={6}>
-                      <button className="pb-3 text-sm font-medium text-gray-900 border-b-2 border-gray-900 relative">
-                        Documents
-                      </button>
-                      <button className="pb-3 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
-                        Rules
-                      </button>
-                    </Flex>
-                  </Box>
+              {/* Right workbench panel - Grid positioned */}
+              <AnimatePresence mode="wait">
+                {workbenchOpen && (
+                  <motion.aside
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 50 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                    className="bg-white border-l border-gray-200 shadow-lg"
+                  >
+                  <Box className="h-full flex flex-col">
+                    {/* Tab Header */}
+                    <Box className="border-b border-gray-100 px-6 pt-6 pb-4">
+                      <Flex gap={6}>
+                        <button className="pb-3 text-sm font-medium text-gray-900 border-b-2 border-gray-900 relative">
+                          Documents
+                        </button>
+                        <button className="pb-3 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
+                          Rules
+                        </button>
+                      </Flex>
+                    </Box>
 
-                  {/* Content */}
-                  <Box className="flex-1 p-6 overflow-auto">
-                    <VStack spacing={8} align="start" className="h-full">
-                      {/* Creating Section */}
-                      <Box className="w-full">
-                        <Text size="sm" className="mb-4 text-gray-900 font-normal">Creating:</Text>
-                        {createDocs.map((doc, i) => (
-                          <Flex key={i} align="center" justify="between" className="py-2">
-                            <Flex align="center" gap={3}>
+                    {/* Content */}
+                    <Box className="flex-1 p-6 overflow-auto">
+                      <VStack spacing={8} align="start" className="h-full">
+                        {/* Creating Section */}
+                        <Box className="w-full">
+                          <Text size="sm" className="mb-4 text-gray-900 font-normal">Creating:</Text>
+                          {createDocs.map((doc, i) => (
+                            <Flex key={i} align="center" justify="between" className="py-2">
+                              <Flex align="center" gap={3}>
+                                <Box className="w-4 h-5 flex items-center justify-center">
+                                  <FileText className="w-4 h-4 text-blue-500" />
+                                </Box>
+                                <Text size="sm" className="text-gray-900">{doc}.docx</Text>
+                              </Flex>
+                              <Text size="xs" className="text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
+                                Draft
+                              </Text>
+                            </Flex>
+                          ))}
+                        </Box>
+
+                        {/* Based on Section */}
+                        <Box className="w-full">
+                          <Text size="sm" className="mb-4 text-gray-900 font-normal">Based on:</Text>
+                          {basedOnDocs.slice(0, 1).map((doc, i) => (
+                            <Flex key={i} align="center" gap={3} className="py-2">
                               <Box className="w-4 h-5 flex items-center justify-center">
                                 <FileText className="w-4 h-4 text-blue-500" />
                               </Box>
                               <Text size="sm" className="text-gray-900">{doc}.docx</Text>
                             </Flex>
-                            <Text size="xs" className="text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
-                              Draft
-                            </Text>
-                          </Flex>
-                        ))}
-                      </Box>
+                          ))}
+                        </Box>
 
-                      {/* Based on Section */}
-                      <Box className="w-full">
-                        <Text size="sm" className="mb-4 text-gray-900 font-normal">Based on:</Text>
-                        {basedOnDocs.slice(0, 1).map((doc, i) => (
-                          <Flex key={i} align="center" gap={3} className="py-2">
-                            <Box className="w-4 h-5 flex items-center justify-center">
-                              <FileText className="w-4 h-4 text-blue-500" />
-                            </Box>
-                            <Text size="sm" className="text-gray-900">{doc}.docx</Text>
-                          </Flex>
-                        ))}
-                      </Box>
+                        {/* Spacer to push drag area to bottom */}
+                        <Box className="flex-1" />
 
-                      {/* Spacer to push drag area to bottom */}
-                      <Box className="flex-1" />
-
-                      {/* Drag Area */}
-                      <Box className="w-full border-2 border-dashed border-gray-200 rounded-lg py-12 px-6 text-center bg-gray-50">
-                        <Text size="sm" className="text-gray-400 leading-relaxed">
-                          Drag documents to import in this project
-                        </Text>
-                      </Box>
-                    </VStack>
+                        {/* Drag Area */}
+                        <Box className="w-full border-2 border-dashed border-gray-200 rounded-lg py-12 px-6 text-center bg-gray-50">
+                          <Text size="sm" className="text-gray-400 leading-relaxed">
+                            Drag documents to import in this project
+                          </Text>
+                        </Box>
+                      </VStack>
+                    </Box>
                   </Box>
-                </Box>
-              </motion.aside>
-            )}
-          </AnimatePresence>
+                  </motion.aside>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
 
           {mode === 'document' && (
             <motion.div
