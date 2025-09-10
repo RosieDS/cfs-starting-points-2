@@ -18,7 +18,6 @@ import {
   ArrowUp,
   FileText,
   Plus,
-  X,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MESSAGE_IDS, generateSequentialId } from '@/constants/messageIds'
@@ -1076,9 +1075,11 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}
             >
-              <Flex justify="center" align="start" gap={6} className="w-full max-w-7xl mx-auto">
+              <Box className="relative w-full transition-all duration-300 ease-out" style={{ 
+                marginRight: workbenchOpen ? '320px' : '0px' 
+              }}>
                 {/* Chat section */}
-                <Box className="relative flex-1 max-w-3xl">
+                <Box className="relative max-w-3xl mx-auto">
                   {/* Glow */}
                   <Box className="absolute -inset-6 rounded-[36px] bg-gradient-to-br from-purple-200/50 via-purple-300/40 to-purple-400/30 blur-3xl pointer-events-none" />
                   <motion.div layoutId="promptCard">
@@ -1571,91 +1572,79 @@ Skip for now`
                   </motion.div>
               </Box>
 
-                {/* Right workbench panel */}
-                <AnimatePresence>
-                  {workbenchOpen && (
-                    <Box className="relative hidden md:block w-[320px]">
-                      {/* Gradient shadow */}
-                      <Box className="absolute -inset-4 rounded-[32px] bg-gradient-to-br from-purple-200/30 via-purple-300/20 to-purple-400/20 blur-2xl pointer-events-none" />
-                      <motion.aside
-                        initial={{ x: 24, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: 24, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="relative rounded-[24px] bg-white/90 backdrop-blur border border-purple-100 shadow-xl"
-                      >
-                        <Box className="p-6">
-                          <VStack spacing={6} align="start">
-                            {/* Documents in progress */}
-                            <Box className="w-full">
-                              <Heading as="h3" size="md" className="mb-4 text-foreground-900 font-medium">Documents in progress:</Heading>
-                              <div className="flex flex-wrap gap-2">
-                                {createDocs.map((d, i) => (
-                                  <div
-                                    key={i}
-                                    className="px-4 py-2 rounded-full border-2 border-purple-500 bg-white text-purple-900 text-sm font-medium whitespace-nowrap"
-                                  >
-                                    {d}
-                                  </div>
-                                ))}
-                              </div>
-                            </Box>
+              {/* Right workbench panel - Fixed position */}
+              <AnimatePresence>
+                {workbenchOpen && (
+                  <motion.aside
+                    initial={{ x: 320, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: 320, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                    className="fixed top-0 right-0 w-[320px] h-full bg-white border-l border-gray-200 shadow-lg z-10"
+                  >
+                    <Box className="h-full flex flex-col">
+                      {/* Tab Header */}
+                      <Box className="border-b border-gray-100 px-6 pt-6 pb-4">
+                        <Flex gap={6}>
+                          <button className="pb-3 text-sm font-medium text-gray-900 border-b-2 border-gray-900 relative">
+                            Documents
+                          </button>
+                          <button className="pb-3 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
+                            Rules
+                          </button>
+                        </Flex>
+                      </Box>
 
-                            {/* Jurisdiction */}
-                            <Box className="w-full">
-                              <Heading as="h3" size="md" className="mb-4 text-foreground-900 font-medium">Jurisdiction:</Heading>
-                              <div className="flex flex-wrap gap-2">
-                                <div
-                                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 text-zinc-700 text-sm font-medium whitespace-nowrap"
-                                >
-                                  <span className="text-sm">England and Wales</span>
-                                  <button
-                                    className="flex items-center justify-center w-4 h-4 text-zinc-500 hover:text-zinc-700 transition-colors"
-                                  >
-                                    <X className="w-3 h-3" />
-                                  </button>
-                                </div>
-                              </div>
-                            </Box>
-
-                            {/* Created based on - always show when workbench is open */}
-                            {workbenchOpen && (
-                              <Box className="w-full">
-                                <Heading as="h3" size="md" className="mb-4 text-foreground-900 font-medium">Created based on:</Heading>
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                  {basedOnDocs.map((d, i) => (
-                                    <div
-                                      key={i}
-                                      className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 text-zinc-700 text-sm font-medium whitespace-nowrap"
-                                    >
-                                      <span className="text-sm">{d}</span>
-                                      <button
-                                        className="flex items-center justify-center w-4 h-4 text-zinc-500 hover:text-zinc-700 transition-colors"
-                                      >
-                                        <X className="w-3 h-3" />
-                                      </button>
-                                    </div>
-                                  ))}
-                                </div>
-                                <Flex justify="end" className="w-full">
-                                  <Button
-                                    variant="gradient"
-                                    size="md"
-                                    className="rounded-full"
-                                    startContent={<Plus className="w-4 h-4" />}
-                                  >
-                                    Upload documents
-                                  </Button>
+                      {/* Content */}
+                      <Box className="flex-1 p-6 overflow-auto">
+                        <VStack spacing={8} align="start" className="h-full">
+                          {/* Creating Section */}
+                          <Box className="w-full">
+                            <Text size="sm" className="mb-4 text-gray-900 font-normal">Creating:</Text>
+                            {createDocs.map((doc, i) => (
+                              <Flex key={i} align="center" justify="between" className="py-2">
+                                <Flex align="center" gap={3}>
+                                  <Box className="w-4 h-5 flex items-center justify-center">
+                                    <FileText className="w-4 h-4 text-blue-500" />
+                                  </Box>
+                                  <Text size="sm" className="text-gray-900">{doc}.docx</Text>
                                 </Flex>
-                              </Box>
-                            )}
-                          </VStack>
-                        </Box>
-                      </motion.aside>
+                                <Text size="xs" className="text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
+                                  Draft
+                                </Text>
+                              </Flex>
+                            ))}
+                          </Box>
+
+                          {/* Based on Section */}
+                          <Box className="w-full">
+                            <Text size="sm" className="mb-4 text-gray-900 font-normal">Based on:</Text>
+                            {basedOnDocs.slice(0, 1).map((doc, i) => (
+                              <Flex key={i} align="center" gap={3} className="py-2">
+                                <Box className="w-4 h-5 flex items-center justify-center">
+                                  <FileText className="w-4 h-4 text-blue-500" />
+                                </Box>
+                                <Text size="sm" className="text-gray-900">{doc}.docx</Text>
+                              </Flex>
+                            ))}
+                          </Box>
+
+                          {/* Spacer to push drag area to bottom */}
+                          <Box className="flex-1" />
+
+                          {/* Drag Area */}
+                          <Box className="w-full border-2 border-dashed border-gray-200 rounded-lg py-12 px-6 text-center bg-gray-50">
+                            <Text size="sm" className="text-gray-400 leading-relaxed">
+                              Drag documents to import in this project
+                            </Text>
+                          </Box>
+                        </VStack>
+                      </Box>
                     </Box>
-                  )}
-                </AnimatePresence>
-              </Flex>
+                  </motion.aside>
+                )}
+              </AnimatePresence>
+              </Box>
             </motion.div>
           )}
 
