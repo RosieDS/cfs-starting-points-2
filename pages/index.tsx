@@ -1125,8 +1125,8 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
               </Box>
 
               {/* Chat section */}
-              <Box className="flex-1 flex flex-col bg-white" style={{ 
-                marginRight: workbenchOpen ? '320px' : '0px' 
+              <Box className="flex-1 flex flex-col bg-white max-w-xl mx-auto" style={{ 
+                marginRight: workbenchOpen ? '420px' : '0px' 
               }}>
                 <motion.div layoutId="promptCard" className="flex-1 flex flex-col">
                     {/* Chat scroll area */}
@@ -1624,11 +1624,11 @@ Skip for now`
           <AnimatePresence>
             {workbenchOpen && (
               <motion.aside
-                initial={{ x: 320, opacity: 0 }}
+                initial={{ x: 420, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                exit={{ x: 320, opacity: 0 }}
+                exit={{ x: 420, opacity: 0 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="fixed top-0 right-0 w-[320px] h-full bg-white border-l border-gray-200 shadow-lg z-10"
+                className="fixed top-0 right-0 w-[420px] h-full bg-white border-l border-gray-200 shadow-lg z-10"
               >
                 <Box className="h-full flex flex-col">
                   {/* Tab Header */}
