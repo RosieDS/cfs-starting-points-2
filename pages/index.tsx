@@ -1083,12 +1083,12 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
               }}
             >
               {/* Left Sidebar */}
-              <Box className="bg-white border-r border-gray-200 flex flex-col">
+              <Box className="bg-white border-r border-gray-200 flex flex-col h-screen overflow-hidden">
                 <Box className="p-4 border-b border-gray-200">
                   <Text size="lg" className="font-semibold text-gray-900">GENIE AI</Text>
                   <Text size="sm" className="text-gray-500">New Project</Text>
                 </Box>
-                <Box className="flex-1 p-4">
+                <Box className="flex-1 p-4 overflow-auto">
                   <VStack spacing={2} align="start">
                     <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 flex items-center gap-3">
                       <Plus className="w-4 h-4" />
@@ -1128,10 +1128,10 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
               </Box>
 
               {/* Chat section */}
-              <Box className="flex flex-col bg-white">
-                <motion.div layoutId="promptCard" className="flex-1 flex flex-col">
+              <Box className="flex flex-col bg-white h-screen">
+                <motion.div layoutId="promptCard" className="flex-1 flex flex-col h-full">
                     {/* Chat scroll area */}
-                    <Box ref={chatScrollRef} className="flex-1 p-6 overflow-auto">
+                    <Box ref={chatScrollRef} className="flex-1 p-6 overflow-y-auto h-0">
                       <VStack spacing={6} align="start" className="min-h-full justify-end">
                         {messages.map((m) => (
                           <Flex key={m.id} justify={m.role === 'user' ? 'end' : 'start'} className="w-full">
@@ -1627,7 +1627,7 @@ Skip for now`
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 50 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="bg-white border-l border-gray-200 shadow-lg"
+                    className="bg-white border-l border-gray-200 shadow-lg h-screen overflow-hidden"
                   >
                   <Box className="h-full flex flex-col">
                     {/* Tab Header */}
@@ -1643,7 +1643,7 @@ Skip for now`
                     </Box>
 
                     {/* Content */}
-                    <Box className="flex-1 p-6 overflow-auto">
+                    <Box className="flex-1 p-6 overflow-y-auto h-0">
                       <VStack spacing={8} align="start" className="h-full">
                         {/* Creating Section */}
                         <Box className="w-full">
