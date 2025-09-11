@@ -335,6 +335,57 @@ By: _________________`
     }
   }
 
+  // Function to generate multi-document key clauses with tags
+  const generateMultiDocumentClauses = (docTypes: string[]): string => {
+    const sections: string[] = []
+    const allClauses: { docType: string; clause: string; index: number }[] = []
+    
+    // Generate sections for each document type
+    docTypes.forEach((docType) => {
+      const clauses = generateKeyClauses(docType)
+      
+      // Add document heading
+      sections.push(`**${docType}**`)
+      
+      // Add clauses for this document (limit to 3 clauses per doc)
+      const limitedClauses = clauses.slice(0, 3)
+      limitedClauses.forEach((clause, index) => {
+        const globalIndex = allClauses.length + index + 1
+        sections.push(`${globalIndex}. ${clause}`)
+        allClauses.push({ docType, clause, index: globalIndex })
+      })
+      
+      // Add blank line between sections
+      sections.push('')
+    })
+    
+    // Select 3 random clauses to get percentage tags
+    const tags = ["85% of templates use this", "92% of templates use this", "78% of templates use this"]
+    const taggedIndices = new Set<number>()
+    
+    // Randomly select 3 different clause indices to tag
+    while (taggedIndices.size < Math.min(3, allClauses.length)) {
+      const randomIndex = Math.floor(Math.random() * allClauses.length)
+      taggedIndices.add(allClauses[randomIndex].index)
+    }
+    
+    // Replace sections with tagged versions
+    const taggedSections = sections.map((section) => {
+      // Check if this line is a numbered clause that should be tagged
+      const match = section.match(/^(\d+)\. (.+)$/)
+      if (match) {
+        const clauseNumber = parseInt(match[1])
+        if (taggedIndices.has(clauseNumber)) {
+          const tagIndex = Array.from(taggedIndices).indexOf(clauseNumber)
+          return `${section} [${tags[tagIndex]}]`
+        }
+      }
+      return section
+    })
+    
+    return taggedSections.join('\n')
+  }
+
   // Sequential thinking steps function
   const runThinkingSequence = () => {
     const steps = [
@@ -357,20 +408,42 @@ By: _________________`
             setCurrentThinkingStep(null)
             setShowThinking(false)
             
-            const firstDoc = createDocs[0] || 'document'
-            const keyClauses = generateKeyClauses(firstDoc)
+            let clausesMessage = ''
             
-            // Pre-tick all clauses
-            const preTickedClauses: Record<string, boolean> = {}
-            keyClauses.forEach((clause) => {
-              preTickedClauses[clause] = true
-            })
-            setSelectedClauses(preTickedClauses)
-            
-            const clausesMessage = `**Key clauses:**
+            if (createDocs.length === 1) {
+              // Single document - use existing logic
+              const firstDoc = createDocs[0] || 'document'
+              const keyClauses = generateKeyClauses(firstDoc)
+              
+              // Pre-tick all clauses
+              const preTickedClauses: Record<string, boolean> = {}
+              keyClauses.forEach((clause) => {
+                preTickedClauses[clause] = true
+              })
+              setSelectedClauses(preTickedClauses)
+              
+              clausesMessage = `**Key clauses:**
 As well as standard clauses, I recommend you include the below key clauses. Untick any of them and click to add more detail.
 
 ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
+            } else {
+              // Multiple documents - use new structure
+              const multiDocClauses = generateMultiDocumentClauses(createDocs)
+              
+              // Pre-tick all clauses for multiple documents
+              const preTickedClauses: Record<string, boolean> = {}
+              // Extract all numbered clauses from the multi-doc string
+              const clauseMatches = multiDocClauses.match(/^\d+\. .+$/gm) || []
+              clauseMatches.forEach((clause) => {
+                preTickedClauses[clause] = true
+              })
+              setSelectedClauses(preTickedClauses)
+              
+              clausesMessage = `**Key clauses:**
+As well as standard clauses, I recommend you include the below key clauses. Untick any of them and click to add more detail.
+
+${multiDocClauses}`
+            }
 
             setMessages((prev) => [
               ...prev,
@@ -430,9 +503,9 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
       const lines = content.split('\n')
       const title = lines[0] // "**Key clauses:**"
       const description = lines[1] // "As well as standard clauses..."
-      const clauseLines = lines.slice(3).filter(line => line.trim() && /^\d+\./.test(line.trim()))
+      const contentLines = lines.slice(3) // Skip title, description, and empty line
       
-      console.log('Rendering clauses - messageId:', messageId, 'clauseLines:', clauseLines, 'selectedClauses:', selectedClauses)
+      console.log('Rendering clauses - messageId:', messageId, 'contentLines:', contentLines, 'selectedClauses:', selectedClauses)
 
       return (
         <div className="space-y-4">
@@ -450,80 +523,96 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
           
           <Text size="md">{description}</Text>
           
-          <div className="space-y-3">
-            {clauseLines.map((line, i) => {
-              const clauseText = line.replace(/^\d+\.\s*/, '').trim()
-              const isChecked = !!selectedClauses[clauseText]
-              const showDetails = !!selectedClauseDetails[clauseText]
+          <div className="space-y-4">
+            {contentLines.map((line, i) => {
+              const trimmedLine = line.trim()
               
-              // Define chips for specific clause positions
-              const getChipText = (index: number) => {
-                if (index === 0) return "85% of templates use this"
-                if (index === 2) return "Rare but advised"
-                if (index === 3) return "Market standard"
-                return null
+              // Skip empty lines
+              if (!trimmedLine) return null
+              
+              // Check if this is a document heading (bold text)
+              if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+                return (
+                  <div key={i} className="mt-6 first:mt-0">
+                    <Text size="md" className="font-bold text-foreground-900 mb-3">
+                      {trimmedLine.replace(/\*\*/g, '')}
+                    </Text>
+                  </div>
+                )
               }
               
-              const chipText = getChipText(i)
-              
-              return (
-                <div key={i} className="w-full">
-                  <div className="flex items-start gap-2">
-                    <input
-                      type="checkbox"
-                      aria-label={`Select ${clauseText}`}
-                      className="mt-1 h-4 w-4 rounded border-zinc-300"
-                      checked={isChecked}
-                      onChange={() => setSelectedClauses((p) => ({ ...p, [clauseText]: !p[clauseText] }))}
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => {
-                            setSelectedClauseDetails((p) => ({ ...p, [clauseText]: !p[clauseText] }))
-                          }}
-                          className="text-purple-600 underline hover:text-purple-800 transition-colors text-left"
-                        >
-                          <Text size="md">{clauseText}</Text>
-                        </button>
-                        {chipText && (
-                          <span className="px-3 py-1 bg-white text-blue-600 text-sm rounded-full border border-gray-200 whitespace-nowrap">
-                            {chipText}
-                          </span>
+              // Check if this is a numbered clause
+              if (/^\d+\./.test(trimmedLine)) {
+                const clauseText = trimmedLine.replace(/^\d+\.\s*/, '').trim()
+                // Check if clause has a tag (text in brackets)
+                const tagMatch = clauseText.match(/^(.+?)\s*\[([^\]]+)\]$/)
+                const actualClauseText = tagMatch ? tagMatch[1].trim() : clauseText
+                const tag = tagMatch ? tagMatch[2] : null
+                
+                const isChecked = !!selectedClauses[trimmedLine]
+                const showDetails = !!selectedClauseDetails[trimmedLine]
+                
+                return (
+                  <div key={i} className="w-full">
+                    <div className="flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${actualClauseText}`}
+                        className="mt-1 h-4 w-4 rounded border-zinc-300"
+                        checked={isChecked}
+                        onChange={() => setSelectedClauses((p) => ({ ...p, [trimmedLine]: !p[trimmedLine] }))}
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              setSelectedClauseDetails((p) => ({ ...p, [trimmedLine]: !p[trimmedLine] }))
+                            }}
+                            className="text-purple-600 underline hover:text-purple-800 transition-colors text-left"
+                          >
+                            <Text size="md">{actualClauseText}</Text>
+                          </button>
+                          {tag && (
+                            <span className="px-3 py-1 bg-white text-blue-600 text-sm rounded-full border border-gray-200 whitespace-nowrap">
+                              {tag}
+                            </span>
+                          )}
+                        </div>
+                        
+                        {showDetails && (
+                          <div className="mt-3 w-full">
+                            <Text size="sm" className="text-zinc-700 mb-2 font-medium">
+                              Add more details for this clause:
+                            </Text>
+                            <Textarea
+                              value={clauseDetailsText[trimmedLine] || ''}
+                              onChange={(e) => {
+                                setClauseDetailsText((prev) => ({
+                                  ...prev,
+                                  [trimmedLine]: e.target.value
+                                }))
+                              }}
+                              placeholder={
+                                actualClauseText.toLowerCase().includes('termination') ? "eg. Include specific termination conditions or notice requirements" :
+                                actualClauseText.toLowerCase().includes('payment') ? "eg. Specify payment terms, late fees, or milestone conditions" :
+                                actualClauseText.toLowerCase().includes('intellectual property') || actualClauseText.toLowerCase().includes('ip') ? "eg. Define what IP is included and ownership terms" :
+                                actualClauseText.toLowerCase().includes('confidentiality') || actualClauseText.toLowerCase().includes('non-disclosure') ? "eg. Specify what information is confidential and exceptions" :
+                                actualClauseText.toLowerCase().includes('liability') ? "eg. Set liability caps or exclusions for specific damages" :
+                                "eg. Add specific requirements, conditions, or clarifications for this clause"
+                              }
+                              className="w-full text-sm"
+                              rows={3}
+                            />
+                          </div>
                         )}
                       </div>
-                      
-                      {showDetails && (
-                        <div className="mt-3 w-full">
-                          <Text size="sm" className="text-zinc-700 mb-2 font-medium">
-                            Add more details for this clause:
-                          </Text>
-                          <Textarea
-                            value={clauseDetailsText[clauseText] || ''}
-                            onChange={(e) => {
-                              setClauseDetailsText((prev) => ({
-                                ...prev,
-                                [clauseText]: e.target.value
-                              }))
-                            }}
-                            placeholder={
-                              clauseText.toLowerCase().includes('termination') ? "eg. Include specific termination conditions or notice requirements" :
-                              clauseText.toLowerCase().includes('payment') ? "eg. Specify payment terms, late fees, or milestone conditions" :
-                              clauseText.toLowerCase().includes('intellectual property') || clauseText.toLowerCase().includes('ip') ? "eg. Define what IP is included and ownership terms" :
-                              clauseText.toLowerCase().includes('confidentiality') || clauseText.toLowerCase().includes('non-disclosure') ? "eg. Specify what information is confidential and exceptions" :
-                              clauseText.toLowerCase().includes('liability') ? "eg. Set liability caps or exclusions for specific damages" :
-                              "eg. Add specific requirements, conditions, or clarifications for this clause"
-                            }
-                            className="w-full text-sm"
-                            rows={3}
-                          />
-                        </div>
-                      )}
                     </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              }
+              
+              return null
+            }).filter(Boolean)}
           </div>
         </div>
       )
@@ -1414,13 +1503,10 @@ ${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
                                       // Single document selected
                                       questionsMessage = "**Document purpose:**\n\nIn your own words, why are you creating this document now, and what must it achieve for this deal to be a success? \n\nList the 2–3 outcomes that matter most.\n\nWe'll get to the details next."
                                     } else {
-                                      // Multiple documents selected - focus on first one
-                                      const firstDoc = createDocs[0]
-                                      questionsMessage = `Great. We'll configure your other documents later but first let's focus on ${firstDoc}.
+                                      // Multiple documents selected
+                                      questionsMessage = `**Purpose:**
 
-**Document purpose:**
-
-In your own words, why are you creating this document now, and what must it achieve for this deal to be a success? 
+Why are you doing this work now and what must it achieve for this deal to be a success?
 
 List the 2–3 outcomes that matter most.
 
@@ -1563,7 +1649,7 @@ We'll get to the details next.`
                                           
                                           const followUpMessage = `**Document details:**
 
-What specific details do I need to include in this contract?
+What specific details do I need to include?
 
 eg.
 ${examples.join('\n')}
@@ -1673,7 +1759,7 @@ Skip for now`
                                           
                                           const followUpMessage = `**Document details:**
 
-What specific details do I need to include in this contract?
+What specific details do I need to include?
 
 eg.
 ${examples.join('\n')}
