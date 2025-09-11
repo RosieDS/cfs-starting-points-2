@@ -52,6 +52,145 @@ export default function Home() {
   const chatScrollRef = useRef<HTMLElement | null>(null)
   const [messageCounter, setMessageCounter] = useState(0)
 
+  // Generate dummy content for different document types
+  const generateDummyContent = (docType: string) => {
+    const docTypeLower = docType.toLowerCase()
+    
+    if (docTypeLower.includes('employment') || docTypeLower.includes('contract')) {
+      return `EMPLOYMENT AGREEMENT
+
+This Employment Agreement is entered into between [COMPANY NAME] and [EMPLOYEE NAME].
+
+1. POSITION AND DUTIES
+Employee shall serve as [JOB TITLE] and perform duties including:
+- [DUTY 1]
+- [DUTY 2]
+- [DUTY 3]
+
+2. COMPENSATION
+Base salary: $[AMOUNT] per year
+Benefits: Health insurance, dental, vision
+Vacation: [NUMBER] days per year
+
+3. EMPLOYMENT TERMS
+Start date: [DATE]
+Employment is at-will and may be terminated by either party
+
+4. CONFIDENTIALITY
+Employee agrees to maintain confidentiality of company information
+
+5. GOVERNING LAW
+This agreement shall be governed by [STATE] law.
+
+[COMPANY NAME]
+By: _________________
+Name: [NAME]
+Title: [TITLE]
+
+EMPLOYEE
+By: _________________
+Name: [EMPLOYEE NAME]`
+    }
+    
+    if (docTypeLower.includes('offer')) {
+      return `OFFER LETTER
+
+Dear [CANDIDATE NAME],
+
+We are pleased to offer you the position of [JOB TITLE] at [COMPANY NAME].
+
+POSITION DETAILS:
+- Job Title: [JOB TITLE]
+- Start Date: [DATE]
+- Salary: $[AMOUNT] per year
+- Benefits: Health, dental, vision insurance
+- Vacation: [NUMBER] days per year
+
+REPORTING:
+You will report to [MANAGER NAME], [MANAGER TITLE].
+
+NEXT STEPS:
+Please sign and return this letter by [DATE] to accept this offer.
+
+We look forward to welcoming you to the team!
+
+Sincerely,
+[HIRING MANAGER NAME]
+[TITLE]
+[COMPANY NAME]
+
+ACCEPTANCE:
+I accept this offer of employment.
+
+Signature: _________________
+Date: _________________`
+    }
+    
+    if (docTypeLower.includes('nda') || docTypeLower.includes('disclosure')) {
+      return `NON-DISCLOSURE AGREEMENT
+
+This Non-Disclosure Agreement ("Agreement") is entered into between [COMPANY NAME] and [RECIPIENT NAME].
+
+1. DEFINITION OF CONFIDENTIAL INFORMATION
+"Confidential Information" includes all technical data, trade secrets, know-how, and proprietary information.
+
+2. NON-DISCLOSURE OBLIGATIONS
+Recipient agrees to:
+- Keep all Confidential Information strictly confidential
+- Not disclose to any third parties
+- Use information solely for agreed purposes
+
+3. DURATION
+This agreement shall remain in effect for [NUMBER] years.
+
+4. RETURN OF MATERIALS
+Upon termination, Recipient shall return all materials containing Confidential Information.
+
+5. REMEDIES
+Breach of this agreement may result in irreparable harm warranting injunctive relief.
+
+[COMPANY NAME]
+By: _________________
+Name: [NAME]
+Title: [TITLE]
+
+RECIPIENT
+By: _________________
+Name: [RECIPIENT NAME]`
+    }
+
+    // Default content for any other document type
+    return `${docType.toUpperCase()}
+
+This document contains the terms and conditions for [PURPOSE].
+
+1. PARTIES
+This agreement is between [PARTY 1] and [PARTY 2].
+
+2. TERMS
+The following terms apply:
+- [TERM 1]
+- [TERM 2]
+- [TERM 3]
+
+3. EFFECTIVE DATE
+This agreement is effective as of [DATE].
+
+4. SIGNATURES
+Both parties agree to the terms set forth above.
+
+[PARTY 1]
+By: _________________
+
+[PARTY 2]
+By: _________________`
+  }
+
+  // Check if ASSISTANT_DOCUMENT_DETAILS is active
+  const isDocumentDetailsActive = () => {
+    return messages.some(msg => msg.id === MESSAGE_IDS.ASSISTANT_DOCUMENT_DETAILS)
+  }
+
   // Helper functions for message management
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const updateMessageById = (messageId: string, newContent: string) => {
@@ -1649,6 +1788,60 @@ Skip for now`
                         <Box className="w-full">
                           <Text size="sm" className="mb-4 text-gray-900 font-normal">Creating:</Text>
                           {createDocs.map((doc, i) => (
+                            <motion.div
+                              key={i}
+                              layout
+                              initial={{ height: 'auto' }}
+                              animate={{ 
+                                height: isDocumentDetailsActive() ? 'auto' : 'auto'
+                              }}
+                              transition={{ duration: 0.3, ease: 'easeInOut' }}
+                              className="mb-2"
+                            >
+                              <Box className="border rounded-lg bg-white shadow-sm">
+                                <Flex align="center" justify="between" className="p-3">
+                                  <Flex align="center" gap={3}>
+                                    <Box className="w-4 h-5 flex items-center justify-center">
+                                      <FileText className="w-4 h-4 text-blue-500" />
+                                    </Box>
+                                    <Text size="sm" className="text-gray-900">{doc}.docx</Text>
+                                  </Flex>
+                                  <Text size="xs" className="text-purple-600 bg-purple-100 px-2 py-1 rounded-md animate-pulse">
+                                    Genie editing...
+                                  </Text>
+                                </Flex>
+                                
+                                <AnimatePresence>
+                                  {isDocumentDetailsActive() && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: 'auto', opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      transition={{ duration: 0.4, ease: 'easeInOut' }}
+                                      className="overflow-hidden"
+                                    >
+                                      <Box className="border-t p-3">
+                                        <Box 
+                                          className="bg-gray-50 p-3 rounded text-xs font-mono leading-relaxed overflow-y-auto"
+                                          style={{ maxHeight: '200px' }}
+                                        >
+                                          <pre className="whitespace-pre-wrap text-gray-800">
+                                            {generateDummyContent(doc)}
+                                          </pre>
+                                        </Box>
+                                      </Box>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </Box>
+                            </motion.div>
+                          ))}
+                        </Box>
+
+                        {/* Based on Section */}
+                        <Box className="w-full">
+                          <Text size="sm" className="mb-4 text-gray-900 font-normal">Based on:</Text>
+                          {['Previous_document_1', 'Previous_document_2'].map((doc, i) => (
                             <Flex key={i} align="center" justify="between" className="py-2">
                               <Flex align="center" gap={3}>
                                 <Box className="w-4 h-5 flex items-center justify-center">
@@ -1656,35 +1849,22 @@ Skip for now`
                                 </Box>
                                 <Text size="sm" className="text-gray-900">{doc}.docx</Text>
                               </Flex>
-                              <Text size="xs" className="text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
-                                Draft
+                              <Text size="xs" className="text-green-700 bg-green-100 px-2 py-1 rounded-md">
+                                Signed
                               </Text>
                             </Flex>
                           ))}
                         </Box>
 
-                        {/* Based on Section */}
-                        <Box className="w-full">
-                          <Text size="sm" className="mb-4 text-gray-900 font-normal">Based on:</Text>
-                          {basedOnDocs.slice(0, 1).map((doc, i) => (
-                            <Flex key={i} align="center" gap={3} className="py-2">
-                              <Box className="w-4 h-5 flex items-center justify-center">
-                                <FileText className="w-4 h-4 text-blue-500" />
-                              </Box>
-                              <Text size="sm" className="text-gray-900">{doc}.docx</Text>
-                            </Flex>
-                          ))}
-                        </Box>
-
-                        {/* Spacer to push drag area to bottom */}
-                        <Box className="flex-1" />
-
                         {/* Drag Area */}
-                        <Box className="w-full border-2 border-dashed border-gray-200 rounded-lg py-12 px-6 text-center bg-gray-50">
+                        <Box className="w-full border-2 border-dashed border-gray-200 rounded-lg py-12 px-6 text-center bg-gray-50 mt-6">
                           <Text size="sm" className="text-gray-400 leading-relaxed">
                             Drag documents to import in this project
                           </Text>
                         </Box>
+
+                        {/* Spacer */}
+                        <Box className="flex-1" />
                       </VStack>
                     </Box>
                   </Box>
