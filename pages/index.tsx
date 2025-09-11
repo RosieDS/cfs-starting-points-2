@@ -881,9 +881,9 @@ ${multiDocClauses}`
           
           <div className="flex flex-col gap-3">
             <Button
-              variant="gradient"
+              variant="outline"
               size="md"
-              className="rounded-full w-fit"
+              className="rounded-2xl px-6 border border-purple-500 text-purple-700 hover:bg-purple-50 bg-white w-fit"
               startContent={<Plus className="w-4 h-4" />}
             >
               Upload documents
@@ -1299,9 +1299,9 @@ ${multiDocClauses}`
                            questionStep === 'clauses' && (
                             <Flex justify="end" className="w-full">
                               <Button
-                                variant="gradient"
+                                variant="outline"
                                 size="md"
-                                className="rounded-2xl px-6"
+                                className="rounded-2xl px-6 border border-purple-500 text-purple-700 hover:bg-purple-50 bg-white"
                                 onPress={() => {
                                   // Show sliders after clauses selection
                                   const slidersMessage = `Last thing before we get your 1st draft ready.`
@@ -1326,9 +1326,9 @@ ${multiDocClauses}`
                           {workbenchOpen && !configureClicked && (
                             <Flex justify="end" className="w-full">
                               <Button
-                                variant="gradient"
+                                variant="outline"
                                 size="md"
-                                className="rounded-2xl px-6"
+                                className="rounded-2xl px-6 border border-purple-500 text-purple-700 hover:bg-purple-50 bg-white"
                                 onPress={() => {
                                   // Add user message first
                                   const userMessage = createDocs.length === 1 ? 'Configure my document' : 'Configure my documents'
@@ -1387,9 +1387,9 @@ We'll get to the details next.`
                           {showSliders && !messages.some(m => m.id === MESSAGE_IDS.ASSISTANT_FINAL_CONFIRMATION) && (
                             <Flex justify="end" className="w-full">
                               <Button
-                                variant="gradient"
+                                variant="outline"
                                 size="md"
-                                className="rounded-2xl px-6"
+                                className="rounded-2xl px-6 border border-purple-500 text-purple-700 hover:bg-purple-50 bg-white"
                                 onPress={() => {
                                   // Start the final check thinking sequence
                                   setShowThinking(true)
