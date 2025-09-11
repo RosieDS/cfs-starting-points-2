@@ -35,7 +35,6 @@ export default function Home() {
   const [selectedExistingInputs, setSelectedExistingInputs] = useState<Record<string, string>>({})
   const [workbenchOpen, setWorkbenchOpen] = useState(false)
   const [createDocs, setCreateDocs] = useState<string[]>([])
-  const [basedOnDocs, setBasedOnDocs] = useState<string[]>([])
   const [configureClicked, setConfigureClicked] = useState(false)
   const [showThinking, setShowThinking] = useState(false)
   const [currentThinkingStep, setCurrentThinkingStep] = useState<string | null>(null)
@@ -1152,15 +1151,7 @@ ${multiDocClauses}`
       setWorkbenchOpen(true)
       setCreateDocs(chosen.length ? chosen : suggestedDocs)
       
-      const selectedLabels = Object.entries(selectedExisting)
-        .filter(([, v]) => v)
-        .map(([id]) => selectedExistingLabels[id])
-        .filter(Boolean)
-      
-      // Always include "Company context" and "Playbook" chips
-      const defaultChips = ['Company context', 'Playbook']
-      const allBasedOnDocs = [...defaultChips, ...selectedLabels as string[]]
-      setBasedOnDocs(allBasedOnDocs)
+      // Note: Using hardcoded documents in the "Based on" section instead of dynamic ones
     } else {
       setWorkbenchOpen(false)
     }
