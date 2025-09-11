@@ -18,6 +18,7 @@ import {
   ArrowUp,
   FileText,
   Plus,
+  Maximize2,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MESSAGE_IDS, generateSequentialId } from '@/constants/messageIds'
@@ -1782,9 +1783,14 @@ Skip for now`
                                     </Box>
                                     <Text size="sm" className="text-gray-900">{doc}.docx</Text>
                                   </Flex>
-                                  <Text size="xs" className="text-purple-600 bg-purple-100 px-2 py-1 rounded-md animate-pulse">
-                                    Genie editing...
-                                  </Text>
+                                  <Flex align="center" gap={2}>
+                                    {isDocumentDetailsActive() && (
+                                      <Maximize2 className="w-3 h-3 text-purple-600" />
+                                    )}
+                                    <Text size="xs" className="text-purple-600 bg-purple-100 px-2 py-1 rounded-md animate-pulse">
+                                      Genie editing...
+                                    </Text>
+                                  </Flex>
                                 </Flex>
                                 
                                 <AnimatePresence>
