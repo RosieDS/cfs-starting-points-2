@@ -34,6 +34,7 @@ export default function Home() {
   const [selectedExistingLabels, setSelectedExistingLabels] = useState<Record<string, string>>({})
   const [selectedExistingInputs, setSelectedExistingInputs] = useState<Record<string, string>>({})
   const [workbenchOpen, setWorkbenchOpen] = useState(false)
+  const [workbenchLoading, setWorkbenchLoading] = useState(false)
   const [createDocs, setCreateDocs] = useState<string[]>([])
   const [configureClicked, setConfigureClicked] = useState(false)
   const [showThinking, setShowThinking] = useState(false)
@@ -1007,12 +1008,21 @@ ${multiDocClauses}`
     console.log('Workbench update - chosen:', chosen, 'suggestedDocs:', suggestedDocs, 'hasSelections:', hasSelections)
     
     if (hasSelections) {
+      // Show loading state first
+      setWorkbenchLoading(true)
       setWorkbenchOpen(true)
-      setCreateDocs(chosen.length ? chosen : suggestedDocs)
+      
+      // After 1 second, show the actual content
+      setTimeout(() => {
+        setWorkbenchLoading(false)
+        setCreateDocs(chosen.length ? chosen : suggestedDocs)
+      }, 1000)
       
       // Note: Using hardcoded documents in the "Based on" section instead of dynamic ones
     } else {
       setWorkbenchOpen(false)
+      setWorkbenchLoading(false)
+      setCreateDocs([])
     }
   }, [selectedDocs, selectedExisting, selectedExistingLabels, suggestedDocs])
 
@@ -1208,7 +1218,10 @@ ${multiDocClauses}`
               {/* Chat section */}
               <Box className="flex flex-col bg-white h-screen">
                 <Box className={`h-full ${!workbenchOpen ? 'flex justify-center' : ''}`}>
-                  <Box className={`${!workbenchOpen ? 'w-1/2 max-w-4xl' : 'w-full'} flex flex-col h-full`}>
+                  <Box className="flex flex-col h-full" style={{ 
+                    width: !workbenchOpen ? '50vw' : '100%',
+                    maxWidth: !workbenchOpen ? '50vw' : '100%'
+                  }}>
                     <motion.div layoutId="promptCard" className="flex-1 flex flex-col h-full">
                     {/* Chat scroll area */}
                     <Box ref={chatScrollRef} className="flex-1 p-6 overflow-y-auto h-0">
@@ -1322,16 +1335,16 @@ ${multiDocClauses}`
                             </Flex>
                           )}
 
-                          {/* Show Configure button when workbench is open and not yet clicked */}
+                          {/* Show Personalise and Create Template buttons when workbench is open and not yet clicked */}
                           {workbenchOpen && !configureClicked && (
-                            <Flex justify="end" className="w-full">
+                            <VStack spacing={3} align="end" className="w-full">
                               <Button
                                 variant="outline"
                                 size="md"
                                 className="rounded-2xl px-6 border border-purple-500 text-purple-700 hover:bg-purple-50 bg-white"
                                 onPress={() => {
                                   // Add user message first
-                                  const userMessage = createDocs.length === 1 ? 'Configure my document' : 'Configure my documents'
+                                  const userMessage = createDocs.length === 1 ? 'Personalise my document' : 'Personalise my documents'
                                   
                                   // Show thinking animation first
                                   setMessages((prev) => [
@@ -1378,10 +1391,22 @@ We'll get to the details next.`
                                   }, 2000) // Show thinking for 2 seconds
                                 }}
                               >
-                                {createDocs.length === 1 ? 'Configure my document' : 'Configure my documents'}
+                                {createDocs.length === 1 ? 'Personalise my document' : 'Personalise my documents'}
                               </Button>
-                </Flex>
-                                                    )}
+                              
+                              <Button
+                                variant="outline"
+                                size="md"
+                                className="rounded-2xl px-6 border border-purple-500 text-purple-700 hover:bg-purple-50 bg-white"
+                                onPress={() => {
+                                  // TODO: Add quick template functionality
+                                  console.log('Create quick template clicked')
+                                }}
+                              >
+                                {createDocs.length === 1 ? 'Create quick template' : 'Create quick templates'}
+                              </Button>
+                            </VStack>
+                          )}
 
                           {/* Show Run Final Check button when sliders are visible */}
                           {showSliders && !messages.some(m => m.id === MESSAGE_IDS.ASSISTANT_FINAL_CONFIRMATION) && (
@@ -1723,6 +1748,11 @@ Skip for now`
 
                     {/* Content */}
                     <Box className="flex-1 p-6 overflow-y-auto h-0">
+                      {workbenchLoading ? (
+                        <Box className="h-full flex items-center justify-center">
+                          <ThinkingStepsAnimation text="Checking document vault.." />
+                        </Box>
+                      ) : (
                       <VStack spacing={4} align="start" className="h-full">
                         {/* Creating Section */}
                         <Box className="w-full">
@@ -1916,6 +1946,7 @@ Skip for now`
                         {/* Spacer */}
                         <Box className="flex-1" />
                       </VStack>
+                      )}
                     </Box>
                   </Box>
                   </motion.aside>
