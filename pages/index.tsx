@@ -48,8 +48,29 @@ export default function Home() {
   const [selectedClauses, setSelectedClauses] = useState<Record<string, boolean>>({})
   const [selectedClauseDetails, setSelectedClauseDetails] = useState<Record<string, boolean>>({})
   const [clauseDetailsText, setClauseDetailsText] = useState<Record<string, string>>({})
+  const [templateSelections, setTemplateSelections] = useState<Record<string, { useAsTemplate: boolean, useAsContext: boolean }>>({})
   const chatScrollRef = useRef<HTMLElement | null>(null)
   const [messageCounter, setMessageCounter] = useState(0)
+
+  // Auto-check "Use as context" for all documents when createDocs changes
+  useEffect(() => {
+    if (createDocs.length > 0) {
+      const newSelections: Record<string, { useAsTemplate: boolean, useAsContext: boolean }> = {}
+      createDocs.forEach((doc) => {
+        const templateKey1 = `${doc}_1`
+        const templateKey2 = `${doc}_2`
+        newSelections[templateKey1] = { 
+          useAsTemplate: templateSelections[templateKey1]?.useAsTemplate || false, 
+          useAsContext: true 
+        }
+        newSelections[templateKey2] = { 
+          useAsTemplate: templateSelections[templateKey2]?.useAsTemplate || false, 
+          useAsContext: true 
+        }
+      })
+      setTemplateSelections(prev => ({ ...prev, ...newSelections }))
+    }
+  }, [createDocs])
 
   // Generate dummy content for different document types
   const generateDummyContent = (docType: string) => {
@@ -652,60 +673,6 @@ ${multiDocClauses}`
                   )}
                   <span className={options?.showCheckboxes !== false ? "flex-1" : ""}>{it}</span>
                 </div>
-                {options?.showExisting && i === 0 && !!selectedDocs[it] ? (
-                  <div className="w-full mt-3 pl-6">
-                    <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm w-full max-w-2xl">
-                      <Text size="sm" className="text-zinc-500 mb-3">Click to reuse & modify existing documents:</Text>
-                      <div className="flex flex-col gap-4">
-                        {(() => {
-                          const makeTemplate = (id: string, label: string) => {
-                            const isSelected = !!selectedExisting[id]
-                            return (
-                              <div key={id} className="w-full">
-                                <button
-                                  onClick={() => {
-                                    setSelectedExisting((p) => ({ ...p, [id]: !p[id] }))
-                                    setSelectedExistingLabels((m) => ({ ...m, [id]: label }))
-                                  }}
-                                  className="flex items-center gap-2 px-3 py-2 rounded-full border-2 border-purple-500 bg-white text-purple-900 hover:bg-purple-50 transition-colors w-fit"
-                                >
-                                  <FileText className={`w-4 h-4 ${isSelected ? 'text-green-600' : 'text-purple-600'}`} />
-                                  <span className="text-sm font-medium">{label}</span>
-                                </button>
-                                
-                                {isSelected && (
-                                  <div className="mt-3 w-full">
-                                    <Text size="sm" className="text-zinc-700 mb-2 font-medium">
-                                      How should I use this document?
-                                    </Text>
-                                    <Textarea
-                                      value={selectedExistingInputs[id] || ''}
-                                      onChange={(e) => {
-                                        setSelectedExistingInputs((prev) => ({
-                                          ...prev,
-                                          [id]: e.target.value
-                                        }))
-                                      }}
-                                      placeholder="eg. Stay as close to it as possible, reuse clause 7"
-                                      className="w-full text-sm"
-                                      rows={3}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          }
-                          return (
-                            <>
-                              {makeTemplate('existing-1', 'Document title 1')}
-                              {makeTemplate('existing-2', 'Document title 2')}
-                            </>
-                          )
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
               </li>
             ))}
           </ol>
@@ -785,60 +752,6 @@ ${multiDocClauses}`
                   )}
                   <span className={options?.showCheckboxes !== false ? "flex-1" : ""}>{it}</span>
                 </div>
-                {options?.showExisting && i === 0 && !!selectedDocs[it] ? (
-                  <div className="w-full mt-3 pl-6">
-                    <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm w-full max-w-2xl">
-                      <Text size="sm" className="text-zinc-500 mb-3">Click to reuse & modify existing documents:</Text>
-                      <div className="flex flex-col gap-4">
-                        {(() => {
-                          const makeTemplate = (id: string, label: string) => {
-                            const isSelected = !!selectedExisting[id]
-                            return (
-                              <div key={id} className="w-full">
-                                <button
-                                  onClick={() => {
-                                    setSelectedExisting((p) => ({ ...p, [id]: !p[id] }))
-                                    setSelectedExistingLabels((m) => ({ ...m, [id]: label }))
-                                  }}
-                                  className="flex items-center gap-2 px-3 py-2 rounded-full border-2 border-purple-500 bg-white text-purple-900 hover:bg-purple-50 transition-colors w-fit"
-                                >
-                                  <FileText className={`w-4 h-4 ${isSelected ? 'text-green-600' : 'text-purple-600'}`} />
-                                  <span className="text-sm font-medium">{label}</span>
-                                </button>
-                                
-                                {isSelected && (
-                                  <div className="mt-3 w-full">
-                                    <Text size="sm" className="text-zinc-700 mb-2 font-medium">
-                                      How should I use this document?
-                                    </Text>
-                                    <Textarea
-                                      value={selectedExistingInputs[id] || ''}
-                                      onChange={(e) => {
-                                        setSelectedExistingInputs((prev) => ({
-                                          ...prev,
-                                          [id]: e.target.value
-                                        }))
-                                      }}
-                                      placeholder="eg. Stay as close to it as possible, reuse clause 7"
-                                      className="w-full text-sm"
-                                      rows={3}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          }
-                          return (
-                            <>
-                              {makeTemplate('existing-1', 'Document title 1')}
-                              {makeTemplate('existing-2', 'Document title 2')}
-                            </>
-                          )
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
               </li>
             ))}
           </ol>
@@ -889,60 +802,6 @@ ${multiDocClauses}`
                   )}
                   <span className={options?.showCheckboxes !== false ? "flex-1" : ""}>{it}</span>
                 </div>
-                {options?.showExisting && i === 0 && !!selectedDocs[it] ? (
-                  <div className="w-full mt-3 pl-6">
-                    <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm w-full max-w-2xl">
-                      <Text size="sm" className="text-zinc-500 mb-3">Click to reuse & modify existing documents:</Text>
-                      <div className="flex flex-col gap-4">
-                        {(() => {
-                          const makeTemplate = (id: string, label: string) => {
-                            const isSelected = !!selectedExisting[id]
-                            return (
-                              <div key={id} className="w-full">
-                                <button
-                                  onClick={() => {
-                                    setSelectedExisting((p) => ({ ...p, [id]: !p[id] }))
-                                    setSelectedExistingLabels((m) => ({ ...m, [id]: label }))
-                                  }}
-                                  className="flex items-center gap-2 px-3 py-2 rounded-full border-2 border-purple-500 bg-white text-purple-900 hover:bg-purple-50 transition-colors w-fit"
-                                >
-                                  <FileText className={`w-4 h-4 ${isSelected ? 'text-green-600' : 'text-purple-600'}`} />
-                                  <span className="text-sm font-medium">{label}</span>
-                                </button>
-                                
-                                {isSelected && (
-                                  <div className="mt-3 w-full">
-                                    <Text size="sm" className="text-zinc-700 mb-2 font-medium">
-                                      How should I use this document?
-                                    </Text>
-                                    <Textarea
-                                      value={selectedExistingInputs[id] || ''}
-                                      onChange={(e) => {
-                                        setSelectedExistingInputs((prev) => ({
-                                          ...prev,
-                                          [id]: e.target.value
-                                        }))
-                                      }}
-                                      placeholder="eg. Stay as close to it as possible, reuse clause 7"
-                                      className="w-full text-sm"
-                                      rows={3}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          }
-                          return (
-                            <>
-                              {makeTemplate('existing-1', 'Document title 1')}
-                              {makeTemplate('existing-2', 'Document title 2')}
-                            </>
-                          )
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
               </li>
             ))}
           </ol>
@@ -1348,7 +1207,9 @@ ${multiDocClauses}`
 
               {/* Chat section */}
               <Box className="flex flex-col bg-white h-screen">
-                <motion.div layoutId="promptCard" className="flex-1 flex flex-col h-full">
+                <Box className={`h-full ${!workbenchOpen ? 'flex justify-center' : ''}`}>
+                  <Box className={`${!workbenchOpen ? 'w-1/2 max-w-4xl' : 'w-full'} flex flex-col h-full`}>
+                    <motion.div layoutId="promptCard" className="flex-1 flex flex-col h-full">
                     {/* Chat scroll area */}
                     <Box ref={chatScrollRef} className="flex-1 p-6 overflow-y-auto h-0">
                       <VStack spacing={6} align="start" className="min-h-full justify-end">
@@ -1833,6 +1694,8 @@ Skip for now`
                       </Flex>
                     </Box>
                   </motion.div>
+                  </Box>
+                </Box>
               </Box>
 
               {/* Right workbench panel - Grid positioned */}
@@ -1860,11 +1723,17 @@ Skip for now`
 
                     {/* Content */}
                     <Box className="flex-1 p-6 overflow-y-auto h-0">
-                      <VStack spacing={8} align="start" className="h-full">
+                      <VStack spacing={4} align="start" className="h-full">
                         {/* Creating Section */}
                         <Box className="w-full">
-                          <Text size="sm" className="mb-4 text-gray-900 font-normal">Creating:</Text>
                           {createDocs.map((doc, i) => (
+                            <Box key={`creating-section-${i}`}>
+                              {/* Dividing line above subsequent documents */}
+                              {i > 0 && (
+                                <Box className="w-full h-px bg-gray-200 my-6" />
+                              )}
+                              <Box className={i > 0 ? "mt-6" : ""}>
+                                <Text size="lg" className="mb-4 text-gray-900 font-semibold">Creating document {i + 1}:</Text>
                             <motion.div
                               key={i}
                               layout
@@ -1911,13 +1780,108 @@ Skip for now`
                                   )}
                                 </AnimatePresence>
                               </Box>
+                              
+                              {/* Template Selection Table */}
+                              <Box className="mt-3">
+                                <Box className="border rounded-lg bg-white shadow-sm overflow-hidden">
+                                  {/* Table Header */}
+                                  <Box className="border-b bg-gray-50 px-3 py-3">
+                                    <Flex align="center" justify="between">
+                                      <Text size="md" className="text-gray-900 font-bold">Based on previous documents:</Text>
+                                      <Flex align="center" className="text-xs text-gray-600" style={{ width: '180px' }}>
+                                        <Text className="w-20 text-center">Use as template</Text>
+                                        <Text className="w-20 text-center">Use as context</Text>
+                                        <Box className="w-16" />
+                                      </Flex>
+                                    </Flex>
+                                  </Box>
+                                  
+                                  {/* Table Rows */}
+                                  {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => {
+                                    const templateKey = `${doc}_${rowIndex + 1}`
+                                    return (
+                                      <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
+                                        <Flex align="center" justify="between">
+                                          <Flex align="center" gap={3} className="flex-1 min-w-0">
+                                            <Box className="w-4 h-5 flex items-center justify-center flex-shrink-0">
+                                              <FileText className="w-4 h-4 text-blue-500" />
+                                            </Box>
+                                            <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
+                                          </Flex>
+                                          <Flex align="center" style={{ width: '180px' }}>
+                                            <Box className="w-20 flex justify-center">
+                                              <input
+                                                type="checkbox"
+                                                checked={templateSelections[templateKey]?.useAsTemplate || false}
+                                                onChange={(e) => {
+                                                  if (e.target.checked) {
+                                                    // Radio button behavior - uncheck other template option in same doc
+                                                    const otherRowIndex = rowIndex === 0 ? 1 : 0
+                                                    const otherTemplateKey = `${doc}_${otherRowIndex + 1}`
+                                                    setTemplateSelections(prev => ({
+                                                      ...prev,
+                                                      [templateKey]: {
+                                                        ...prev[templateKey],
+                                                        useAsTemplate: true
+                                                      },
+                                                      [otherTemplateKey]: {
+                                                        ...prev[otherTemplateKey],
+                                                        useAsTemplate: false
+                                                      }
+                                                    }))
+                                                  } else {
+                                                    setTemplateSelections(prev => ({
+                                                      ...prev,
+                                                      [templateKey]: {
+                                                        ...prev[templateKey],
+                                                        useAsTemplate: false
+                                                      }
+                                                    }))
+                                                  }
+                                                }}
+                                                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                              />
+                                            </Box>
+                                            <Box className="w-20 flex justify-center">
+                                              <input
+                                                type="checkbox"
+                                                checked={templateSelections[templateKey]?.useAsContext !== false}
+                                                onChange={(e) => {
+                                                  setTemplateSelections(prev => ({
+                                                    ...prev,
+                                                    [templateKey]: {
+                                                      ...prev[templateKey],
+                                                      useAsContext: e.target.checked
+                                                    }
+                                                  }))
+                                                }}
+                                                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                              />
+                                            </Box>
+                                            <Box className="w-16 flex justify-center">
+                                              <Text size="xs" className="text-green-700 bg-green-100 px-2 py-0.5 rounded-md">
+                                                Signed
+                                              </Text>
+                                            </Box>
+                                          </Flex>
+                                        </Flex>
+                                      </Box>
+                                    )
+                                  })}
+                                </Box>
+                              </Box>
                             </motion.div>
+                              </Box>
+                            </Box>
                           ))}
                         </Box>
 
-                        {/* Based on Section */}
+                        {/* Dividing line above Additional context */}
+                        <Box className="w-full h-px bg-gray-200 my-6" />
+
+                        {/* Additional Context Section */}
                         <Box className="w-full">
-                          <Text size="sm" className="mb-4 text-gray-900 font-normal">Based on:</Text>
+                          <Text size="lg" className="mb-4 text-gray-900 font-semibold">Additional context:</Text>
                           {['Previous_document_1', 'Previous_document_2'].map((doc, i) => (
                             <Flex key={i} align="center" justify="between" className="py-2">
                               <Flex align="center" gap={3}>
@@ -1931,13 +1895,22 @@ Skip for now`
                               </Text>
                             </Flex>
                           ))}
-                        </Box>
-
-                        {/* Drag Area */}
-                        <Box className="w-full border-2 border-dashed border-gray-200 rounded-lg py-12 px-6 text-center bg-gray-50 mt-6">
-                          <Text size="sm" className="text-gray-400 leading-relaxed">
-                            Drag documents to import in this project
-                          </Text>
+                          
+                          {/* Action Buttons */}
+                          <Flex gap={3} className="mt-4">
+                            <Button
+                              variant="outline"
+                              className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
+                            >
+                              Search Vault
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
+                            >
+                              Upload
+                            </Button>
+                          </Flex>
                         </Box>
 
                         {/* Spacer */}
