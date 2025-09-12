@@ -418,7 +418,7 @@ export default function Home() {
                               <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Box className="lg:col-span-1">
                                   <Text size="lg" className="font-medium text-gray-900 mb-4">Key clauses:</Text>
-                                  <button className="text-purple-600 underline hover:text-purple-800 transition-colors text-sm mb-4">
+                                  <button className="text-purple-600 underline hover:text-purple-800 transition-colors text-sm mb-4 block">
                                     Customise standard clauses
                                   </button>
                                   <Text size="sm" className="text-gray-600">
@@ -452,7 +452,7 @@ export default function Home() {
                                                             [clauseKey]: false
                                                           }))
                                                         }}
-                                                        className="text-gray-400 hover:text-red-500 transition-colors text-sm"
+                                                        className="text-gray-400 hover:text-red-500 transition-colors"
                                                       >
                                                         <X className="w-3 h-3" />
                                                       </button>
@@ -460,8 +460,8 @@ export default function Home() {
                                                     <Text size="xs" className="text-gray-600">{clause.explainer}</Text>
                                                   </Box>
                                                   
-                                                  {/* Right side: Text input */}
-                                                  <Box className="w-48">
+                                                  {/* Right side: Text input - full width */}
+                                                  <Box className="flex-1">
                                                     <Textarea
                                                       minRows={2}
                                                       value={clauseDetailsText[clauseKey] || ''}
@@ -469,7 +469,7 @@ export default function Home() {
                                                         ...prev, 
                                                         [clauseKey]: val
                                                       }))}
-                                                      placeholder="Add specific requirements..."
+                                                      placeholder={`Add specific requirements for ${clause.name.toLowerCase()}...`}
                                                       className="w-full"
                                                       classNames={{
                                                         inputWrapper: 'rounded-lg border border-gray-200',
