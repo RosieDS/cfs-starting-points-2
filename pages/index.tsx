@@ -15,6 +15,7 @@ import {
   ArrowUp,
   FileText,
   Plus,
+  X,
 } from 'lucide-react'
 // import { motion, AnimatePresence } from 'framer-motion'
 
@@ -27,6 +28,44 @@ export default function Home() {
   const [selectedDocs, setSelectedDocs] = useState<Record<string, boolean>>({})
   const [suggestedDocs, setSuggestedDocs] = useState<string[]>([])
   const [createDocs, setCreateDocs] = useState<string[]>([])
+  const [selectedClauses, setSelectedClauses] = useState<Record<string, boolean>>({})
+  const [clauseDetailsText, setClauseDetailsText] = useState<Record<string, string>>({})
+
+  // Generate key clauses for each document type
+  const generateKeyClauses = (docType: string): Array<{name: string, explainer: string}> => {
+    switch(docType) {
+      case 'Employment Agreement':
+        return [
+          { name: 'Termination and notice periods', explainer: 'Protects both parties with clear exit terms and adequate notice requirements.' },
+          { name: 'Intellectual property assignment', explainer: 'Ensures all work-related IP belongs to the company, preventing future disputes.' },
+          { name: 'Non-compete and non-solicitation', explainer: 'Prevents employees from competing or poaching clients/staff after leaving.' }
+        ]
+      case 'Investment Agreement':
+        return [
+          { name: 'Liquidation preferences', explainer: 'Determines payout order and amounts if the company is sold or liquidated.' },
+          { name: 'Anti-dilution protection', explainer: 'Protects investors from share value reduction in future funding rounds.' },
+          { name: 'Board representation rights', explainer: 'Gives investors governance control proportional to their investment stake.' }
+        ]
+      case 'Service Agreement':
+        return [
+          { name: 'Service level agreements', explainer: 'Defines performance standards and penalties for subpar delivery.' },
+          { name: 'Intellectual property ownership', explainer: 'Clarifies who owns work product and any innovations created.' },
+          { name: 'Limitation of liability', explainer: 'Caps financial exposure for both parties in case of disputes or damages.' }
+        ]
+      case 'NDA':
+        return [
+          { name: 'Definition of confidential information', explainer: 'Clearly defines what information is protected under the agreement.' },
+          { name: 'Permitted disclosures and exceptions', explainer: 'Specifies when confidential information can legally be shared.' },
+          { name: 'Return of confidential materials', explainer: 'Requires return or destruction of confidential information when relationship ends.' }
+        ]
+      default:
+        return [
+          { name: 'Term and termination', explainer: 'Establishes duration and conditions for ending the agreement.' },
+          { name: 'Payment and compensation', explainer: 'Defines all financial obligations and payment schedules.' },
+          { name: 'Dispute resolution', explainer: 'Sets process for handling disagreements without costly litigation.' }
+        ]
+    }
+  }
 
   // Generate suggested documents based on user prompt
   const generateSuggestedDocs = (userPrompt: string): string[] => {
@@ -372,6 +411,84 @@ export default function Home() {
                               </Box>
                             </Box>
                           </Box>
+
+                          {/* Key Clauses Section - Show when documents are selected */}
+                          {Object.values(selectedDocs).some(v => v) && (
+                            <Box className="w-full">
+                              <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <Box className="lg:col-span-1">
+                                  <Text size="lg" className="font-medium text-gray-900 mb-4">Key clauses:</Text>
+                                  <button className="text-purple-600 underline hover:text-purple-800 transition-colors text-sm mb-4">
+                                    Customise standard clauses
+                                  </button>
+                                  <Text size="sm" className="text-gray-600">
+                                    As well as standard clauses, I recommend you include the below key clauses. Untick any of them and click to add more detail.
+                                  </Text>
+                                </Box>
+                                
+                                <Box className="lg:col-span-2">
+                                  <VStack spacing={6} align="start">
+                                    {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((docType) => (
+                                      <Box key={docType} className="w-full">
+                                        <Text size="md" className="font-semibold text-gray-900 mb-4">{docType}</Text>
+                                        <VStack spacing={4} align="start">
+                                          {generateKeyClauses(docType).map((clause, i) => {
+                                            const clauseKey = `${docType}-${i}`
+                                            // Show clause unless explicitly hidden
+                                            const isVisible = selectedClauses[clauseKey] !== false
+                                            if (!isVisible) return null
+                                            
+                                            return (
+                                              <Box key={i} className="w-full">
+                                                <Flex align="start" gap={4}>
+                                                  {/* Left side: Clause name + explainer */}
+                                                  <Box className="flex-1">
+                                                    <Flex align="center" gap={2} className="mb-1">
+                                                      <Text size="sm" className="font-medium text-gray-900">{clause.name}</Text>
+                                                      <button 
+                                                        onClick={() => {
+                                                          setSelectedClauses(prev => ({
+                                                            ...prev,
+                                                            [clauseKey]: false
+                                                          }))
+                                                        }}
+                                                        className="text-gray-400 hover:text-red-500 transition-colors text-sm"
+                                                      >
+                                                        <X className="w-3 h-3" />
+                                                      </button>
+                                                    </Flex>
+                                                    <Text size="xs" className="text-gray-600">{clause.explainer}</Text>
+                                                  </Box>
+                                                  
+                                                  {/* Right side: Text input */}
+                                                  <Box className="w-48">
+                                                    <Textarea
+                                                      minRows={2}
+                                                      value={clauseDetailsText[clauseKey] || ''}
+                                                      onValueChange={(val) => setClauseDetailsText(prev => ({
+                                                        ...prev, 
+                                                        [clauseKey]: val
+                                                      }))}
+                                                      placeholder="Add specific requirements..."
+                                                      className="w-full"
+                                                      classNames={{
+                                                        inputWrapper: 'rounded-lg border border-gray-200',
+                                                        input: 'text-gray-900 placeholder:text-gray-400 text-sm',
+                                                      }}
+                                                    />
+                                                  </Box>
+                                                </Flex>
+                                              </Box>
+                                            )
+                                          })}
+                                        </VStack>
+                                      </Box>
+                                    ))}
+                                  </VStack>
+                                </Box>
+                              </Box>
+                            </Box>
+                          )}
 
                           <Box className="w-full border-t border-gray-200 pt-6">
                             <Flex justify="end" gap={4}>
