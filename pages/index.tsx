@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { 
   Box, 
   Flex, 
@@ -9,1163 +9,190 @@ import {
   Text,
   Textarea,
 } from '@/genie-ui'
-// Using custom slider with HTML range input
 import {
   Wand2,
   Paperclip,
-  Link2,
-  Mic,
   ArrowUp,
   FileText,
   Plus,
-  Maximize2,
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { MESSAGE_IDS, generateSequentialId } from '@/constants/messageIds'
-
-type ChatMessage = { id: string; role: 'user' | 'assistant'; content: string; isClausesMessage?: boolean }
+// import { motion, AnimatePresence } from 'framer-motion'
 
 export default function Home() {
   const [prompt, setPrompt] = useState('')
   const [mode, setMode] = useState<'landing' | 'chat' | 'document'>('landing')
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [suggestedDocs, setSuggestedDocs] = useState<string[]>([])
-  const [selectedDocs, setSelectedDocs] = useState<Record<string, boolean>>({})
-  const [selectedExisting, setSelectedExisting] = useState<Record<string, boolean>>({})
-  const [selectedExistingLabels, setSelectedExistingLabels] = useState<Record<string, string>>({})
   const [selectedExistingInputs, setSelectedExistingInputs] = useState<Record<string, string>>({})
-  const [workbenchOpen, setWorkbenchOpen] = useState(false)
-  const [workbenchLoading, setWorkbenchLoading] = useState(false)
-  const [createDocs, setCreateDocs] = useState<string[]>([])
-  const [configureClicked, setConfigureClicked] = useState(false)
-  const [showThinking, setShowThinking] = useState(false)
-  const [currentThinkingStep, setCurrentThinkingStep] = useState<string | null>(null)
-  const [showSliders, setShowSliders] = useState(false)
-  const [lengthValue, setLengthValue] = useState(50)
-  const [favourabilityValue, setFavourabilityValue] = useState(50)
-  const [toneValue, setToneValue] = useState(50)
   const [documentTitle, setDocumentTitle] = useState('')
-  const [creatingDocuments, setCreatingDocuments] = useState<string[]>([])
-  const [questionStep, setQuestionStep] = useState<'initial' | 'outcomes' | 'details' | 'clauses' | 'complete'>('initial')
-  const [selectedClauses, setSelectedClauses] = useState<Record<string, boolean>>({})
-  const [selectedClauseDetails, setSelectedClauseDetails] = useState<Record<string, boolean>>({})
-  const [clauseDetailsText, setClauseDetailsText] = useState<Record<string, string>>({})
-  const [templateSelections, setTemplateSelections] = useState<Record<string, { useAsTemplate: boolean, useAsContext: boolean }>>({})
-  const chatScrollRef = useRef<HTMLElement | null>(null)
-  const [messageCounter, setMessageCounter] = useState(0)
+  const [workbenchOpen, setWorkbenchOpen] = useState(false)
+  const [selectedDocs, setSelectedDocs] = useState<Record<string, boolean>>({})
+  const [suggestedDocs, setSuggestedDocs] = useState<string[]>([])
+  const [createDocs, setCreateDocs] = useState<string[]>([])
 
-  // Auto-check "Use as context" for all documents when createDocs changes
-  useEffect(() => {
-    if (createDocs.length > 0) {
-      const newSelections: Record<string, { useAsTemplate: boolean, useAsContext: boolean }> = {}
-      createDocs.forEach((doc) => {
-        const templateKey1 = `${doc}_1`
-        const templateKey2 = `${doc}_2`
-        newSelections[templateKey1] = { 
-          useAsTemplate: templateSelections[templateKey1]?.useAsTemplate || false, 
-          useAsContext: true 
-        }
-        newSelections[templateKey2] = { 
-          useAsTemplate: templateSelections[templateKey2]?.useAsTemplate || false, 
-          useAsContext: true 
-        }
-      })
-      setTemplateSelections(prev => ({ ...prev, ...newSelections }))
-    }
-  }, [createDocs])
-
-  // Generate dummy content for different document types
-  const generateDummyContent = (docType: string) => {
-    const docTypeLower = docType.toLowerCase()
+  // Generate suggested documents based on user prompt
+  const generateSuggestedDocs = (userPrompt: string): string[] => {
+    const lowerPrompt = userPrompt.toLowerCase()
     
-    if (docTypeLower.includes('employment') || docTypeLower.includes('contract')) {
-      return `EMPLOYMENT AGREEMENT
-
-This Employment Agreement is entered into between [COMPANY NAME] and [EMPLOYEE NAME].
-
-1. POSITION AND DUTIES
-Employee shall serve as [JOB TITLE] and perform duties including:
-- [DUTY 1]
-- [DUTY 2]
-- [DUTY 3]
-
-2. COMPENSATION
-Base salary: $[AMOUNT] per year
-Benefits: Health insurance, dental, vision
-Vacation: [NUMBER] days per year
-
-3. EMPLOYMENT TERMS
-Start date: [DATE]
-Employment is at-will and may be terminated by either party
-
-4. CONFIDENTIALITY
-Employee agrees to maintain confidentiality of company information
-
-5. GOVERNING LAW
-This agreement shall be governed by [STATE] law.
-
-[COMPANY NAME]
-By: _________________
-Name: [NAME]
-Title: [TITLE]
-
-EMPLOYEE
-By: _________________
-Name: [EMPLOYEE NAME]`
+    if (lowerPrompt.includes('hire') || lowerPrompt.includes('employ') || lowerPrompt.includes('job')) {
+      return ['Employment Agreement', 'Offer Letter', 'NDA', 'IP Assignment Agreement']
+    }
+    if (lowerPrompt.includes('invest') || lowerPrompt.includes('funding') || lowerPrompt.includes('capital')) {
+      return ['Investment Agreement', 'Shareholders Agreement', 'Term Sheet', 'NDA']
+    }
+    if (lowerPrompt.includes('service') || lowerPrompt.includes('contract') || lowerPrompt.includes('client')) {
+      return ['Service Agreement', 'Statement of Work', 'NDA', 'Terms & Conditions']
+    }
+    if (lowerPrompt.includes('partner') || lowerPrompt.includes('joint venture')) {
+      return ['Partnership Agreement', 'Joint Venture Agreement', 'NDA', 'Operating Agreement']
+    }
+    if (lowerPrompt.includes('supplier') || lowerPrompt.includes('vendor') || lowerPrompt.includes('purchase')) {
+      return ['Supplier Agreement', 'Purchase Agreement', 'Terms & Conditions', 'NDA']
     }
     
-    if (docTypeLower.includes('offer')) {
-      return `OFFER LETTER
+    // Default suggestions
+    return ['Employment Agreement', 'Service Agreement', 'NDA', 'Partnership Agreement']
+  }
 
-Dear [CANDIDATE NAME],
-
-We are pleased to offer you the position of [JOB TITLE] at [COMPANY NAME].
-
-POSITION DETAILS:
-- Job Title: [JOB TITLE]
-- Start Date: [DATE]
-- Salary: $[AMOUNT] per year
-- Benefits: Health, dental, vision insurance
-- Vacation: [NUMBER] days per year
-
-REPORTING:
-You will report to [MANAGER NAME], [MANAGER TITLE].
-
-NEXT STEPS:
-Please sign and return this letter by [DATE] to accept this offer.
-
-We look forward to welcoming you to the team!
-
-Sincerely,
-[HIRING MANAGER NAME]
-[TITLE]
-[COMPANY NAME]
-
-ACCEPTANCE:
-I accept this offer of employment.
-
-Signature: _________________
-Date: _________________`
-    }
+  // Generate specific detail questions based on selected documents
+  const generateDetailQuestions = (): string[] => {
+    const chosen = Object.keys(selectedDocs).filter(k => selectedDocs[k])
+    if (chosen.length === 0) return []
     
-    if (docTypeLower.includes('nda') || docTypeLower.includes('disclosure')) {
-      return `NON-DISCLOSURE AGREEMENT
-
-This Non-Disclosure Agreement ("Agreement") is entered into between [COMPANY NAME] and [RECIPIENT NAME].
-
-1. DEFINITION OF CONFIDENTIAL INFORMATION
-"Confidential Information" includes all technical data, trade secrets, know-how, and proprietary information.
-
-2. NON-DISCLOSURE OBLIGATIONS
-Recipient agrees to:
-- Keep all Confidential Information strictly confidential
-- Not disclose to any third parties
-- Use information solely for agreed purposes
-
-3. DURATION
-This agreement shall remain in effect for [NUMBER] years.
-
-4. RETURN OF MATERIALS
-Upon termination, Recipient shall return all materials containing Confidential Information.
-
-5. REMEDIES
-Breach of this agreement may result in irreparable harm warranting injunctive relief.
-
-[COMPANY NAME]
-By: _________________
-Name: [NAME]
-Title: [TITLE]
-
-RECIPIENT
-By: _________________
-Name: [RECIPIENT NAME]`
-    }
-
-    // Default content for any other document type
-    return `${docType.toUpperCase()}
-
-This document contains the terms and conditions for [PURPOSE].
-
-1. PARTIES
-This agreement is between [PARTY 1] and [PARTY 2].
-
-2. TERMS
-The following terms apply:
-- [TERM 1]
-- [TERM 2]
-- [TERM 3]
-
-3. EFFECTIVE DATE
-This agreement is effective as of [DATE].
-
-4. SIGNATURES
-Both parties agree to the terms set forth above.
-
-[PARTY 1]
-By: _________________
-
-[PARTY 2]
-By: _________________`
-  }
-
-  // Check if ASSISTANT_DOCUMENT_DETAILS is active
-  const isDocumentDetailsActive = () => {
-    return messages.some(msg => msg.id === MESSAGE_IDS.ASSISTANT_DOCUMENT_DETAILS)
-  }
-
-  // Helper functions for message management
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const updateMessageById = (messageId: string, newContent: string) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId ? { ...msg, content: newContent } : msg
-    ))
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const findMessageById = (messageId: string): ChatMessage | undefined => {
-    return messages.find(msg => msg.id === messageId)
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const addMessage = (role: 'user' | 'assistant', content: string, customId?: string) => {
-    const id = customId || generateSequentialId(
-      role === 'user' ? MESSAGE_IDS.USER_MESSAGE_PREFIX : MESSAGE_IDS.ASSISTANT_MESSAGE_PREFIX,
-      messageCounter
-    )
-    setMessages(prev => [...prev, { id, role, content }])
-    if (!customId) {
-      setMessageCounter(prev => prev + 1)
-    }
-  }
-
-  // Thinking Steps Animation Component
-  const ThinkingStepsAnimation = ({ text }: { text: string }) => (
-    <Text 
-      size="md" 
-      className="animate-color-shift"
-    >
-      {text}
-    </Text>
-  )
-
-  // Function to generate contextual examples based on document type
-  const generateContextualExamples = (docType: string): string[] => {
-    let examples: string[] = []
-    
-    if (docType.toLowerCase().includes('employment') || docType.toLowerCase().includes('offer')) {
-      examples = [
-        "What are the specific role responsibilities and reporting structure?",
-        "What's the compensation package (salary, benefits, equity, bonuses)?",
-        "What are the working arrangements (remote, hybrid, location requirements)?"
-      ]
-    } else if (docType.toLowerCase().includes('purchase') || docType.toLowerCase().includes('sale')) {
-      examples = [
-        "What exactly are you buying/selling and what's included?",
-        "What's the total purchase price and payment schedule?",
-        "What are the key conditions or contingencies for completion?"
-      ]
-    } else if (docType.toLowerCase().includes('service') || docType.toLowerCase().includes('consulting')) {
-      examples = [
-        "What specific services are being provided and what's the scope?",
-        "How will payments work — upfront, in stages, or based on milestones?",
-        "What are the key deliverables and deadlines?"
-      ]
-    } else if (docType.toLowerCase().includes('nda') || docType.toLowerCase().includes('non-disclosure')) {
-      examples = [
-        "What type of confidential information will be shared?",
-        "Who are the parties and what are their roles in this relationship?",
-        "How long should the confidentiality period last?"
-      ]
-    } else if (docType.toLowerCase().includes('license') || docType.toLowerCase().includes('ip')) {
-      examples = [
-        "What intellectual property is being licensed and what are the usage rights?",
-        "What's the licensing fee structure (upfront, royalties, subscription)?",
-        "What restrictions or limitations should apply to the license?"
-      ]
-    } else {
-      // Generic examples for other document types
-      examples = [
-        "Who are the parties and what are their roles (supplier, client, partners)?",
-        "What's the scope of this deal — is it a service, a product, or both?",
-        "What's the payment model (fixed fee, milestones, hourly, performance-based)?"
-      ]
-    }
-    
-    // Always add the risks question as the fourth item
-    examples.push("Which risks are most important to protect against?")
-    
-    return examples
-  }
-
-  // Function to generate key clauses based on document type
-  const generateKeyClauses = (docType: string): string[] => {
-    if (docType.toLowerCase().includes('employment') || docType.toLowerCase().includes('offer')) {
+    // For employment agreements
+    if (chosen.includes('Employment Agreement') || chosen.includes('Offer Letter')) {
       return [
-        "Termination and notice periods",
-        "Intellectual property assignment", 
-        "Non-compete and non-solicitation",
-        "Confidentiality and data protection",
-        "Performance review and disciplinary procedures",
-        "Benefits and compensation adjustments"
-      ]
-    } else if (docType.toLowerCase().includes('purchase') || docType.toLowerCase().includes('sale')) {
-      return [
-        "Title transfer and ownership",
-        "Warranties and representations",
-        "Inspection and acceptance criteria", 
-        "Risk of loss and insurance",
-        "Default and remedies",
-        "Dispute resolution and governing law"
-      ]
-    } else if (docType.toLowerCase().includes('service') || docType.toLowerCase().includes('consulting')) {
-      return [
-        "Scope of work and deliverables",
-        "Payment terms and late fees",
-        "Intellectual property ownership",
-        "Limitation of liability",
-        "Termination for convenience", 
-        "Indemnification and insurance"
-      ]
-    } else if (docType.toLowerCase().includes('nda') || docType.toLowerCase().includes('non-disclosure')) {
-      return [
-        "Definition of confidential information",
-        "Permitted uses and exceptions",
-        "Return or destruction of information",
-        "Duration of confidentiality obligations",
-        "Remedies for breach",
-        "Survival after termination"
-      ]
-    } else if (docType.toLowerCase().includes('license') || docType.toLowerCase().includes('ip')) {
-      return [
-        "Scope of license and permitted uses",
-        "Royalty and payment terms",
-        "Quality control and standards",
-        "Termination and reversion rights",
-        "Warranty and support obligations",
-        "Compliance and audit rights"
-      ]
-    } else {
-      // Generic clauses for other document types
-      return [
-        "Payment terms and conditions",
-        "Limitation of liability",
-        "Termination and breach",
-        "Governing law and jurisdiction",
-        "Force majeure and delays",
-        "Confidentiality and non-disclosure"
+        'What are the specific role responsibilities and reporting structure?',
+        'What\'s the compensation package (salary, benefits, equity, bonuses)?',
+        'What are the working arrangements (remote, hybrid, location requirements)?',
+        'Which risks are most important to protect against?'
       ]
     }
-  }
-
-  // Function to generate multi-document key clauses with tags
-  const generateMultiDocumentClauses = (docTypes: string[]): string => {
-    const sections: string[] = []
-    const allClauses: { docType: string; clause: string; index: number }[] = []
     
-    // Generate sections for each document type
-    docTypes.forEach((docType) => {
-      const clauses = generateKeyClauses(docType)
-      
-      // Add document heading
-      sections.push(`**${docType}**`)
-      
-      // Add clauses for this document (limit to 3 clauses per doc)
-      const limitedClauses = clauses.slice(0, 3)
-      limitedClauses.forEach((clause, index) => {
-        const globalIndex = allClauses.length + index + 1
-        sections.push(`${globalIndex}. ${clause}`)
-        allClauses.push({ docType, clause, index: globalIndex })
-      })
-      
-      // Add blank line between sections
-      sections.push('')
-    })
-    
-    // Select 3 random clauses to get percentage tags
-    const tags = ["85% of templates use this", "92% of templates use this", "78% of templates use this"]
-    const taggedIndices = new Set<number>()
-    
-    // Randomly select 3 different clause indices to tag
-    while (taggedIndices.size < Math.min(3, allClauses.length)) {
-      const randomIndex = Math.floor(Math.random() * allClauses.length)
-      taggedIndices.add(allClauses[randomIndex].index)
+    // For investment agreements
+    if (chosen.includes('Investment Agreement') || chosen.includes('Term Sheet')) {
+      return [
+        'What\'s the funding amount and valuation structure?',
+        'What are the investor rights and board representation?',
+        'What are the liquidation and anti-dilution preferences?',
+        'What are the key milestone and reporting requirements?'
+      ]
     }
     
-    // Replace sections with tagged versions
-    const taggedSections = sections.map((section) => {
-      // Check if this line is a numbered clause that should be tagged
-      const match = section.match(/^(\d+)\. (.+)$/)
-      if (match) {
-        const clauseNumber = parseInt(match[1])
-        if (taggedIndices.has(clauseNumber)) {
-          const tagIndex = Array.from(taggedIndices).indexOf(clauseNumber)
-          return `${section} [${tags[tagIndex]}]`
-        }
-      }
-      return section
-    })
+    // For service agreements
+    if (chosen.includes('Service Agreement') || chosen.includes('Statement of Work')) {
+      return [
+        'What are the specific services and deliverables?',
+        'What\'s the payment structure and schedule?',
+        'What are the performance standards and SLAs?',
+        'What are the termination and IP ownership terms?'
+      ]
+    }
     
-    return taggedSections.join('\n')
-  }
-
-  // Sequential thinking steps function
-  const runThinkingSequence = () => {
-    const steps = [
-      "Checking market standards..",
-      "Scanning template library..",
-      "Checking relevant laws, precedents, regulations.."
+    // For NDAs
+    if (chosen.includes('NDA')) {
+      return [
+        'What information needs to be protected?',
+        'Is this mutual or one-way protection?',
+        'What\'s the confidentiality period and scope?',
+        'What are the permitted disclosure exceptions?'
+      ]
+    }
+    
+    // Default questions for other document types
+    return [
+      'What are the specific terms and scope of work?',
+      'What\'s the payment or compensation structure?',
+      'What are the key responsibilities and obligations?',
+      'What are the termination and dispute resolution terms?'
     ]
-    
-    let stepIndex = 0
-    
-    const showNextStep = () => {
-      if (stepIndex < steps.length) {
-        setCurrentThinkingStep(steps[stepIndex])
-        stepIndex++
-        setTimeout(() => {
-          if (stepIndex < steps.length) {
-            showNextStep()
-          } else {
-            // All thinking steps done, show key clauses section
-            setCurrentThinkingStep(null)
-            setShowThinking(false)
-            
-            let clausesMessage = ''
-            
-            if (createDocs.length === 1) {
-              // Single document - use existing logic
-              const firstDoc = createDocs[0] || 'document'
-              const keyClauses = generateKeyClauses(firstDoc)
-              
-              // Pre-tick all clauses
-              const preTickedClauses: Record<string, boolean> = {}
-              keyClauses.forEach((clause) => {
-                preTickedClauses[clause] = true
-              })
-              setSelectedClauses(preTickedClauses)
-              
-              clausesMessage = `**Key clauses:**
-As well as standard clauses, I recommend you include the below key clauses. Untick any of them and click to add more detail.
-
-${keyClauses.map((clause, i) => `${i + 1}. ${clause}`).join('\n')}`
-            } else {
-              // Multiple documents - use new structure
-              const multiDocClauses = generateMultiDocumentClauses(createDocs)
-              
-              // Pre-tick all clauses for multiple documents
-              const preTickedClauses: Record<string, boolean> = {}
-              // Extract all numbered clauses from the multi-doc string
-              const clauseMatches = multiDocClauses.match(/^\d+\. .+$/gm) || []
-              clauseMatches.forEach((clause) => {
-                preTickedClauses[clause] = true
-              })
-              setSelectedClauses(preTickedClauses)
-              
-              clausesMessage = `**Key clauses:**
-As well as standard clauses, I recommend you include the below key clauses. Untick any of them and click to add more detail.
-
-${multiDocClauses}`
-            }
-
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: MESSAGE_IDS.ASSISTANT_KEY_CLAUSES,
-                role: 'assistant',
-                content: clausesMessage,
-                isClausesMessage: true, // Flag to prevent document extraction
-              },
-            ])
-            setQuestionStep('clauses')
-            
-            // Force scroll after a brief delay to ensure DOM is updated
-            setTimeout(() => {
-              const el = chatScrollRef.current
-              if (el) {
-                el.scrollTop = el.scrollHeight
-              }
-            }, 100)
-          }
-        }, 1500) // 1.5 seconds per step
-      }
-    }
-    
-    showNextStep()
   }
-
-  const extractDocsFromText = (content: string): string[] => {
-    const lines = content.split('\n')
-    // First try numbered lists
-    const numberedLines = lines.filter((l) => /^\s*\d+\.\s+/.test(l))
-    if (numberedLines.length >= 2) {
-      return numberedLines
-        .map((l) => l.replace(/^\s*\d+\.\s+/, '').trim())
-        .filter(Boolean)
-        .slice(0, 5) // limit to 1–5 doc types
-    }
-    // Then try bullet points
-    const bulletLines = lines.filter((l) => /^\s*[-•]\s+/.test(l))
-    if (bulletLines.length >= 2) {
-      return bulletLines
-        .map((l) => l.replace(/^\s*[-•]\s+/, '').trim())
-        .filter(Boolean)
-        .slice(0, 5) // limit to 1–5 doc types
-    }
-    const inlineParts = content.split(' - ').map((p) => p.trim())
-    if (inlineParts.length >= 3) {
-      const [, ...maybeItems] = inlineParts
-      return maybeItems.map((s) => s.replace(/(Do you.*)$/i, '').trim()).filter(Boolean)
-    }
-    return []
-  }
-
-  const renderAssistantContent = (content: string, messageId: string, options?: { showExisting?: boolean; showCheckboxes?: boolean }) => {
-    // Check if this is a key clauses message first (before numbered list detection)
-    if (messageId === MESSAGE_IDS.ASSISTANT_KEY_CLAUSES) {
-      const lines = content.split('\n')
-      const title = lines[0] // "**Key clauses:**"
-      const description = lines[1] // "As well as standard clauses..."
-      const contentLines = lines.slice(3) // Skip title, description, and empty line
-      
-      console.log('Rendering clauses - messageId:', messageId, 'contentLines:', contentLines, 'selectedClauses:', selectedClauses)
-
-      return (
-        <div className="space-y-4">
-          <div>
-            <Text size="md" className="font-bold text-foreground-900">
-              {title.replace(/\*\*/g, '')}
-            </Text>
-            <button 
-              onClick={(e) => e.preventDefault()}
-              className="text-purple-600 underline text-sm hover:text-purple-800 transition-colors mt-1 block"
-            >
-              Customise standard clauses
-            </button>
-          </div>
-          
-          <Text size="md">{description}</Text>
-          
-          <div className="space-y-4">
-            {contentLines.map((line, i) => {
-              const trimmedLine = line.trim()
-              
-              // Skip empty lines
-              if (!trimmedLine) return null
-              
-              // Check if this is a document heading (bold text)
-              if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
-                return (
-                  <div key={i} className="mt-6 first:mt-0">
-                    <Text size="md" className="font-bold text-foreground-900 mb-3">
-                      {trimmedLine.replace(/\*\*/g, '')}
-                    </Text>
-                  </div>
-                )
-              }
-              
-              // Check if this is a numbered clause
-              if (/^\d+\./.test(trimmedLine)) {
-                const clauseText = trimmedLine.replace(/^\d+\.\s*/, '').trim()
-                // Check if clause has a tag (text in brackets)
-                const tagMatch = clauseText.match(/^(.+?)\s*\[([^\]]+)\]$/)
-                const actualClauseText = tagMatch ? tagMatch[1].trim() : clauseText
-                const tag = tagMatch ? tagMatch[2] : null
-                
-                const isChecked = !!selectedClauses[trimmedLine]
-                const showDetails = !!selectedClauseDetails[trimmedLine]
-                
-                return (
-                  <div key={i} className="w-full">
-                    <div className="flex items-start gap-2">
-                      <input
-                        type="checkbox"
-                        aria-label={`Select ${actualClauseText}`}
-                        className="mt-1 h-4 w-4 rounded border-zinc-300"
-                        checked={isChecked}
-                        onChange={() => setSelectedClauses((p) => ({ ...p, [trimmedLine]: !p[trimmedLine] }))}
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => {
-                              setSelectedClauseDetails((p) => ({ ...p, [trimmedLine]: !p[trimmedLine] }))
-                            }}
-                            className="text-purple-600 underline hover:text-purple-800 transition-colors text-left"
-                          >
-                            <Text size="md">{actualClauseText}</Text>
-                          </button>
-                          {tag && (
-                            <span className="px-3 py-1 bg-white text-blue-600 text-sm rounded-full border border-gray-200 whitespace-nowrap">
-                              {tag}
-                            </span>
-                          )}
-                        </div>
-                        
-                        {showDetails && (
-                          <div className="mt-3 w-full">
-                            <Text size="sm" className="text-zinc-700 mb-2 font-medium">
-                              Add more details for this clause:
-                            </Text>
-                            <Textarea
-                              value={clauseDetailsText[trimmedLine] || ''}
-                              onChange={(e) => {
-                                setClauseDetailsText((prev) => ({
-                                  ...prev,
-                                  [trimmedLine]: e.target.value
-                                }))
-                              }}
-                              placeholder={
-                                actualClauseText.toLowerCase().includes('termination') ? "eg. Include specific termination conditions or notice requirements" :
-                                actualClauseText.toLowerCase().includes('payment') ? "eg. Specify payment terms, late fees, or milestone conditions" :
-                                actualClauseText.toLowerCase().includes('intellectual property') || actualClauseText.toLowerCase().includes('ip') ? "eg. Define what IP is included and ownership terms" :
-                                actualClauseText.toLowerCase().includes('confidentiality') || actualClauseText.toLowerCase().includes('non-disclosure') ? "eg. Specify what information is confidential and exceptions" :
-                                actualClauseText.toLowerCase().includes('liability') ? "eg. Set liability caps or exclusions for specific damages" :
-                                "eg. Add specific requirements, conditions, or clarifications for this clause"
-                              }
-                              className="w-full text-sm"
-                              rows={3}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
-              }
-              
-              return null
-            }).filter(Boolean)}
-          </div>
-        </div>
-      )
-    }
-
-    // 1) Detect multi-line numbered lists (lines beginning with '1. ', '2. ', etc.)
-    const lines = content.split('\n')
-    const numberedLines = lines.filter((l) => /^\s*\d+\.\s+/.test(l))
-    if (numberedLines.length >= 2) {
-      // Keep any intro text above the first numbered item
-      const firstNumberedIndex = lines.findIndex((l) => /^\s*\d+\.\s+/.test(l))
-      const intro = lines.slice(0, firstNumberedIndex).join(' ').trim()
-      const question = lines
-        .slice(firstNumberedIndex + numberedLines.length)
-        .join(' ')
-        .trim()
-      const items = numberedLines.map((l) => l.replace(/^\s*\d+\.\s+/, '').trim()).filter(Boolean)
-      
-      // Check if content contains the special link text
-      const hasAnswerSeparately = content.includes('Answer separately for each doc')
-      const questionWithoutLink = hasAnswerSeparately ? question.replace('Answer separately for each doc', '').trim() : question
-      
-      return (
-        <>
-          {intro && <Text size="md" className="mb-2">{intro}</Text>}
-          <ol className="list-decimal pl-6 space-y-1">
-            {items.map((it, i) => (
-              <li key={i} className="text-foreground-900 text-size-3 leading-2 tracking-3">
-                <div className={`${options?.showCheckboxes !== false ? 'flex items-start gap-2' : ''}`}>
-                  {options?.showCheckboxes !== false && (
-                    <input
-                      type="checkbox"
-                      aria-label={`Select ${it}`}
-                      className="mt-1 h-4 w-4 rounded border-zinc-300"
-                      checked={!!selectedDocs[it]}
-                      onChange={() => setSelectedDocs((p) => ({ ...p, [it]: !p[it] }))}
-                    />
-                  )}
-                  <span className={options?.showCheckboxes !== false ? "flex-1" : ""}>{it}</span>
-                </div>
-              </li>
-            ))}
-          </ol>
-          {questionWithoutLink && (() => {
-            // Parse inline bullets embedded in trailing text like: "... like: - Item A - Item B When that happens, ..."
-            const inlineParts = questionWithoutLink.split(' - ').map((p) => p.trim())
-            if (inlineParts.length >= 3) {
-              const [intro, ...rest] = inlineParts
-              let items = rest
-              let trailing = ''
-              const last = rest[rest.length - 1]
-              const whenMatch = last.match(/(When that happens.*)$/i)
-              if (whenMatch) {
-                trailing = whenMatch[1]
-                items = rest.slice(0, -1).concat([last.replace(whenMatch[1], '').trim()])
-              }
-              items = items.filter(Boolean).slice(0, 2)
-              return (
-                <>
-                  <Text size="md" className="mt-4">{intro}</Text>
-                  <ul className="list-disc pl-6 space-y-1">
-                    {items.map((it, i) => (
-                      <li key={i} className="text-foreground-900 text-size-3 leading-2 tracking-3">{it}</li>
-                    ))}
-                  </ul>
-                  {trailing && <Text size="md" className="mt-2">{trailing}</Text>}
-                </>
-              )
-            }
-            return <Text size="md" className="mt-2 whitespace-pre-line">{questionWithoutLink}</Text>
-          })()}
-          {hasAnswerSeparately && (
-            <Text size="sm" className="text-purple-600 underline cursor-pointer mt-2 block">
-              Answer separately for each doc
-            </Text>
-          )}
-        </>
-      )
-    }
-
-    // 2) Detect multi-line dash bullets (lines beginning with '- ')
-    const bulletLines = lines.filter((l) => /^\s*[-•]\s+/.test(l))
-    if (bulletLines.length >= 2) {
-      // Keep any intro text above the first bullet
-      const firstBulletIndex = lines.findIndex((l) => /^\s*[-•]\s+/.test(l))
-      const intro = lines.slice(0, firstBulletIndex).join(' ').trim()
-      const question = lines
-        .slice(firstBulletIndex + bulletLines.length)
-        .join(' ')
-        .trim()
-      let items = bulletLines.map((l) => l.replace(/^\s*[-•]\s+/, '').trim()).filter(Boolean)
-
-      // If this appears to be the "other party" section, cap bullets to 2
-      if (/you'll likely have to review documents from the other party like/i.test(intro)) {
-        items = items.slice(0, 2)
-      }
-      
-      // Check if content contains the special link text
-      const hasAnswerSeparately = content.includes('Answer separately for each doc')
-      const questionWithoutLink = hasAnswerSeparately ? question.replace('Answer separately for each doc', '').trim() : question
-      
-      return (
-        <>
-          {intro && <Text size="md" className="mb-2">{intro}</Text>}
-          <ol className="list-decimal pl-6 space-y-1">
-            {items.map((it, i) => (
-              <li key={i} className="text-foreground-900 text-size-3 leading-2 tracking-3">
-                <div className={`${options?.showCheckboxes !== false ? 'flex items-start gap-2' : ''}`}>
-                  {options?.showCheckboxes !== false && (
-                    <input
-                      type="checkbox"
-                      aria-label={`Select ${it}`}
-                      className="mt-1 h-4 w-4 rounded border-zinc-300"
-                      checked={!!selectedDocs[it]}
-                      onChange={() => setSelectedDocs((p) => ({ ...p, [it]: !p[it] }))}
-                    />
-                  )}
-                  <span className={options?.showCheckboxes !== false ? "flex-1" : ""}>{it}</span>
-                </div>
-              </li>
-            ))}
-          </ol>
-          {questionWithoutLink && <Text size="md" className="mt-2 whitespace-pre-line">{questionWithoutLink}</Text>}
-          {hasAnswerSeparately && (
-            <Text size="sm" className="text-purple-600 underline cursor-pointer mt-2 block">
-              Answer separately for each doc
-            </Text>
-          )}
-        </>
-      )
-    }
-
-    // 2) Detect inline " - Item1 - Item2 - Item3" bullets in a single line
-    const inlineParts = content.split(' - ').map((p) => p.trim())
-    if (inlineParts.length >= 3) {
-      const [intro, ...maybeItems] = inlineParts
-      let items = maybeItems
-      let trailing = ''
-      // If the last part looks like a question, split it away from bullets
-      const last = maybeItems[maybeItems.length - 1]
-      const qMatch = last.match(/(Do you.*)$/i)
-      if (qMatch) {
-        trailing = qMatch[1]
-        items = maybeItems.slice(0, -1).concat([last.replace(qMatch[1], '').trim()])
-      }
-      items = items.filter(Boolean)
-      
-      // Check if content contains the special link text
-      const hasAnswerSeparately = content.includes('Answer separately for each doc')
-      const trailingWithoutLink = hasAnswerSeparately && trailing ? trailing.replace('Answer separately for each doc', '').trim() : trailing
-      
-      return (
-        <>
-          <Text size="md" className="mb-2">{intro}</Text>
-          <ol className="list-decimal pl-6 space-y-1">
-            {items.map((it, i) => (
-              <li key={i} className="text-foreground-900 text-size-3 leading-2 tracking-3">
-                <div className={`${options?.showCheckboxes !== false ? 'flex items-start gap-2' : ''}`}>
-                  {options?.showCheckboxes !== false && (
-                    <input
-                      type="checkbox"
-                      aria-label={`Select ${it}`}
-                      className="mt-1 h-4 w-4 rounded border-zinc-300"
-                      checked={!!selectedDocs[it]}
-                      onChange={() => setSelectedDocs((p) => ({ ...p, [it]: !p[it] }))}
-                    />
-                  )}
-                  <span className={options?.showCheckboxes !== false ? "flex-1" : ""}>{it}</span>
-                </div>
-              </li>
-            ))}
-          </ol>
-          {trailingWithoutLink && (() => {
-            const inlineParts = trailingWithoutLink.split(' - ').map((p) => p.trim())
-            if (inlineParts.length >= 3) {
-              const [intro, ...rest] = inlineParts
-              let items = rest
-              let trailing = ''
-              const last = rest[rest.length - 1]
-              const whenMatch = last.match(/(When that happens.*)$/i)
-              if (whenMatch) {
-                trailing = whenMatch[1]
-                items = rest.slice(0, -1).concat([last.replace(whenMatch[1], '').trim()])
-              }
-              items = items.filter(Boolean).slice(0, 2)
-              return (
-                <>
-                  <Text size="md" className="mt-4">{intro}</Text>
-                  <ul className="list-disc pl-6 space-y-1">
-                    {items.map((it, i) => (
-                      <li key={i} className="text-foreground-900 text-size-3 leading-2 tracking-3">{it}</li>
-                    ))}
-                  </ul>
-                  {trailing && <Text size="md" className="mt-2">{trailing}</Text>}
-                </>
-              )
-            }
-            return <Text size="md" className="mt-2 whitespace-pre-line">{trailingWithoutLink}</Text>
-          })()}
-          {hasAnswerSeparately && (
-            <Text size="sm" className="text-purple-600 underline cursor-pointer mt-2 block">
-              Answer separately for each doc
-            </Text>
-          )}
-        </>
-      )
-    }
-
-    // Fallback: preserve line breaks, but check for special link text
-    if (content.includes('Answer separately for each doc')) {
-      const parts = content.split('Answer separately for each doc')
-      return (
-        <div className="whitespace-pre-line">
-          <Text size="md">{parts[0]}</Text>
-          <Text size="sm" className="text-purple-600 underline cursor-pointer mt-2 block">
-            Answer separately for each doc
-          </Text>
-          <Text size="md">{parts[1]}</Text>
-        </div>
-      )
-    }
-    // Check if this is a follow-up message with upload button and skip link
-    if (messageId === MESSAGE_IDS.ASSISTANT_DOCUMENT_DETAILS) {
-      const lines = content.split('\n')
-      const title = lines[0] // "**Document details:**"
-      const question = lines[2] // "What specific details..."
-      // Extract examples more carefully to ensure we get all of them
-      const exampleLines = lines.slice(5, -3) // Skip title, empty line, question, "eg.", empty line at start, and button/skip lines at end
-      const examples = exampleLines.filter(line => line.trim())
-      
-      return (
-        <div className="space-y-4">
-          <Text size="md" className="font-medium">{title.replace(/\*\*/g, '')}</Text>
-          <Text size="md">{question}</Text>
-          
-          <div>
-            <Text size="sm" className="text-zinc-600 mb-2">eg.</Text>
-            <ol className="list-decimal pl-6 space-y-2">
-              {examples.map((example, i) => (
-                <li key={i} className="text-foreground-900 text-size-3 leading-2 tracking-3">
-                  <Text size="md">{example}</Text>
-                </li>
-              ))}
-            </ol>
-          </div>
-          
-          <div className="flex flex-col gap-3">
-            <Button
-              variant="outline"
-              size="md"
-              className="rounded-2xl px-6 border border-purple-500 text-purple-700 hover:bg-purple-50 bg-white w-fit"
-              startContent={<Plus className="w-4 h-4" />}
-            >
-              Upload documents
-            </Button>
-            
-            <div className="flex gap-4">
-              <Text 
-                size="sm" 
-                className="text-purple-600 underline cursor-pointer hover:text-purple-800 transition-colors w-fit"
-              >
-                Skip for now
-              </Text>
-              <Text 
-                size="sm" 
-                className="text-purple-600 underline cursor-pointer hover:text-purple-800 transition-colors w-fit"
-              >
-                More example questions
-              </Text>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    // Handle markdown bold formatting in content
-    const renderContentWithMarkdown = (text: string) => {
-      const parts = text.split(/(\*\*[^*]+\*\*)/g)
-      return parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const boldText = part.slice(2, -2)
-          return <strong key={i}>{boldText}</strong>
-        }
-        return <span key={i}>{part}</span>
-      })
-    }
-
-    return (
-      <Text size="md" className="whitespace-pre-line">
-        {renderContentWithMarkdown(content)}
-      </Text>
-    )
-  }
-
-  const startChat = (text: string) => {
-    const content = text.trim()
-    if (!content) return
-    setMode('chat')
-    setMessages([{ id: MESSAGE_IDS.USER_INITIAL, role: 'user', content }])
-    setPrompt('')
-  }
-
-  const handleSubmit = () => startChat(prompt)
-
-  // Demo assistant reply placeholder
-  useEffect(() => {
-    if (mode !== 'chat') return
-    const hasAssistant = messages.some((m) => m.role === 'assistant')
-    if (messages.length === 1 && !hasAssistant) {
-      // Show thinking steps during API call with a guaranteed minimum display time.
-      // We intentionally DO NOT cancel the switch timer so both steps are visible.
-      const MIN_THINK_MS = 800
-      const FIRST_STEP_MS = 600
-      const thinkStartMs = Date.now()
-      setShowThinking(true)
-      setCurrentThinkingStep("Recommending documents...")
-      
-      // Switch to second thinking step at the halfway point
-      setTimeout(() => {
-        setCurrentThinkingStep("Analysing your document library...")
-      }, FIRST_STEP_MS)
-      
-      ;(async () => {
-        try {
-          const res = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: [{ role: 'user', content: messages[0].content }] }),
-          })
-          const data = await res.json()
-          const docs = extractDocsFromText(data.content || '')
-          console.log('Extracted docs from AI response:', docs, 'from content:', data.content)
-          setSuggestedDocs(docs)
-          
-          // Ensure the thinking shows for at least MIN_THINK_MS
-          const elapsedMs = Date.now() - thinkStartMs
-          const remainingMs = Math.max(0, MIN_THINK_MS - elapsedMs)
-          setTimeout(() => {
-            setShowThinking(false)
-            setCurrentThinkingStep(null)
-            setMessages((m) => [
-              ...m,
-              { id: MESSAGE_IDS.ASSISTANT_INITIAL, role: 'assistant', content: data.content || '...' },
-            ])
-          }, remainingMs)
-        } catch {
-          setShowThinking(false)
-          setCurrentThinkingStep(null)
-          setMessages((m) => [
-            ...m,
-            { id: MESSAGE_IDS.ASSISTANT_ERROR, role: 'assistant', content: 'There was an error. Please try again.' },
-          ])
-        }
-      })()
-    }
-  }, [mode, messages])
-
-  // Auto-scroll to the latest message in chat mode
-  useEffect(() => {
-    if (mode !== 'chat') return
-    const el = chatScrollRef.current
-    if (el) {
-      el.scrollTop = el.scrollHeight
-    }
-  }, [messages, mode, showThinking, currentThinkingStep, showSliders])
-
-  // Update workbench panel in real-time when selections change
-  useEffect(() => {
-    const chosen = Object.keys(selectedDocs).filter((k) => selectedDocs[k])
-    const hasSelections = chosen.length > 0 || Object.values(selectedExisting).some(v => v)
-    
-    console.log('Workbench update - chosen:', chosen, 'suggestedDocs:', suggestedDocs, 'hasSelections:', hasSelections)
-    
-    if (hasSelections) {
-      // Show loading state first
-      setWorkbenchLoading(true)
-      setWorkbenchOpen(true)
-      
-      // After 1 second, show the actual content
-      setTimeout(() => {
-        setWorkbenchLoading(false)
-        setCreateDocs(chosen.length ? chosen : suggestedDocs)
-      }, 1000)
-      
-      // Note: Using hardcoded documents in the "Based on" section instead of dynamic ones
-    } else {
-      setWorkbenchOpen(false)
-      setWorkbenchLoading(false)
-      setCreateDocs([])
-    }
-  }, [selectedDocs, selectedExisting, selectedExistingLabels, suggestedDocs])
 
   return (
     <Box className="min-h-screen bg-white">
       <Box className="h-screen">
-        <AnimatePresence initial={false} mode="wait">
-          {mode === 'landing' && (
-            <motion.div
-              key="landing"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}
-              className="bg-gradient-to-b from-white to-zinc-50 min-h-screen"
-            >
+        {mode === 'landing' && (
+            <div className="bg-gradient-to-b from-white to-zinc-50 min-h-screen">
               <Container maxWidth="lg" className="py-12">
                 <VStack spacing={12} align="center">
-                <VStack spacing={4} align="start" className="w-full max-w-3xl">
-                  <Wand2 className="w-6 h-6 text-purple-600" />
-                  <Heading as="h1" size="xl" className="text-foreground-900 text-left">
-                    Good morning! What do you want to do today?
-                  </Heading>
-                </VStack>
+                  <VStack spacing={6} align="center">
+                    <div>
+                      <Wand2 className="w-12 h-12 text-purple-600" />
+                    </div>
+                    <VStack spacing={3} align="center">
+                      <Heading as="h1" size="2xl" className="text-center font-bold text-gray-900">
+                        Say what you need, <br />
+                        <span className="text-purple-600">we&apos;ll get it ready</span>
+                      </Heading>
+                      <Text size="lg" className="text-center text-gray-600 max-w-2xl">
+                        Type what you need and we&apos;ll create your legal documents in seconds. 
+                        No templates, no setup—just describe what you want.
+                      </Text>
+                    </VStack>
+                  </VStack>
 
-                <Box className="relative w-full max-w-3xl">
-                  <Box className="absolute -inset-6 rounded-[32px] bg-gradient-to-br from-purple-200/40 to-purple-300/30 blur-2xl pointer-events-none" />
-                  <motion.div layoutId="promptCard">
-                    <Box className="relative rounded-[24px] bg-white/80 backdrop-blur border border-purple-100 shadow-lg">
-                      <Box className="p-6">
-                        <Textarea
-                          minRows={5}
-                          value={prompt}
-                          onValueChange={(val) => setPrompt(val)}
-                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault()
-                              handleSubmit()
+                  <Box className="relative w-full max-w-3xl">
+                    <Box className="absolute -inset-6 rounded-[32px] bg-gradient-to-br from-purple-200/40 to-purple-300/30 blur-2xl pointer-events-none" />
+                    <div>
+                      <Box className="relative rounded-[24px] bg-white/80 backdrop-blur border border-purple-100 shadow-lg">
+                        <Box className="p-6">
+                          <Textarea
+                            minRows={5}
+                            value={prompt}
+                            onValueChange={(val) => setPrompt(val)}
+                            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault()
+                                if (prompt.trim()) {
+                                  // Generate suggested documents and go directly to form
+                                  const suggested = generateSuggestedDocs(prompt)
+                                  setSuggestedDocs(suggested)
+                                  setMode('chat')
+                                  setWorkbenchOpen(true)
+                                }
+                              }
+                            }}
+                            placeholder={
+                              'E.g.,\n"Hire a Sales person"\n"Apply for investment funding"\n"Review this NDA against my template & playbook"'
                             }
-                          }}
-                          placeholder={
-                            'E.g.,\n"Hire a Sales person"\n"Apply for investment funding"\n"Review this NDA against my template & playbook"'
-                          }
-                          classNames={{
-                            inputWrapper: 'rounded-2xl',
-                            input: 'text-foreground-900',
-                          }}
-                        />
+                            classNames={{
+                              inputWrapper: 'rounded-2xl',
+                              input: 'text-foreground-900',
+                            }}
+                          />
 
-                        <Flex justify="between" align="center" className="mt-3">
-                          <Flex align="center" gap={3}>
-                            <Button variant="light" size="sm">
-                              <Paperclip className="w-5 h-5" />
-                            </Button>
-                            <Button variant="light" size="sm">
-                              <Link2 className="w-5 h-5" />
+                          <Flex justify="between" align="center" className="mt-4">
+                            <Flex gap={2}>
+                              <Button variant="light" size="sm" className="text-gray-500 hover:text-purple-600">
+                                <Paperclip className="w-4 h-4 mr-2" />
+                                Attach
+                              </Button>
+                            </Flex>
+                            <Button
+                              variant="solid"
+                              className="bg-purple-600 hover:bg-purple-700 text-white"
+                              onPress={() => {
+                                if (prompt.trim()) {
+                                  // Generate suggested documents and go directly to form
+                                  const suggested = generateSuggestedDocs(prompt)
+                                  setSuggestedDocs(suggested)
+                                  setMode('chat')
+                                  setWorkbenchOpen(true)
+                                }
+                              }}
+                            >
+                              <ArrowUp className="w-4 h-4" />
                             </Button>
                           </Flex>
-
-                          <Flex align="center" gap={2}>
-                            <Button variant="light" size="sm">
-                              <Mic className="w-5 h-5" />
-                            </Button>
-                            <Button onPress={handleSubmit} variant="gradient" size="md">
-                              <ArrowUp className="w-5 h-5" />
-                            </Button>
-                          </Flex>
-            </Flex>
+                        </Box>
                       </Box>
-                    </Box>
-                  </motion.div>
-          </Box>
-
-                <Box className="w-full max-w-4xl rounded-[24px] bg-white border border-purple-100 shadow-md mt-4">
-                  <Box className="p-6">
-                    <Heading as="h2" size="lg" className="mb-4">
-                      Recent projects
-          </Heading>
-                    <Box className="grid grid-cols-12 items-center text-left px-2 pb-2 text-zinc-500">
-                      <Text as="p" size="sm" className="col-span-8">Document name</Text>
-                      <Text as="p" size="sm" className="col-span-4">Last edited</Text>
-                    </Box>
-
-                    {/* Creating documents at the top */}
-                    {creatingDocuments.map((docName, idx) => (
-                      <Box
-                        key={`creating-${idx}`}
-                        className="grid grid-cols-12 items-center rounded-xl px-2 py-3 hover:bg-zinc-50"
-                      >
-                        <Flex align="center" gap={3} className="col-span-8">
-                          <Box className="rounded-full bg-purple-100 p-1">
-                            <FileText className="w-4 h-4 text-purple-600" />
-                          </Box>
-                          <Text size="md" className="text-foreground-900 animate-color-shift">
-                            {docName}
-                          </Text>
-                        </Flex>
-                        <Text size="sm" className="col-span-4 text-zinc-600">
-                          Creating...
-                        </Text>
-                      </Box>
-                    ))}
-
-                    {/* Regular recent projects */}
-                    {[
-                      { name: 'Software Licence Agreement', date: '21 Feb 2023' },
-                      { name: 'Terms of service', date: '1 Feb 2023' },
-                      { name: 'Software Licence Agreement', date: '21 Feb 2023' },
-                      { name: 'Terms of service', date: '1 Feb 2023' },
-                      { name: 'Software Licence Agreement', date: '21 Feb 2023' },
-                    ].map((row, idx) => (
-                      <Box
-                        key={`existing-${idx}`}
-                        className="grid grid-cols-12 items-center rounded-xl px-2 py-3 hover:bg-zinc-50"
-                      >
-                        <Flex align="center" gap={3} className="col-span-8">
-                          <Box className="rounded-full bg-purple-100 p-1">
-                            <FileText className="w-4 h-4 text-purple-600" />
-                          </Box>
-                          <Text size="md" className="text-foreground-900">
-                            {row.name}
-                          </Text>
-                        </Flex>
-                        <Text size="sm" className="col-span-4 text-zinc-600">
-                          {row.date}
-                        </Text>
-                      </Box>
-                    ))}
-                </Box>
-                </Box>
+                    </div>
+                  </Box>
                 </VStack>
               </Container>
-            </motion.div>
+            </div>
           )}
-          
+
           {mode === 'chat' && (
-            <motion.div
-              key="chat"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}
+            <div
               className="grid h-screen bg-white"
               style={{ 
                 gridTemplateColumns: workbenchOpen ? '1fr 3fr 2fr' : '1fr 5fr'
@@ -1216,524 +243,172 @@ ${multiDocClauses}`
                 </Box>
               </Box>
 
-              {/* Chat section */}
+              {/* Form-based interface */}
               <Box className="flex flex-col bg-white h-screen">
-                <Box className={`h-full ${!workbenchOpen ? 'flex justify-center' : ''}`}>
-                  <Box className="flex flex-col h-full" style={{ 
-                    width: !workbenchOpen ? '50vw' : '100%',
-                    maxWidth: !workbenchOpen ? '50vw' : '100%'
-                  }}>
-                    <motion.div layoutId="promptCard" className="flex-1 flex flex-col h-full">
-                    {/* Chat scroll area */}
-                    <Box ref={chatScrollRef} className="flex-1 p-6 overflow-y-auto h-0">
-                      <VStack spacing={6} align="start" className="min-h-full justify-end">
-                        {messages.map((m) => (
-                          <Flex key={m.id} justify={m.role === 'user' ? 'end' : 'start'} className="w-full">
-                            <Box
-                              className={
-                                m.role === 'user'
-                                  ? 'bg-gray-100 text-gray-900 rounded-2xl px-4 py-3 max-w-[70%]'
-                                  : 'bg-gray-50 text-gray-900 rounded-2xl px-4 py-3 max-w-[70%]'
-                              }
-                            >
-                                {m.role === 'assistant' ? (
-                                  m.id === MESSAGE_IDS.ASSISTANT_DRAFT_SETTINGS ? (
-                                    <VStack spacing={4} align="start">
-                                      <Text size="md">{m.content}</Text>
-                                      <VStack spacing={4} className="w-full">
-                                        <Box className="w-full">
-                                          <Text size="sm" className="font-medium mb-2">Length</Text>
-                                          <Flex justify="between" className="mb-1">
-                                            <Text size="sm" className="text-zinc-600">Simple</Text>
-                                            <Text size="sm" className="text-zinc-600">Comprehensive</Text>
-                                          </Flex>
-                                          <input
-                                            type="range"
-                                            min="0"
-                                            max="100"
-                                            value={lengthValue}
-                                            onChange={(e) => setLengthValue(Number(e.target.value))}
-                                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                                          />
-                                        </Box>
-                                        <Box className="w-full">
-                                          <Text size="sm" className="font-medium mb-2">Favourability</Text>
-                                          <Flex justify="between" className="mb-1">
-                                            <Text size="sm" className="text-zinc-600">Favours them</Text>
-                                            <Text size="sm" className="text-zinc-600">Favours me</Text>
-                                          </Flex>
-                                          <input
-                                            type="range"
-                                            min="0"
-                                            max="100"
-                                            value={favourabilityValue}
-                                            onChange={(e) => setFavourabilityValue(Number(e.target.value))}
-                                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                                          />
-                                        </Box>
-                                        <Box className="w-full">
-                                          <Text size="sm" className="font-medium mb-2">Tone</Text>
-                                          <Flex justify="between" className="mb-1">
-                                            <Text size="sm" className="text-zinc-600">Plain English</Text>
-                                            <Text size="sm" className="text-zinc-600">Formal</Text>
-                                          </Flex>
-                                          <input
-                                            type="range"
-                                            min="0"
-                                            max="100"
-                                            value={toneValue}
-                                            onChange={(e) => setToneValue(Number(e.target.value))}
-                                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                                          />
-                                        </Box>
-                                      </VStack>
-                                    </VStack>
-                                  ) : (
-                                    renderAssistantContent(m.content, m.id, { 
-                                      showExisting: m.id === MESSAGE_IDS.ASSISTANT_INITIAL,
-                                      showCheckboxes: m.id === MESSAGE_IDS.ASSISTANT_INITIAL || m.id !== MESSAGE_IDS.ASSISTANT_DOCUMENT_PURPOSE
-                                    })
-                                  )
-                                ) : (
-                                  <Text size="md">{m.content}</Text>
-                                )}
-            </Box>
-          </Flex>
-                          ))}
-                          
-                          {/* Show thinking animation */}
-                          {(showThinking || currentThinkingStep) && (
-                            <Flex justify="start" className="w-full">
-                              <ThinkingStepsAnimation text={currentThinkingStep || "Thinking about requirements..."} />
-                            </Flex>
-                          )}
-                          
-                          {/* Show Continue to final details button when clauses message is visible */}
-                          {messages.some(m => m.id === MESSAGE_IDS.ASSISTANT_KEY_CLAUSES) && 
-                           questionStep === 'clauses' && (
-                            <Flex justify="end" className="w-full">
+                <Box className="h-full flex justify-center">
+                  <Box className="w-full max-w-4xl flex flex-col h-full">
+                    <div className="flex-1 flex flex-col h-full">
+                      <Box className="flex-1 p-6 overflow-y-auto h-0">
+                        <VStack spacing={8} align="start" className="w-full">
+                          <Box className="w-full">
+                            <Flex justify="between" align="center">
+                              <Box>
+                                <Text size="lg" className="font-semibold text-gray-900 mb-2">Document Creation</Text>
+                                <Text size="md" className="text-gray-600">Complete the form below to create your document</Text>
+                              </Box>
                               <Button
-                                variant="outline"
-                                size="md"
-                                className="rounded-2xl px-6 border border-purple-500 text-purple-700 hover:bg-purple-50 bg-white"
-                                onPress={() => {
-                                  // Show sliders after clauses selection
-                                  const slidersMessage = `Last thing before we get your 1st draft ready.`
-                                  setMessages((prev) => [
-                                    ...prev,
-                                    {
-                                      id: MESSAGE_IDS.ASSISTANT_DRAFT_SETTINGS,
-                                      role: 'assistant',
-                                      content: slidersMessage,
-                                    },
-                                  ])
-                                  setQuestionStep('complete')
-                                  setShowSliders(true)
-                                }}
+                                variant="bordered"
+                                size="sm"
+                                onPress={() => setWorkbenchOpen(!workbenchOpen)}
+                                className="border-purple-200 text-purple-700 hover:bg-purple-50"
                               >
-                                Continue to final details
+                                {workbenchOpen ? 'Hide Panel' : 'Show Panel'}
                               </Button>
                             </Flex>
-                          )}
+                          </Box>
 
-                          {/* Show Personalise and Create Template buttons when workbench is open and not yet clicked */}
-                          {workbenchOpen && !configureClicked && (
-                            <VStack spacing={3} align="end" className="w-full">
-                              <Button
-                                variant="outline"
-                                size="md"
-                                className="rounded-2xl px-6 border border-purple-500 text-purple-700 hover:bg-purple-50 bg-white"
-                                onPress={() => {
-                                  // Add user message first
-                                  const userMessage = createDocs.length === 1 ? 'Personalise my document' : 'Personalise my documents'
-                                  
-                                  // Show thinking animation first
-                                  setMessages((prev) => [
-                                    ...prev,
-                                    {
-                                      id: MESSAGE_IDS.USER_CONFIGURE,
-                                      role: 'user',
-                                      content: userMessage,
-                                    },
-                                  ])
-                                  
-                                  setShowThinking(true)
-                                  setConfigureClicked(true)
-                                  setQuestionStep('outcomes')
-                                  
-                                  // Generate conditional question based on number of selected documents
-                                  setTimeout(() => {
-                                    let questionsMessage = ''
-                                    
-                                    if (createDocs.length === 1) {
-                                      // Single document selected
-                                      questionsMessage = "**Document purpose:**\n\nIn your own words, why are you creating this document now, and what must it achieve for this deal to be a success? \n\nList the 2–3 outcomes that matter most.\n\nWe'll get to the details next."
-                                    } else {
-                                      // Multiple documents selected
-                                      questionsMessage = `**Purpose:**
-
-Why are you doing this work now and what must it achieve for this deal to be a success?
-
-List the 2–3 outcomes that matter most.
-
-We'll get to the details next.`
-                                    }
-
-                                    // Hide thinking animation and add questions
-                                    setShowThinking(false)
-                                    setMessages((prev) => [
-                                      ...prev,
-                                      {
-                                        id: MESSAGE_IDS.ASSISTANT_DOCUMENT_PURPOSE,
-                                        role: 'assistant',
-                                        content: questionsMessage,
-                                      },
-                                    ])
-                                  }, 2000) // Show thinking for 2 seconds
-                                }}
-                              >
-                                {createDocs.length === 1 ? 'Personalise my document' : 'Personalise my documents'}
-                              </Button>
+                          {/* Document Selection Section */}
+                          <Box className="w-full">
+                            <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                              <Box className="lg:col-span-1">
+                                <Text size="lg" className="font-medium text-gray-900 mb-2">Select docs to create</Text>
+                                <Text size="sm" className="text-gray-600">Choose which documents you need</Text>
+                              </Box>
                               
-                              <Button
-                                variant="outline"
-                                size="md"
-                                className="rounded-2xl px-6 border border-purple-500 text-purple-700 hover:bg-purple-50 bg-white"
-                                onPress={() => {
-                                  // TODO: Add quick template functionality
-                                  console.log('Create quick template clicked')
-                                }}
-                              >
-                                {createDocs.length === 1 ? 'Create quick template' : 'Create quick templates'}
-                              </Button>
-                            </VStack>
-                          )}
+                              <Box className="lg:col-span-2">
+                                <VStack spacing={3} align="start">
+                                  {suggestedDocs.map((doc, i) => (
+                                    <Box key={i} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 w-full">
+                                      <input
+                                        type="checkbox"
+                                        id={`doc-${i}`}
+                                        checked={selectedDocs[doc] || false}
+                                        onChange={(e) => {
+                                          const newSelected = {
+                                            ...selectedDocs,
+                                            [doc]: e.target.checked
+                                          }
+                                          setSelectedDocs(newSelected)
+                                          // Update createDocs immediately
+                                          const chosen = Object.keys(newSelected).filter(k => newSelected[k])
+                                          setCreateDocs(chosen)
+                                        }}
+                                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                      />
+                                      <label htmlFor={`doc-${i}`} className="flex-1 cursor-pointer">
+                                        <Text size="sm" className="text-gray-900">{i + 1}. {doc}</Text>
+                                      </label>
+                                    </Box>
+                                  ))}
+                                </VStack>
+                              </Box>
+                            </Box>
+                          </Box>
 
-                          {/* Show Run Final Check button when sliders are visible */}
-                          {showSliders && !messages.some(m => m.id === MESSAGE_IDS.ASSISTANT_FINAL_CONFIRMATION) && (
-                            <Flex justify="end" className="w-full">
-                              <Button
-                                variant="outline"
+                          <Box className="w-full">
+                            <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                              <Box className="lg:col-span-1">
+                                <Text size="lg" className="font-medium text-gray-900 mb-2">Document Purpose</Text>
+                                <Text size="sm" className="text-gray-600">List 2-3 outcomes that matter most</Text>
+                              </Box>
+                              
+                              <Box className="lg:col-span-2">
+                                <Textarea
+                                  minRows={3}
+                                  value={prompt}
+                                  onValueChange={(val) => setPrompt(val)}
+                                  placeholder="E.g., 'Hire a Sales person', 'Apply for investment funding'"
+                                  className="w-full"
+                                  classNames={{
+                                    inputWrapper: 'rounded-lg border border-gray-200',
+                                    input: 'text-gray-900 placeholder:text-gray-400',
+                                  }}
+                                />
+                              </Box>
+                            </Box>
+                          </Box>
+
+                          <Box className="w-full">
+                            <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                              <Box className="lg:col-span-1">
+                                <Text size="lg" className="font-medium text-gray-900 mb-2">Document Details</Text>
+                                <Text size="sm" className="text-gray-600 mb-4">What specific details do I need to include?</Text>
+                                
+                                {/* Show numbered questions when documents are selected */}
+                                {Object.values(selectedDocs).some(v => v) && (
+                                  <Box className="mt-4">
+                                    <Text size="sm" className="text-gray-600 mb-3">eg.</Text>
+                                    <VStack spacing={3} align="start">
+                                      {generateDetailQuestions().map((question, i) => (
+                                        <Text key={i} size="sm" className="text-gray-600">
+                                          {i + 1}. {question}
+                                        </Text>
+                                      ))}
+                                    </VStack>
+                                  </Box>
+                                )}
+                              </Box>
+                              
+                              <Box className="lg:col-span-2">
+                                <Textarea
+                                  minRows={4}
+                                  value={selectedExistingInputs['document-details'] || ''}
+                                  onValueChange={(val) => setSelectedExistingInputs(prev => ({...prev, 'document-details': val}))}
+                                  placeholder="E.g., salary range £40-50k, hybrid working 2 days/week, reporting to CMO"
+                                  className="w-full"
+                                  classNames={{
+                                    inputWrapper: 'rounded-lg border border-gray-200',
+                                    input: 'text-gray-900 placeholder:text-gray-400',
+                                  }}
+                                />
+                                <Text size="xs" className="text-gray-500 mt-2">Examples: salary ranges, working arrangements, experience requirements</Text>
+                              </Box>
+                            </Box>
+                          </Box>
+
+                          <Box className="w-full">
+                            <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                              <Box className="lg:col-span-1">
+                                <Text size="lg" className="font-medium text-gray-900 mb-2">Upload Documents</Text>
+                                <Text size="sm" className="text-gray-600">Add reference documents or templates</Text>
+                              </Box>
+                              
+                              <Box className="lg:col-span-2">
+                                <Box className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                                  <Paperclip className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                                  <Text size="sm" className="text-gray-600 mb-2">Drop files here or click to upload</Text>
+                                  <Button variant="bordered" size="sm">Choose Files</Button>
+                                </Box>
+                              </Box>
+                            </Box>
+                          </Box>
+
+                          <Box className="w-full border-t border-gray-200 pt-6">
+                            <Flex justify="end" gap={4}>
+                              <Button variant="bordered" size="md">Save Draft</Button>
+                              <Button 
+                                variant="solid" 
                                 size="md"
-                                className="rounded-2xl px-6 border border-purple-500 text-purple-700 hover:bg-purple-50 bg-white"
+                                className="bg-purple-600 hover:bg-purple-700 text-white"
                                 onPress={() => {
-                                  // Start the final check thinking sequence
-                                  setShowThinking(true)
-                                  setShowSliders(false)
-                                  
-                                  // Thinking steps sequence
-                                  const thinkingSteps = [
-                                    "Checking document configuration..",
-                                    "Reviewing against key laws and regulations..",
-                                    "Making sure nothing is missing.."
-                                  ]
-                                  
-                                  let stepIndex = 0
-                                  
-                                  const showNextThinkingStep = () => {
-                                    if (stepIndex < thinkingSteps.length) {
-                                      setCurrentThinkingStep(thinkingSteps[stepIndex])
-                                      stepIndex++
-                                      setTimeout(() => {
-                                        if (stepIndex < thinkingSteps.length) {
-                                          showNextThinkingStep()
-                                        } else {
-                                          // All thinking steps done, show final confirmation
-                                          setCurrentThinkingStep(null)
-                                          setShowThinking(false)
-                                          
-                                          const confirmationMessage = "Your document is really comprehensive and ready to create! I'll start the 1st draft now, but you can always edit later."
-                                          
-                                          setMessages((prev) => [
-                                            ...prev,
-                                            {
-                                              id: MESSAGE_IDS.ASSISTANT_FINAL_CONFIRMATION,
-                                              role: 'assistant',
-                                              content: confirmationMessage,
-                                            },
-                                          ])
-                                          
-                                          // Auto-navigate to document page after a short delay
-                                          setTimeout(() => {
-                                            if (createDocs.length === 1) {
-                                              // Single document - go to document draft screen
-                                              const firstDoc = createDocs[0] || 'Document'
-                                              setDocumentTitle(firstDoc)
-                                              setMode('document')
-                                            } else {
-                                              // Multiple documents - return to landing page and show creating documents in table
-                                              setCreatingDocuments(createDocs)
-                                              setMode('landing')
-                                              // Reset chat state
-                                              setMessages([])
-                                              setSelectedDocs({})
-                                              setSelectedExisting({})
-                                              setSelectedExistingLabels({})
-                                              setWorkbenchOpen(false)
-                                              setConfigureClicked(false)
-                                              setShowThinking(false)
-                                              setShowSliders(false)
-                                              setPrompt('')
-                                            }
-                                          }, 6000) // 6 second delay to show the confirmation message
-                                        }
-                                      }, 1500) // 1.5 seconds per thinking step
-                                    }
-                                  }
-                                  
-                                  showNextThinkingStep()
+                                  setMode('document')
+                                  setDocumentTitle(prompt || 'New Document')
                                 }}
                               >
-                                Run final check
+                                Create Document
                               </Button>
                             </Flex>
-                          )}
+                          </Box>
                         </VStack>
-              </Box>
-
-                    {/* Composer */}
-                    <Box className="border-t border-gray-200 bg-white p-4">
-                      <Flex justify="between" align="center" className="gap-3">
-                        <Flex align="center" gap={3}>
-                          <Button variant="light" size="sm">
-                            <Paperclip className="w-4 h-4 text-gray-500" />
-                          </Button>
-                          <Button variant="light" size="sm">
-                            <Link2 className="w-4 h-4 text-gray-500" />
-                          </Button>
-                        </Flex>
-                        <Box className="flex-1 mx-4">
-                          <Textarea
-                            minRows={1}
-                            value={prompt}
-                            onValueChange={(val) => setPrompt(val)}
-                                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                                  if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault()
-                                    if (prompt.trim()) {
-                                      const text = prompt.trim()
-                                      setMessages((prev) => [
-                                        ...prev,
-                                        { id: generateSequentialId(MESSAGE_IDS.USER_MESSAGE_PREFIX, messageCounter), role: 'user', content: text },
-                                      ])
-                                      setMessageCounter(prev => prev + 1)
-                                      
-                                      // Handle different question steps
-                                      if (questionStep === 'outcomes') {
-                                        // User just responded to outcomes question - show details question
-                                        setTimeout(() => {
-                                          const firstDoc = createDocs[0] || 'document'
-                                          const examples = generateContextualExamples(firstDoc)
-                                          
-                                          const followUpMessage = `**Document details:**
-
-What specific details do I need to include?
-
-eg.
-${examples.join('\n')}
-
-[Upload documents button will appear here]
-
-Skip for now`
-
-                                          setMessages((prev) => [
-                                            ...prev,
-                                            {
-                                              id: MESSAGE_IDS.ASSISTANT_DOCUMENT_DETAILS,
-                                              role: 'assistant',
-                                              content: followUpMessage,
-                                            },
-                                          ])
-                                          
-                                          setQuestionStep('details')
-                                        }, 500)
-                                      } else if (questionStep === 'details') {
-                                        // User just responded to details question - start thinking sequence
-                                        setTimeout(() => {
-                                          runThinkingSequence()
-                                        }, 500)
-                                      } else if (questionStep === 'clauses') {
-                                        // User responded to clauses section - continue to sliders
-                                        setTimeout(() => {
-                                          const slidersMessage = `Last thing before we get your 1st draft ready.`
-                                          setMessages((prev) => [
-                                            ...prev,
-                                            {
-                                              id: MESSAGE_IDS.ASSISTANT_DRAFT_SETTINGS,
-                                              role: 'assistant',
-                                              content: slidersMessage,
-                                            },
-                                          ])
-                                          setQuestionStep('complete')
-                                          setShowSliders(true)
-                                        }, 500)
-                                      } else {
-                                        // Only call API if not responding to questions
-                                        fetch('/api/chat', {
-                                          method: 'POST',
-                                          headers: { 'Content-Type': 'application/json' },
-                                          body: JSON.stringify({ messages: [{ role: 'user', content: text }] }),
-                                        })
-                                          .then((r) => r.json())
-                                          .then((d) => {
-                                            const msgId = generateSequentialId(MESSAGE_IDS.ASSISTANT_MESSAGE_PREFIX, messageCounter)
-                                            setMessages((m) => [
-                                              ...m,
-                                              {
-                                                id: msgId,
-                                                role: 'assistant',
-                                                content: d.content || '...',
-                                              },
-                                            ])
-                                            setMessageCounter(prev => prev + 1)
-                                          })
-                                          .catch(() => {
-                                            const msgId = generateSequentialId(MESSAGE_IDS.ASSISTANT_MESSAGE_PREFIX, messageCounter)
-                                            setMessages((m) => [
-                                              ...m,
-                                              {
-                                                id: msgId,
-                                                role: 'assistant',
-                                                content: 'There was an error. Please try again.',
-                                              },
-                                            ])
-                                            setMessageCounter(prev => prev + 1)
-                                          })
-                                      }
-                                      setPrompt('')
-                                    }
-                                  }
-                                }}
-                            placeholder="Type your message"
-                            classNames={{ 
-                              inputWrapper: 'border border-gray-300 rounded-full bg-white', 
-                              input: 'text-gray-900' 
-                            }}
-                          />
-                        </Box>
-                        <Flex align="center" gap={2}>
-                          <Button variant="light" size="sm">
-                            <Mic className="w-4 h-4 text-gray-500" />
-                          </Button>
-                          <Button
-                            variant="solid"
-                            size="md"
-                            className="bg-purple-600 hover:bg-purple-700 text-white rounded-full"
-                                onPress={() => {
-                                  if (prompt.trim()) {
-                                    const text = prompt.trim()
-                                    setMessages((prev) => [
-                                      ...prev,
-                                      { id: generateSequentialId(MESSAGE_IDS.USER_MESSAGE_PREFIX, messageCounter), role: 'user', content: text },
-                                    ])
-                                    setMessageCounter(prev => prev + 1)
-                                    
-                                    // Handle different question steps
-                                    if (questionStep === 'outcomes') {
-                                      // User just responded to outcomes question - show details question
-                                                                              setTimeout(() => {
-                                          const firstDoc = createDocs[0] || 'document'
-                                          const examples = generateContextualExamples(firstDoc)
-                                          
-                                          const followUpMessage = `**Document details:**
-
-What specific details do I need to include?
-
-eg.
-${examples.join('\n')}
-
-[Upload documents button will appear here]
-
-Skip for now`
-
-                                        setMessages((prev) => [
-                                          ...prev,
-                                          {
-                                            id: MESSAGE_IDS.ASSISTANT_DOCUMENT_DETAILS,
-                                            role: 'assistant',
-                                            content: followUpMessage,
-                                          },
-                                        ])
-                                        
-                                        setQuestionStep('details')
-                                      }, 500)
-                                    } else if (questionStep === 'details') {
-                                      // User just responded to details question - start thinking sequence
-                                      setTimeout(() => {
-                                        runThinkingSequence()
-                                      }, 500)
-                                    } else if (questionStep === 'clauses') {
-                                      // User responded to clauses section - continue to sliders
-                                      setTimeout(() => {
-                                        const slidersMessage = `Last thing before we get your 1st draft ready.`
-                                        setMessages((prev) => [
-                                          ...prev,
-                                          {
-                                            id: MESSAGE_IDS.ASSISTANT_DRAFT_SETTINGS,
-                                            role: 'assistant',
-                                            content: slidersMessage,
-                                          },
-                                        ])
-                                        setQuestionStep('complete')
-                                        setShowSliders(true)
-                                      }, 500)
-                                    } else {
-                                      // Only call API if not responding to questions
-                                      fetch('/api/chat', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ messages: [{ role: 'user', content: text }] }),
-                                      })
-                                        .then((r) => r.json())
-                                        .then((d) => {
-                                          const msgId = generateSequentialId(MESSAGE_IDS.ASSISTANT_MESSAGE_PREFIX, messageCounter)
-                                          setMessages((m) => [
-                                            ...m,
-                                            {
-                                              id: msgId,
-                                              role: 'assistant',
-                                              content: d.content || '...',
-                                            },
-                                          ])
-                                          setMessageCounter(prev => prev + 1)
-                                        })
-                                        .catch(() => {
-                                          const msgId = generateSequentialId(MESSAGE_IDS.ASSISTANT_MESSAGE_PREFIX, messageCounter)
-                                          setMessages((m) => [
-                                            ...m,
-                                            {
-                                              id: msgId,
-                                              role: 'assistant',
-                                              content: 'There was an error. Please try again.',
-                                            },
-                                          ])
-                                          setMessageCounter(prev => prev + 1)
-                                        })
-                                    }
-                                    setPrompt('')
-                                  }
-                                }}
-                          >
-                            <ArrowUp className="w-4 h-4" />
-                          </Button>
-                        </Flex>
-                      </Flex>
-                    </Box>
-                  </motion.div>
+                      </Box>
+                    </div>
                   </Box>
                 </Box>
               </Box>
 
-              {/* Right workbench panel - Grid positioned */}
-              <AnimatePresence mode="wait">
-                {workbenchOpen && (
-                  <motion.aside
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 50 }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="bg-white border-l border-gray-200 shadow-lg h-screen overflow-hidden"
-                  >
+              {/* Right workbench panel */}
+              {workbenchOpen && (
+                <aside className="bg-white border-l border-gray-200 shadow-lg h-screen overflow-hidden">
                   <Box className="h-full flex flex-col">
                     {/* Tab Header */}
                     <Box className="border-b border-gray-100 px-6 pt-6 pb-4">
@@ -1749,78 +424,28 @@ Skip for now`
 
                     {/* Content */}
                     <Box className="flex-1 p-6 overflow-y-auto h-0">
-                      {workbenchLoading ? (
-                        <Box className="h-full flex items-center justify-center">
-                          <ThinkingStepsAnimation text="Checking document vault.." />
-                        </Box>
-                      ) : (
                       <VStack spacing={4} align="start" className="h-full">
                         {/* Creating Section */}
                         <Box className="w-full">
                           {createDocs.map((doc, i) => (
-                            <Box key={`creating-section-${i}`}>
-                              {/* Dividing line above subsequent documents */}
-                              {i > 0 && (
-                                <Box className="w-full h-px bg-gray-200 my-6" />
-                              )}
-                              <Box className={i > 0 ? "mt-6" : ""}>
-                                <Text size="lg" className="mb-4 text-gray-900 font-semibold">Creating document {i + 1}:</Text>
-                            <motion.div
-                              key={i}
-                              layout
-                              initial={{ height: 'auto' }}
-                              animate={{ 
-                                height: isDocumentDetailsActive() ? 'auto' : 'auto'
-                              }}
-                              transition={{ duration: 0.3, ease: 'easeInOut' }}
-                              className="mb-2"
-                            >
-                              <Box className="border rounded-lg bg-white shadow-sm">
+                            <Box key={`creating-section-${i}`} className={i > 0 ? "mt-6" : ""}>
+                              {i > 0 && <Box className="w-full h-px bg-gray-200 my-6" />}
+                              <Text size="lg" className="mb-4 text-gray-900 font-semibold">Creating document {i + 1}:</Text>
+                              <Box className="border rounded-lg bg-white shadow-sm mb-2">
                                 <Flex align="center" justify="between" className="p-3">
                                   <Flex align="center" gap={3}>
-                                    <Box className="w-4 h-5 flex items-center justify-center">
-                                      <FileText className="w-4 h-4 text-blue-500" />
-                                    </Box>
+                                    <FileText className="w-4 h-4 text-blue-500" />
                                     <Text size="sm" className="text-gray-900">{doc}.docx</Text>
                                   </Flex>
-                                  <Flex align="center" gap={2}>
-                                    {isDocumentDetailsActive() && (
-                                      <Maximize2 className="w-3 h-3 text-purple-600" />
-                                    )}
-                                    <Text size="xs" className="text-purple-600 bg-purple-100 px-2 py-1 rounded-md animate-pulse">
-                                      Genie editing...
-                                    </Text>
-                                  </Flex>
+                                  <Text size="xs" className="text-purple-600 bg-purple-100 px-2 py-1 rounded-md animate-pulse">
+                                    Genie editing...
+                                  </Text>
                                 </Flex>
-                                
-                                <AnimatePresence>
-                                  {isDocumentDetailsActive() && (
-                                    <motion.div
-                                      initial={{ height: 0, opacity: 0 }}
-                                      animate={{ height: 'auto', opacity: 1 }}
-                                      exit={{ height: 0, opacity: 0 }}
-                                      transition={{ duration: 0.4, ease: 'easeInOut' }}
-                                      className="overflow-hidden"
-                                    >
-                                      <Box className="border-t p-3">
-                                        <Box 
-                                          className="bg-gray-50 p-3 rounded text-xs font-mono leading-relaxed overflow-y-auto"
-                                          style={{ maxHeight: '200px' }}
-                                        >
-                                          <pre className="whitespace-pre-wrap text-gray-800">
-                                            {generateDummyContent(doc)}
-                                          </pre>
-                                        </Box>
-                                      </Box>
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
                               </Box>
                               
                               {/* Template Selection Table */}
                               <Box className="mt-3">
                                 <Box className="border rounded-lg bg-white shadow-sm overflow-hidden">
-                                  {/* Table Header */}
                                   <Box className="border-b bg-gray-50 px-3 py-3">
                                     <Flex align="center" justify="between">
                                       <Text size="md" className="text-gray-900 font-bold">Based on previous documents:</Text>
@@ -1832,98 +457,51 @@ Skip for now`
                                     </Flex>
                                   </Box>
                                   
-                                  {/* Table Rows */}
-                                  {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => {
-                                    const templateKey = `${doc}_${rowIndex + 1}`
-                                    return (
-                                      <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
-                                        <Flex align="center" justify="between">
-                                          <Flex align="center" gap={3} className="flex-1 min-w-0">
-                                            <Box className="w-4 h-5 flex items-center justify-center flex-shrink-0">
-                                              <FileText className="w-4 h-4 text-blue-500" />
-                                            </Box>
-                                            <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
-                                          </Flex>
-                                          <Flex align="center" style={{ width: '180px' }}>
-                                            <Box className="w-20 flex justify-center">
-                                              <input
-                                                type="checkbox"
-                                                checked={templateSelections[templateKey]?.useAsTemplate || false}
-                                                onChange={(e) => {
-                                                  if (e.target.checked) {
-                                                    // Radio button behavior - uncheck other template option in same doc
-                                                    const otherRowIndex = rowIndex === 0 ? 1 : 0
-                                                    const otherTemplateKey = `${doc}_${otherRowIndex + 1}`
-                                                    setTemplateSelections(prev => ({
-                                                      ...prev,
-                                                      [templateKey]: {
-                                                        ...prev[templateKey],
-                                                        useAsTemplate: true
-                                                      },
-                                                      [otherTemplateKey]: {
-                                                        ...prev[otherTemplateKey],
-                                                        useAsTemplate: false
-                                                      }
-                                                    }))
-                                                  } else {
-                                                    setTemplateSelections(prev => ({
-                                                      ...prev,
-                                                      [templateKey]: {
-                                                        ...prev[templateKey],
-                                                        useAsTemplate: false
-                                                      }
-                                                    }))
-                                                  }
-                                                }}
-                                                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                              />
-                                            </Box>
-                                            <Box className="w-20 flex justify-center">
-                                              <input
-                                                type="checkbox"
-                                                checked={templateSelections[templateKey]?.useAsContext !== false}
-                                                onChange={(e) => {
-                                                  setTemplateSelections(prev => ({
-                                                    ...prev,
-                                                    [templateKey]: {
-                                                      ...prev[templateKey],
-                                                      useAsContext: e.target.checked
-                                                    }
-                                                  }))
-                                                }}
-                                                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                              />
-                                            </Box>
-                                            <Box className="w-16 flex justify-center">
-                                              <Text size="xs" className="text-green-700 bg-green-100 px-2 py-0.5 rounded-md">
-                                                Signed
-                                              </Text>
-                                            </Box>
-                                          </Flex>
+                                  {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
+                                    <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
+                                      <Flex align="center" justify="between">
+                                        <Flex align="center" gap={3} className="flex-1 min-w-0">
+                                          <FileText className="w-4 h-4 text-blue-500" />
+                                          <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
                                         </Flex>
-                                      </Box>
-                                    )
-                                  })}
+                                        <Flex align="center" style={{ width: '180px' }}>
+                                          <Box className="w-20 flex justify-center">
+                                            <input
+                                              type="checkbox"
+                                              defaultChecked={rowIndex === 0}
+                                              className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                            />
+                                          </Box>
+                                          <Box className="w-20 flex justify-center">
+                                            <input
+                                              type="checkbox"
+                                              defaultChecked
+                                              className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                            />
+                                          </Box>
+                                          <Box className="w-16 flex justify-center">
+                                            <Text size="xs" className="text-green-700 bg-green-100 px-2 py-0.5 rounded-md">
+                                              Signed
+                                            </Text>
+                                          </Box>
+                                        </Flex>
+                                      </Flex>
+                                    </Box>
+                                  ))}
                                 </Box>
-                              </Box>
-                            </motion.div>
                               </Box>
                             </Box>
                           ))}
                         </Box>
 
-                        {/* Dividing line above Additional context */}
-                        <Box className="w-full h-px bg-gray-200 my-6" />
-
                         {/* Additional Context Section */}
+                        <Box className="w-full h-px bg-gray-200 my-6" />
                         <Box className="w-full">
                           <Text size="lg" className="mb-4 text-gray-900 font-semibold">Additional context:</Text>
                           {['Previous_document_1', 'Previous_document_2'].map((doc, i) => (
                             <Flex key={i} align="center" justify="between" className="py-2">
                               <Flex align="center" gap={3}>
-                                <Box className="w-4 h-5 flex items-center justify-center">
-                                  <FileText className="w-4 h-4 text-blue-500" />
-                                </Box>
+                                <FileText className="w-4 h-4 text-blue-500" />
                                 <Text size="sm" className="text-gray-900">{doc}.docx</Text>
                               </Flex>
                               <Text size="xs" className="text-green-700 bg-green-100 px-2 py-1 rounded-md">
@@ -1935,129 +513,58 @@ Skip for now`
                           {/* Action Buttons */}
                           <Flex gap={3} className="mt-4">
                             <Button
-                              variant="outline"
+                              variant="bordered"
                               className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
                             >
                               Search Vault
                             </Button>
                             <Button
-                              variant="outline"
+                              variant="bordered"
                               className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
                             >
                               Upload
                             </Button>
                           </Flex>
                         </Box>
-
-                        {/* Spacer */}
-                        <Box className="flex-1" />
                       </VStack>
-                      )}
                     </Box>
                   </Box>
-                  </motion.aside>
-                )}
-              </AnimatePresence>
-            </motion.div>
+                </aside>
+              )}
+            </div>
           )}
 
           {mode === 'document' && (
-            <motion.div
-              key="document"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}
-            >
+            <div>
               <Container maxWidth="2xl" className="py-8">
                 <VStack spacing={6} align="start" className="w-full">
-                  {/* Document header */}
                   <Box className="w-full pb-4 border-b border-zinc-200">
                     <VStack spacing={2} align="start">
                       <Text size="sm" className="text-zinc-500">
                         Saved in / {documentTitle} project 🔒 Private and secure
-                </Text>
+                      </Text>
                       <Heading as="h1" size="xl" className="text-purple-600">
                         {documentTitle} (19 August 2025) v1
-                  </Heading>
+                      </Heading>
                     </VStack>
                   </Box>
 
-                  {/* Document content */}
                   <Box className="w-full bg-white rounded-2xl border border-zinc-200 shadow-sm min-h-[70vh]">
                     <Box className="p-8">
                       <VStack spacing={6} align="start" className="w-full max-w-4xl">
                         <Text size="lg" className="leading-relaxed">
                           This Agreement is made on the <span className="bg-yellow-200 px-2 py-1 rounded">[DATE]</span> day of <span className="bg-yellow-200 px-2 py-1 rounded">[MONTH]</span> <span className="bg-yellow-200 px-2 py-1 rounded">[YEAR]</span>
                         </Text>
-
                         <Text size="lg" className="leading-relaxed">
-                          Between
+                          Document content for: {documentTitle}
                         </Text>
-
-                        <Text size="lg" className="leading-relaxed">
-                          <span className="bg-yellow-200 px-2 py-1 rounded">[ORGANIZATION NAME]</span>
-                        </Text>
-
-                        <Text size="lg" className="leading-relaxed">
-                          And:
-                        </Text>
-
-                        <Text size="lg" className="leading-relaxed">
-                          <span className="bg-yellow-200 px-2 py-1 rounded">[VOLUNTEER NAME]</span>
-                        </Text>
-
-                        <Box className="pt-4">
-                          <Heading as="h2" size="lg" className="mb-4">
-                            Parties
-                  </Heading>
-                          <Text size="md" className="leading-relaxed mb-4">
-                            (1) &nbsp;&nbsp;&nbsp;&nbsp;<span className="bg-yellow-200 px-2 py-1 rounded">[ORGANIZATION NAME]</span>, a <span className="bg-yellow-200 px-2 py-1 rounded">[LEGAL STATUS]</span> registered in England and Wales under registration number <span className="bg-yellow-200 px-2 py-1 rounded">[REGISTRATION NUMBER]</span>, whose registered office is at <span className="bg-yellow-200 px-2 py-1 rounded">[REGISTERED ADDRESS]</span> (the <strong>&ldquo;Organization&rdquo;</strong>).
-                          </Text>
-                          <Text size="md" className="leading-relaxed">
-                            (2) &nbsp;&nbsp;&nbsp;&nbsp;<span className="bg-yellow-200 px-2 py-1 rounded">[VOLUNTEER NAME]</span> of <span className="bg-yellow-200 px-2 py-1 rounded">[VOLUNTEER ADDRESS]</span> (the <strong>&ldquo;Volunteer&rdquo;</strong>).
-                          </Text>
-                        </Box>
-
-                        {/* Lorem ipsum content to fill the page */}
-                        <Box className="pt-6">
-                          <Text size="md" className="leading-relaxed mb-4">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                          </Text>
-                          <Text size="md" className="leading-relaxed mb-4">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                  </Text>
-                          <Text size="md" className="leading-relaxed mb-4">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                  </Text>
-                          <Text size="md" className="leading-relaxed mb-4">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                  </Text>
-              </Box>
-            </VStack>
+                      </VStack>
                     </Box>
                   </Box>
-
-                  {/* Footer with creation status */}
-                  <Box className="w-full flex justify-center pt-6">
-                    <Box className="flex items-center gap-3 px-6 py-3 bg-purple-100 rounded-full">
-                      <Text size="sm" className="text-purple-800">
-                        Genie is creating your {documentTitle}
-                      </Text>
-                      <Button
-                        variant="light"
-                        size="sm"
-                        className="text-purple-600 hover:text-purple-800"
-                      >
-                        Stop
-                      </Button>
-                    </Box>
-          </Box>
-        </VStack>
+                </VStack>
               </Container>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
       </Box>
     </Box>
   )
