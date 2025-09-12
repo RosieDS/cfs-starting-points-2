@@ -361,24 +361,13 @@ export default function Home() {
                                     input: 'text-gray-900 placeholder:text-gray-400',
                                   }}
                                 />
-                                <Text size="xs" className="text-gray-500 mt-2">Examples: salary ranges, working arrangements, experience requirements</Text>
-                              </Box>
-                            </Box>
-                          </Box>
-
-                          <Box className="w-full">
-                            <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                              <Box className="lg:col-span-1">
-                                <Text size="lg" className="font-medium text-gray-900 mb-2">Upload Documents</Text>
-                                <Text size="sm" className="text-gray-600">Add reference documents or templates</Text>
-                              </Box>
-                              
-                              <Box className="lg:col-span-2">
-                                <Box className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
-                                  <Paperclip className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                                  <Text size="sm" className="text-gray-600 mb-2">Drop files here or click to upload</Text>
-                                  <Button variant="bordered" size="sm">Choose Files</Button>
-                                </Box>
+                                <Button
+                                  variant="bordered"
+                                  size="sm"
+                                  className="mt-3 border-purple-200 text-purple-700 hover:bg-purple-50"
+                                >
+                                  Upload Documents
+                                </Button>
                               </Box>
                             </Box>
                           </Box>
