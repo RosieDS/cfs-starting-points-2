@@ -308,7 +308,8 @@ export default function Home() {
                           <Box className="w-full">
                             <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                               <Box className="lg:col-span-1">
-                                <Text size="lg" className="font-medium text-gray-900 mb-2">Why are you doing this work now and what must it achieve for this deal to be a success?</Text>
+                                <Text size="lg" className="font-medium text-gray-900 mb-2">Document Purpose</Text>
+                                <Text size="sm" className="text-gray-600 mb-1">Why are you doing this work now and what must it achieve for this deal to be a success?</Text>
                                 <Text size="sm" className="text-gray-600">List the 2–3 outcomes that matter most.</Text>
                               </Box>
                               
