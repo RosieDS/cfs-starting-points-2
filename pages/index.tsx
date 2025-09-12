@@ -30,6 +30,9 @@ export default function Home() {
   const [createDocs, setCreateDocs] = useState<string[]>([])
   const [selectedClauses, setSelectedClauses] = useState<Record<string, boolean>>({})
   const [clauseDetailsText, setClauseDetailsText] = useState<Record<string, string>>({})
+  const [lengthValue, setLengthValue] = useState(50)
+  const [favourabilityValue, setFavourabilityValue] = useState(50)
+  const [toneValue, setToneValue] = useState(50)
 
   // Generate key clauses for each document type
   const generateKeyClauses = (docType: string): Array<{name: string, explainer: string}> => {
@@ -489,6 +492,77 @@ export default function Home() {
                                         </VStack>
                                       </Box>
                                     ))}
+                                  </VStack>
+                                </Box>
+                              </Box>
+                            </Box>
+                          )}
+
+                          {/* Draft Customization Sliders - Show when documents are selected */}
+                          {Object.values(selectedDocs).some(v => v) && (
+                            <Box className="w-full">
+                              <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <Box className="lg:col-span-1">
+                                  <Text size="lg" className="font-medium text-gray-900 mb-2">
+                                    Customise your {Object.values(selectedDocs).filter(v => v).length === 1 ? 'draft' : 'drafts'}
+                                  </Text>
+                                  <Text size="sm" className="text-gray-600">
+                                    Adjust your {Object.values(selectedDocs).filter(v => v).length === 1 ? 'document' : 'documents'} along key dimensions
+                                  </Text>
+                                </Box>
+                                
+                                <Box className="lg:col-span-2">
+                                  <VStack spacing={4} className="w-full">
+                                    {/* Length Slider */}
+                                    <Box className="w-full">
+                                      <Text size="sm" className="font-medium mb-2">Length</Text>
+                                      <Flex justify="between" className="mb-1">
+                                        <Text size="sm" className="text-gray-600">Simple</Text>
+                                        <Text size="sm" className="text-gray-600">Comprehensive</Text>
+                                      </Flex>
+                                      <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={lengthValue}
+                                        onChange={(e) => setLengthValue(Number(e.target.value))}
+                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
+                                      />
+                                    </Box>
+                                    
+                                    {/* Favourability Slider */}
+                                    <Box className="w-full">
+                                      <Text size="sm" className="font-medium mb-2">Favourability</Text>
+                                      <Flex justify="between" className="mb-1">
+                                        <Text size="sm" className="text-gray-600">Favours them</Text>
+                                        <Text size="sm" className="text-gray-600">Favours me</Text>
+                                      </Flex>
+                                      <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={favourabilityValue}
+                                        onChange={(e) => setFavourabilityValue(Number(e.target.value))}
+                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
+                                      />
+                                    </Box>
+                                    
+                                    {/* Tone Slider */}
+                                    <Box className="w-full">
+                                      <Text size="sm" className="font-medium mb-2">Tone</Text>
+                                      <Flex justify="between" className="mb-1">
+                                        <Text size="sm" className="text-gray-600">Plain English</Text>
+                                        <Text size="sm" className="text-gray-600">Formal</Text>
+                                      </Flex>
+                                      <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={toneValue}
+                                        onChange={(e) => setToneValue(Number(e.target.value))}
+                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
+                                      />
+                                    </Box>
                                   </VStack>
                                 </Box>
                               </Box>
