@@ -421,12 +421,11 @@ export default function Home() {
                                   <button className="text-purple-600 underline hover:text-purple-800 transition-colors text-sm mb-4 block">
                                     Customise standard clauses
                                   </button>
-                                  <Text size="sm" className="text-gray-600">
+                                  <Text size="sm" className="text-gray-600 mb-6">
                                     As well as standard clauses, I recommend you include the below key clauses. Untick any of them and click to add more detail.
                                   </Text>
-                                </Box>
-                                
-                                <Box className="lg:col-span-2">
+                                  
+                                  {/* All clauses in left column */}
                                   <VStack spacing={6} align="start">
                                     {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((docType) => (
                                       <Box key={docType} className="w-full">
@@ -440,44 +439,59 @@ export default function Home() {
                                             
                                             return (
                                               <Box key={i} className="w-full">
-                                                <Flex align="start" gap={4}>
-                                                  {/* Left side: Clause name + explainer */}
-                                                  <Box className="flex-1">
-                                                    <Flex align="center" gap={2} className="mb-1">
-                                                      <Text size="sm" className="font-medium text-gray-900">{clause.name}</Text>
-                                                      <button 
-                                                        onClick={() => {
-                                                          setSelectedClauses(prev => ({
-                                                            ...prev,
-                                                            [clauseKey]: false
-                                                          }))
-                                                        }}
-                                                        className="text-gray-400 hover:text-red-500 transition-colors"
-                                                      >
-                                                        <X className="w-3 h-3" />
-                                                      </button>
-                                                    </Flex>
-                                                    <Text size="xs" className="text-gray-600">{clause.explainer}</Text>
-                                                  </Box>
-                                                  
-                                                  {/* Right side: Text input - full width */}
-                                                  <Box className="flex-1">
-                                                    <Textarea
-                                                      minRows={2}
-                                                      value={clauseDetailsText[clauseKey] || ''}
-                                                      onValueChange={(val) => setClauseDetailsText(prev => ({
-                                                        ...prev, 
-                                                        [clauseKey]: val
-                                                      }))}
-                                                      placeholder={`Add specific requirements for ${clause.name.toLowerCase()}...`}
-                                                      className="w-full"
-                                                      classNames={{
-                                                        inputWrapper: 'rounded-lg border border-gray-200',
-                                                        input: 'text-gray-900 placeholder:text-gray-400 text-sm',
-                                                      }}
-                                                    />
-                                                  </Box>
+                                                <Flex align="center" gap={2} className="mb-1">
+                                                  <Text size="sm" className="font-medium text-gray-900">{clause.name}</Text>
+                                                  <button 
+                                                    onClick={() => {
+                                                      setSelectedClauses(prev => ({
+                                                        ...prev,
+                                                        [clauseKey]: false
+                                                      }))
+                                                    }}
+                                                    className="text-gray-400 hover:text-red-500 transition-colors"
+                                                  >
+                                                    <X className="w-3 h-3" />
+                                                  </button>
                                                 </Flex>
+                                                <Text size="xs" className="text-gray-600">{clause.explainer}</Text>
+                                              </Box>
+                                            )
+                                          })}
+                                        </VStack>
+                                      </Box>
+                                    ))}
+                                  </VStack>
+                                </Box>
+                                
+                                {/* Right column: All text boxes - full width */}
+                                <Box className="lg:col-span-2">
+                                  <VStack spacing={6} align="start">
+                                    {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((docType) => (
+                                      <Box key={`${docType}-inputs`} className="w-full">
+                                        <Text size="md" className="font-semibold text-gray-900 mb-4">{docType}</Text>
+                                        <VStack spacing={4} align="start">
+                                          {generateKeyClauses(docType).map((clause, i) => {
+                                            const clauseKey = `${docType}-${i}`
+                                            // Show clause unless explicitly hidden
+                                            const isVisible = selectedClauses[clauseKey] !== false
+                                            if (!isVisible) return null
+                                            
+                                            return (
+                                              <Box key={i} className="w-full">
+                                                <Textarea
+                                                  minRows={2}
+                                                  value={clauseDetailsText[clauseKey] || ''}
+                                                  onValueChange={(val) => setClauseDetailsText(prev => ({
+                                                    ...prev, 
+                                                    [clauseKey]: val
+                                                  }))}
+                                                  placeholder={`Add specific requirements for ${clause.name.toLowerCase()}...`}
+                                                  className="w-full"
+                                                  classNames={{
+                                                    inputWrapper: 'rounded-lg border border-gray-200',
+                                                    input: 'text-gray-900 placeholder:text-gray-400 text-sm',
+                                                  }}
+                                                />
                                               </Box>
                                             )
                                           })}
