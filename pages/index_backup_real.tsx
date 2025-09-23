@@ -376,12 +376,7 @@ export default function Home() {
                                       setGoverningLaw(selected)
                                     }}
                                     placeholder="Select governing law"
-                                    className="w-1/2"
-                                    classNames={{
-                                      trigger: "h-[40px] min-h-[40px]",
-                                      selectorIcon: "right-3 absolute"
-                                    }}
-                                    size="md"
+                                    className="w-full max-w-md"
                                   >
                                     <SelectItem key="english-law">English Law</SelectItem>
                                     <SelectItem key="scottish-law">Scottish Law</SelectItem>
@@ -431,7 +426,6 @@ export default function Home() {
                                   }}
                                 />
                               </Box>
-                            </Box>
                             </Box>
                           )}
 
@@ -560,20 +554,16 @@ export default function Home() {
                             </Box>
                           )}
 
-                          {/* Draft Customization Sliders - Show when documents are selected OR Template mode */}
-                          {(Object.values(selectedDocs).some(v => v) || documentType === 'template') && (
+                          {/* Draft Customization Sliders - Show when documents are selected */}
+                          {Object.values(selectedDocs).some(v => v) && (
                             <Box className="w-full">
                               <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Box className="lg:col-span-1">
                                   <Text size="lg" className="font-medium text-gray-900 mb-2">
-                                    Customise your {documentType === 'template' && Object.values(selectedDocs).filter(v => v).length === 0 
-                                      ? 'template' 
-                                      : Object.values(selectedDocs).filter(v => v).length === 1 ? 'draft' : 'drafts'}
+                                    Customise your {Object.values(selectedDocs).filter(v => v).length === 1 ? 'draft' : 'drafts'}
                                   </Text>
                                   <Text size="sm" className="text-gray-600">
-                                    Adjust your {documentType === 'template' && Object.values(selectedDocs).filter(v => v).length === 0 
-                                      ? 'template' 
-                                      : Object.values(selectedDocs).filter(v => v).length === 1 ? 'document' : 'documents'} along key dimensions
+                                    Adjust your {Object.values(selectedDocs).filter(v => v).length === 1 ? 'document' : 'documents'} along key dimensions
                                   </Text>
                                 </Box>
                                 
