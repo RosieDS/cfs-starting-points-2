@@ -359,8 +359,8 @@ export default function Home() {
                             </Box>
                           </Box>
 
-                          {/* Governing Law Section - Only show for Template */}
-                          {documentType === 'template' && (
+                          {/* Governing Law Section - Show for Template and Standard */}
+                          {(documentType === 'template' || documentType === 'standard') && (
                             <Box className="w-full">
                               <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Box className="lg:col-span-1">
@@ -403,8 +403,8 @@ export default function Home() {
                             </Box>
                           )}
 
-                          {/* Document Purpose - Hide for Template */}
-                          {documentType !== 'template' && (
+                          {/* Document Purpose - Show for Standard and Customised */}
+                          {(documentType === 'standard' || documentType === 'customised') && (
                             <Box className="w-full">
                               <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Box className="lg:col-span-3">
@@ -435,8 +435,8 @@ export default function Home() {
                             </Box>
                           )}
 
-                          {/* Document Details - Hide for Template */}
-                          {documentType !== 'template' && (
+                          {/* Document Details - Show for Standard and Customised */}
+                          {(documentType === 'standard' || documentType === 'customised') && (
                             <Box className="w-full">
                               <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Box className="lg:col-span-1">
@@ -482,8 +482,8 @@ export default function Home() {
                             </Box>
                           )}
 
-                          {/* Key Clauses Section - Show when documents are selected and not Template */}
-                          {Object.values(selectedDocs).some(v => v) && documentType !== 'template' && (
+                          {/* Key Clauses Section - Show when documents are selected and only for Customised */}
+                          {Object.values(selectedDocs).some(v => v) && documentType === 'customised' && (
                             <Box className="w-full">
                               <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Box className="lg:col-span-3">
@@ -596,8 +596,8 @@ export default function Home() {
                                       />
                                     </Box>
                                     
-                                    {/* Favourability Slider - Hide for Template */}
-                                    {documentType !== 'template' && (
+                                    {/* Favourability Slider - Show for Standard and Customised */}
+                                    {(documentType === 'standard' || documentType === 'customised') && (
                                       <Box className="w-full">
                                         <Text size="sm" className="font-medium mb-2">Favourability</Text>
                                         <Flex justify="between" className="mb-1">
