@@ -290,13 +290,13 @@ export default function Home() {
               </Box>
 
               {/* Form-based interface */}
-              <Box className="flex flex-col bg-white h-screen">
+              <Box className="flex flex-col bg-gray-50 h-screen">
                 <Box className="h-full flex justify-center">
                   <Box className="w-full max-w-4xl flex flex-col h-full">
                     <div className="flex-1 flex flex-col h-full">
                       <Box className="flex-1 p-6 overflow-y-auto h-0">
                         <VStack spacing={8} align="start" className="w-full">
-                          <Box className="w-full">
+                          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                             <Flex justify="between" align="center">
                               <Box>
                                 <Text size="lg" className="font-semibold text-gray-900 mb-2">Document Creation</Text>
@@ -322,7 +322,7 @@ export default function Home() {
                           </Box>
 
                           {/* Document Selection Section */}
-                          <Box className="w-full">
+                          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                             <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                               <Box className="lg:col-span-1">
                                 <Text size="lg" className="font-medium text-gray-900 mb-2">Select docs to create</Text>
@@ -361,7 +361,7 @@ export default function Home() {
 
                           {/* Governing Law Section - Show for Template and Standard */}
                           {(documentType === 'template' || documentType === 'standard') && (
-                            <Box className="w-full">
+                            <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                               <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Box className="lg:col-span-1">
                                   <Text size="lg" className="font-medium text-gray-900 mb-2">Governing Law</Text>
@@ -405,7 +405,7 @@ export default function Home() {
 
                           {/* Document Purpose - Show for Standard and Customised */}
                           {(documentType === 'standard' || documentType === 'customised') && (
-                            <Box className="w-full">
+                            <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                               <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Box className="lg:col-span-3">
                                   <Text size="lg" className="font-medium text-gray-900 mb-2">Document Purpose</Text>
@@ -437,7 +437,7 @@ export default function Home() {
 
                           {/* Document Details - Show for Standard and Customised */}
                           {(documentType === 'standard' || documentType === 'customised') && (
-                            <Box className="w-full">
+                            <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                               <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Box className="lg:col-span-1">
                                   <Text size="lg" className="font-medium text-gray-900 mb-2">Document Details</Text>
@@ -484,7 +484,7 @@ export default function Home() {
 
                           {/* Key Clauses Section - Show when documents are selected and only for Customised */}
                           {Object.values(selectedDocs).some(v => v) && documentType === 'customised' && (
-                            <Box className="w-full">
+                            <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                               <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Box className="lg:col-span-3">
                                   <Text size="lg" className="font-medium text-gray-900 mb-4">Key clauses:</Text>
@@ -562,7 +562,7 @@ export default function Home() {
 
                           {/* Draft Customization Sliders - Show when documents are selected OR Template mode */}
                           {(Object.values(selectedDocs).some(v => v) || documentType === 'template') && (
-                            <Box className="w-full">
+                            <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                               <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Box className="lg:col-span-1">
                                   <Text size="lg" className="font-medium text-gray-900 mb-2">
@@ -637,7 +637,7 @@ export default function Home() {
                             </Box>
                           )}
 
-                          <Box className="w-full border-t border-gray-200 pt-6">
+                          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                             <Flex justify="end" gap={4}>
                               <Button variant="bordered" size="md">Save Draft</Button>
                               <Button 
