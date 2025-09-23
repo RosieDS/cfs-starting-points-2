@@ -9,6 +9,7 @@ import {
   Text,
   Textarea,
 } from '@/genie-ui'
+import DocumentTypeSelector, { DocumentType } from '@/genie-ui/components/documentTypeSelector'
 import {
   Wand2,
   Paperclip,
@@ -33,6 +34,7 @@ export default function Home() {
   const [lengthValue, setLengthValue] = useState(50)
   const [favourabilityValue, setFavourabilityValue] = useState(50)
   const [toneValue, setToneValue] = useState(50)
+  const [documentType, setDocumentType] = useState<DocumentType>('customised')
 
   // Generate key clauses for each document type
   const generateKeyClauses = (docType: string): Array<{name: string, explainer: string}> => {
@@ -307,6 +309,14 @@ export default function Home() {
                                 {workbenchOpen ? 'Hide Panel' : 'Show Panel'}
                               </Button>
                             </Flex>
+                          </Box>
+
+                          {/* Document Type Selector */}
+                          <Box className="w-full">
+                            <DocumentTypeSelector
+                              value={documentType}
+                              onChange={setDocumentType}
+                            />
                           </Box>
 
                           {/* Document Selection Section */}
