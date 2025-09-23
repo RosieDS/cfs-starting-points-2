@@ -64,7 +64,7 @@ export default function DocDetailSlider({
       <VStack spacing={6} align="center">
         {/* Question */}
         <Text size="lg" className="font-semibold text-gray-900 text-center">
-          What do you want to create?
+          What kind of document do you need?
         </Text>
 
         {/* Slider Track and Cards Container */}

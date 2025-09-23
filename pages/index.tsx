@@ -206,8 +206,7 @@ export default function Home() {
                     </div>
                     <VStack spacing={3} align="center">
                       <Heading as="h1" size="2xl" className="text-center font-bold text-gray-900">
-                        Say what you need, <br />
-                        <span className="text-purple-600">we&apos;ll get it ready</span>
+                        What kind of document do you need?
                       </Heading>
                       <Text size="lg" className="text-center text-gray-600 max-w-2xl">
                         Type what you need and we&apos;ll create your legal documents in seconds. 
@@ -338,20 +337,10 @@ export default function Home() {
                       <Box className="flex-1 p-6 overflow-y-auto h-0">
                         <VStack spacing={8} align="start" className="w-full">
                           <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                            <Flex justify="between" align="center">
-                              <Box>
-                                <Text size="lg" className="font-semibold text-gray-900 mb-2">Document Creation</Text>
-                                <Text size="md" className="text-gray-600">Complete the form below to create your document</Text>
-                              </Box>
-                              <Button
-                                variant="bordered"
-                                size="sm"
-                                onPress={() => setWorkbenchOpen(!workbenchOpen)}
-                                className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                              >
-                                {workbenchOpen ? 'Hide Panel' : 'Show Panel'}
-                              </Button>
-                            </Flex>
+                            <Box>
+                              <Text size="lg" className="font-semibold text-gray-900 mb-2">Customise your document</Text>
+                              <Text size="md" className="text-gray-600">Come back any time to edit or iterate</Text>
+                            </Box>
                           </Box>
 
                           {/* Doc Detail Slider */}
@@ -371,7 +360,7 @@ export default function Home() {
                               </Box>
                               
                               <Box className="lg:col-span-3">
-                                <VStack spacing={3} align="start">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                   {suggestedDocs.map((doc, i) => (
                                     <Box key={i} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 w-full">
                                       <input
@@ -390,21 +379,27 @@ export default function Home() {
                                         }}
                                         className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                                       />
-                                      <label htmlFor={`doc-${i}`} className="flex-1 cursor-pointer">
-                                        <Text size="sm" className="text-gray-900">{i + 1}. {doc}</Text>
+                                      <label htmlFor={`doc-${i}`} className="flex-1 cursor-pointer min-w-0">
+                                        <Text 
+                                          size="sm" 
+                                          className="text-gray-900 truncate" 
+                                          title={doc}
+                                        >
+                                          {i + 1}. {doc}
+                                        </Text>
                                       </label>
                                     </Box>
                                   ))}
-                                  
-                                  {/* Show customise link when more than one document is selected */}
-                                  {Object.values(selectedDocs).filter(Boolean).length > 1 && (
-                                    <Box className="w-full flex justify-start mt-2">
-                                      <button className="text-xs text-purple-600 hover:text-purple-800 underline">
-                                        Customise documents separately.
-                                      </button>
-                                    </Box>
-                                  )}
-                                </VStack>
+                                </div>
+                                
+                                {/* Show customise link when more than one document is selected */}
+                                {Object.values(selectedDocs).filter(Boolean).length > 1 && (
+                                  <Box className="w-full flex justify-start mt-4">
+                                    <button className="text-xs text-purple-600 hover:text-purple-800 underline">
+                                      Customise documents separately.
+                                    </button>
+                                  </Box>
+                                )}
                               </Box>
                             </Box>
                           </Box>
@@ -489,17 +484,10 @@ export default function Home() {
                                   
                                   <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                                     <Box className="lg:col-span-2">
-                                      <Text size="sm" className="text-gray-600 mb-4">What specific details do I need to include?</Text>
-                                      <Text size="sm" className="text-gray-600">
-                                        {Object.values(selectedDocs).some(v => v) 
-                                          ? 'Include key details and requirements.' 
-                                          : 'Include key details and requirements.'
-                                        }
-                                      </Text>
+                                      <Text size="sm" className="text-gray-600 mb-4">What specific details do I need to include? eg.</Text>
                                       {/* Show numbered questions when documents are selected */}
                                       {Object.values(selectedDocs).some(v => v) && (
                                         <Box className="mt-4">
-                                          <Text size="sm" className="text-gray-600 mb-3">eg.</Text>
                                           <VStack spacing={3} align="start">
                                             {generateDetailQuestions().map((question, i) => (
                                               <Text key={i} size="sm" className="text-gray-600">
@@ -560,7 +548,7 @@ export default function Home() {
                                         Customise standard clauses
                                       </button>
                                       <Text size="sm" className="text-gray-600 mb-6">
-                                        As well as standard clauses, I recommend you include the below key clauses. Untick any of them and click to add more detail.
+                                        Add detail below to customise the most important clauses in this document.
                                       </Text>
                                       
                                       {/* Each document type */}
@@ -768,22 +756,6 @@ export default function Home() {
                             </Box>
                           )}
 
-                          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                            <Flex justify="end" gap={4}>
-                              <Button variant="bordered" size="md">Save Draft</Button>
-                              <Button 
-                                variant="solid" 
-                                size="md"
-                                className="bg-purple-600 hover:bg-purple-700 text-white"
-                                onPress={() => {
-                                  setMode('document')
-                                  setDocumentTitle(prompt || 'New Document')
-                                }}
-                              >
-                                Create Document
-                              </Button>
-                            </Flex>
-                          </Box>
                         </VStack>
                       </Box>
                     </div>
