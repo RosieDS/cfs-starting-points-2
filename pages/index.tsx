@@ -35,8 +35,49 @@ export default function Home() {
   const [lengthValue, setLengthValue] = useState(50)
   const [favourabilityValue, setFavourabilityValue] = useState(50)
   const [toneValue, setToneValue] = useState(50)
-  const [documentType, setDocumentType] = useState<DocumentType>('template')
+  const [documentType, setDocumentType] = useState<DocumentType>('standard')
   const [governingLaw, setGoverningLaw] = useState('english-law')
+  const [customClauses, setCustomClauses] = useState<Record<string, Array<{name: string, details: string, id: string}>>>({})
+
+  // Helper function to add a new custom clause
+  const addCustomClause = (docType: string) => {
+    const newId = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    setCustomClauses(prev => ({
+      ...prev,
+      [docType]: [
+        ...(prev[docType] || []),
+        { name: '', details: '', id: newId }
+      ]
+    }))
+  }
+
+  // Helper function to update custom clause name
+  const updateCustomClauseName = (docType: string, clauseId: string, name: string) => {
+    setCustomClauses(prev => ({
+      ...prev,
+      [docType]: (prev[docType] || []).map(clause => 
+        clause.id === clauseId ? { ...clause, name } : clause
+      )
+    }))
+  }
+
+  // Helper function to update custom clause details
+  const updateCustomClauseDetails = (docType: string, clauseId: string, details: string) => {
+    setCustomClauses(prev => ({
+      ...prev,
+      [docType]: (prev[docType] || []).map(clause => 
+        clause.id === clauseId ? { ...clause, details } : clause
+      )
+    }))
+  }
+
+  // Helper function to remove a custom clause
+  const removeCustomClause = (docType: string, clauseId: string) => {
+    setCustomClauses(prev => ({
+      ...prev,
+      [docType]: (prev[docType] || []).filter(clause => clause.id !== clauseId)
+    }))
+  }
 
   // Generate key clauses for each document type
   const generateKeyClauses = (docType: string): Array<{name: string, explainer: string}> => {
@@ -323,13 +364,13 @@ export default function Home() {
 
                           {/* Document Selection Section */}
                           <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                            <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                              <Box className="lg:col-span-1">
+                            <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                              <Box className="lg:col-span-2">
                                 <Text size="lg" className="font-medium text-gray-900 mb-2">Select docs to create</Text>
                                 <Text size="sm" className="text-gray-600">Choose which documents you need</Text>
                               </Box>
                               
-                              <Box className="lg:col-span-2">
+                              <Box className="lg:col-span-3">
                                 <VStack spacing={3} align="start">
                                   {suggestedDocs.map((doc, i) => (
                                     <Box key={i} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 w-full">
@@ -354,6 +395,15 @@ export default function Home() {
                                       </label>
                                     </Box>
                                   ))}
+                                  
+                                  {/* Show customise link when more than one document is selected */}
+                                  {Object.values(selectedDocs).filter(Boolean).length > 1 && (
+                                    <Box className="w-full flex justify-start mt-2">
+                                      <button className="text-xs text-purple-600 hover:text-purple-800 underline">
+                                        Customise documents separately.
+                                      </button>
+                                    </Box>
+                                  )}
                                 </VStack>
                               </Box>
                             </Box>
@@ -362,13 +412,13 @@ export default function Home() {
                           {/* Governing Law Section - Show for Template and Standard */}
                           {(documentType === 'template' || documentType === 'standard') && (
                             <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                              <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                <Box className="lg:col-span-1">
+                              <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                                <Box className="lg:col-span-2">
                                   <Text size="lg" className="font-medium text-gray-900 mb-2">Governing Law</Text>
                                   <Text size="sm" className="text-gray-600">Select the governing law for your documents</Text>
                                 </Box>
                                 
-                                <Box className="lg:col-span-2">
+                                <Box className="lg:col-span-3">
                                   <Select
                                     selectedKeys={[governingLaw]}
                                     onSelectionChange={(keys) => {
@@ -403,101 +453,119 @@ export default function Home() {
                             </Box>
                           )}
 
-                          {/* Document Purpose - Show for Standard and Customised */}
+                          {/* Document Purpose & Details - Combined card for Standard and Customised */}
                           {(documentType === 'standard' || documentType === 'customised') && (
                             <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                              <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                <Box className="lg:col-span-3">
-                                  <Text size="lg" className="font-medium text-gray-900 mb-2">Document Purpose</Text>
-                                  <Text size="sm" className="text-gray-600 mb-4">Why are you doing this work now and what must it achieve for this deal to be a success?</Text>
-                                </Box>
-                              </Box>
-                            
-                            <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                              <Box className="lg:col-span-1">
-                                <Text size="sm" className="text-gray-600">List the 2–3 outcomes that matter most.</Text>
-                              </Box>
-                              
-                              <Box className="lg:col-span-2">
-                                <Textarea
-                                  minRows={3}
-                                  value={prompt}
-                                  onValueChange={(val) => setPrompt(val)}
-                                  placeholder="E.g., 'Hire a Sales person', 'Apply for investment funding'"
-                                  className="w-full"
-                                  classNames={{
-                                    inputWrapper: 'rounded-lg border border-gray-200',
-                                    input: 'text-gray-900 placeholder:text-gray-400',
-                                  }}
-                                />
-                              </Box>
-                            </Box>
-                            </Box>
-                          )}
-
-                          {/* Document Details - Show for Standard and Customised */}
-                          {(documentType === 'standard' || documentType === 'customised') && (
-                            <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                              <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                <Box className="lg:col-span-1">
-                                  <Text size="lg" className="font-medium text-gray-900 mb-2">Document Details</Text>
-                                  <Text size="sm" className="text-gray-600 mb-4">What specific details do I need to include?</Text>
-                                
-                                {/* Show numbered questions when documents are selected */}
-                                {Object.values(selectedDocs).some(v => v) && (
-                                  <Box className="mt-4">
-                                    <Text size="sm" className="text-gray-600 mb-3">eg.</Text>
-                                    <VStack spacing={3} align="start">
-                                      {generateDetailQuestions().map((question, i) => (
-                                        <Text key={i} size="sm" className="text-gray-600">
-                                          {i + 1}. {question}
-                                        </Text>
-                                      ))}
-                                    </VStack>
-                                  </Box>
-                                )}
-                              </Box>
-                              
-                              <Box className="lg:col-span-2">
-                                <Textarea
-                                  minRows={4}
-                                  value={selectedExistingInputs['document-details'] || ''}
-                                  onValueChange={(val) => setSelectedExistingInputs(prev => ({...prev, 'document-details': val}))}
-                                  placeholder="E.g., salary range £40-50k, hybrid working 2 days/week, reporting to CMO"
-                                  className="w-full"
-                                  classNames={{
-                                    inputWrapper: 'rounded-lg border border-gray-200',
-                                    input: 'text-gray-900 placeholder:text-gray-400',
-                                  }}
-                                />
-                                <Button
-                                  variant="bordered"
-                                  size="sm"
-                                  className="mt-3 border-purple-200 text-purple-700 hover:bg-purple-50"
-                                >
-                                  Upload Documents
-                                </Button>
-                              </Box>
-                            </Box>
-                            </Box>
-                          )}
-
-                          {/* Key Clauses Section - Show when documents are selected and only for Customised */}
-                          {Object.values(selectedDocs).some(v => v) && documentType === 'customised' && (
-                            <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                              <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                <Box className="lg:col-span-3">
-                                  <Text size="lg" className="font-medium text-gray-900 mb-4">Key clauses:</Text>
-                                  <button className="text-purple-600 underline hover:text-purple-800 transition-colors text-sm mb-4 block">
-                                    Customise standard clauses
-                                  </button>
-                                  <Text size="sm" className="text-gray-600 mb-6">
-                                    As well as standard clauses, I recommend you include the below key clauses. Untick any of them and click to add more detail.
-                                  </Text>
+                              <VStack spacing={6} align="start">
+                                {/* Document Purpose Section */}
+                                <Box className="w-full">
+                                  <Text size="lg" className="font-medium text-gray-900 mb-4">Document Purpose</Text>
                                   
-                                  {/* Each document type */}
-                                  <VStack spacing={6} align="start">
-                                    {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((docType) => (
+                                  <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                                    <Box className="lg:col-span-2">
+                                      <Text size="sm" className="text-gray-600 mb-4">Why are you doing this work now and what must it achieve for this deal to be a success?</Text>
+                                      <Text size="sm" className="text-gray-600">List the 2–3 outcomes that matter most.</Text>
+                                    </Box>
+                                    
+                                    <Box className="lg:col-span-3">
+                                      <Textarea
+                                        minRows={3}
+                                        value={prompt}
+                                        onValueChange={(val) => setPrompt(val)}
+                                        placeholder="E.g., 'Hire a Sales person', 'Apply for investment funding'"
+                                        className="w-full"
+                                        classNames={{
+                                          inputWrapper: 'rounded-lg border border-gray-200',
+                                          input: 'text-gray-900 placeholder:text-gray-400',
+                                        }}
+                                      />
+                                    </Box>
+                                  </Box>
+                                </Box>
+
+                                {/* Document Details Section */}
+                                <Box className="w-full">
+                                  <Text size="lg" className="font-medium text-gray-900 mb-4">Document Details</Text>
+                                  
+                                  <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                                    <Box className="lg:col-span-2">
+                                      <Text size="sm" className="text-gray-600 mb-4">What specific details do I need to include?</Text>
+                                      <Text size="sm" className="text-gray-600">
+                                        {Object.values(selectedDocs).some(v => v) 
+                                          ? 'Include key details and requirements.' 
+                                          : 'Include key details and requirements.'
+                                        }
+                                      </Text>
+                                      {/* Show numbered questions when documents are selected */}
+                                      {Object.values(selectedDocs).some(v => v) && (
+                                        <Box className="mt-4">
+                                          <Text size="sm" className="text-gray-600 mb-3">eg.</Text>
+                                          <VStack spacing={3} align="start">
+                                            {generateDetailQuestions().map((question, i) => (
+                                              <Text key={i} size="sm" className="text-gray-600">
+                                                {i + 1}. {question}
+                                              </Text>
+                                            ))}
+                                          </VStack>
+                                        </Box>
+                                      )}
+                                    </Box>
+                                    
+                                    <Box className="lg:col-span-3">
+                                      <Textarea
+                                        minRows={4}
+                                        value={selectedExistingInputs['document-details'] || ''}
+                                        onValueChange={(val) => setSelectedExistingInputs(prev => ({...prev, 'document-details': val}))}
+                                        placeholder="E.g., salary range £40-50k, hybrid working 2 days/week, reporting to CMO"
+                                        className="w-full mb-4"
+                                        classNames={{
+                                          inputWrapper: 'rounded-lg border border-gray-200',
+                                          input: 'text-gray-900 placeholder:text-gray-400',
+                                        }}
+                                      />
+                                      <Flex align="center" gap={3}>
+                                        <Text size="sm" className="text-gray-600">Any supporting documents?</Text>
+                                        <Button
+                                          variant="bordered"
+                                          size="sm"
+                                          className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                                        >
+                                          Upload Documents
+                                        </Button>
+                                      </Flex>
+                                    </Box>
+                                  </Box>
+                                </Box>
+                              </VStack>
+                            </Box>
+                          )}
+
+                          {/* Key Clauses Section - Show for Customised mode */}
+                          {documentType === 'customised' && (
+                            <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                              <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                                <Box className="lg:col-span-5">
+                                  <Text size="lg" className="font-medium text-gray-900 mb-4">Key clauses:</Text>
+                                  
+                                  {/* Show placeholder when no documents are selected */}
+                                  {!Object.values(selectedDocs).some(v => v) ? (
+                                    <Box className="text-center py-12">
+                                      <Text size="md" className="text-gray-500">
+                                        Select a document to customise your clauses.
+                                      </Text>
+                                    </Box>
+                                  ) : (
+                                    <>
+                                      <button className="text-purple-600 underline hover:text-purple-800 transition-colors text-sm mb-4 block">
+                                        Customise standard clauses
+                                      </button>
+                                      <Text size="sm" className="text-gray-600 mb-6">
+                                        As well as standard clauses, I recommend you include the below key clauses. Untick any of them and click to add more detail.
+                                      </Text>
+                                      
+                                      {/* Each document type */}
+                                      <VStack spacing={6} align="start">
+                                        {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((docType) => (
                                       <Box key={docType} className="w-full">
                                         <Text size="md" className="font-semibold text-gray-900 mb-4">{docType}</Text>
                                         <VStack spacing={4} align="start">
@@ -510,9 +578,9 @@ export default function Home() {
                                             return (
                                               <Box key={i} className="w-full">
                                                 {/* Each clause row: left clause + right text box */}
-                                                <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                                <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                                                   {/* Left: Clause name + explainer */}
-                                                  <Box className="lg:col-span-1">
+                                                  <Box className="lg:col-span-2">
                                                     <Flex align="center" gap={2} className="mb-1">
                                                       <Text size="sm" className="font-medium text-gray-900">{clause.name}</Text>
                                                       <button 
@@ -531,7 +599,7 @@ export default function Home() {
                                                   </Box>
                                                   
                                                   {/* Right: Text input aligned with this clause */}
-                                                  <Box className="lg:col-span-2">
+                                                  <Box className="lg:col-span-3">
                                                     <Textarea
                                                       minRows={2}
                                                       value={clauseDetailsText[clauseKey] || ''}
@@ -551,20 +619,83 @@ export default function Home() {
                                               </Box>
                                             )
                                           })}
+                                          
+                                          {/* Custom Clauses */}
+                                          {(customClauses[docType] || []).map((customClause) => (
+                                            <Box key={customClause.id} className="w-full">
+                                              {/* Each custom clause row: left clause name input + right details textarea */}
+                                              <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                                                {/* Left: Custom clause name input */}
+                                                <Box className="lg:col-span-2">
+                                                  <Flex align="center" gap={2} className="mb-1">
+                                                    <Box className="flex-1">
+                                                      <Textarea
+                                                        minRows={1}
+                                                        value={customClause.name}
+                                                        onValueChange={(val) => updateCustomClauseName(docType, customClause.id, val)}
+                                                        placeholder="What clause would you like to add?"
+                                                        className="w-full"
+                                                        classNames={{
+                                                          inputWrapper: 'rounded-lg border border-gray-200',
+                                                          input: 'text-gray-900 placeholder:text-gray-400 text-sm font-medium',
+                                                        }}
+                                                      />
+                                                    </Box>
+                                                    <button 
+                                                      onClick={() => removeCustomClause(docType, customClause.id)}
+                                                      className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                                                    >
+                                                      <X className="w-3 h-3" />
+                                                    </button>
+                                                  </Flex>
+                                                </Box>
+                                                
+                                                {/* Right: Custom clause details textarea */}
+                                                <Box className="lg:col-span-3">
+                                                  <Textarea
+                                                    minRows={2}
+                                                    value={customClause.details}
+                                                    onValueChange={(val) => updateCustomClauseDetails(docType, customClause.id, val)}
+                                                    placeholder="Add specific requirements for this clause..."
+                                                    className="w-full"
+                                                    classNames={{
+                                                      inputWrapper: 'rounded-lg border border-gray-200',
+                                                      input: 'text-gray-900 placeholder:text-gray-400 text-sm',
+                                                    }}
+                                                  />
+                                                </Box>
+                                              </Box>
+                                            </Box>
+                                          ))}
+                                          
+                                          {/* Add another clause button */}
+                                          <Box className="w-full flex justify-end">
+                                            <Button 
+                                              size="sm"
+                                              variant="outline"
+                                              onClick={() => addCustomClause(docType)}
+                                              className="text-purple-600 border-purple-600 hover:bg-purple-50"
+                                            >
+                                              <Plus className="w-4 h-4 mr-2" />
+                                              Add another clause
+                                            </Button>
+                                          </Box>
                                         </VStack>
                                       </Box>
                                     ))}
                                   </VStack>
+                                    </>
+                                  )}
                                 </Box>
                               </Box>
                             </Box>
                           )}
 
-                          {/* Draft Customization Sliders - Show when documents are selected OR Template mode */}
-                          {(Object.values(selectedDocs).some(v => v) || documentType === 'template') && (
+                          {/* Draft Customization Sliders - Show for all document types */}
+                          {(documentType === 'template' || documentType === 'standard' || documentType === 'customised') && (
                             <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                              <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                <Box className="lg:col-span-1">
+                              <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                                <Box className="lg:col-span-2">
                                   <Text size="lg" className="font-medium text-gray-900 mb-2">
                                     Customise your {documentType === 'template' && Object.values(selectedDocs).filter(v => v).length === 0 
                                       ? 'template' 
@@ -577,7 +708,7 @@ export default function Home() {
                                   </Text>
                                 </Box>
                                 
-                                <Box className="lg:col-span-2">
+                                <Box className="lg:col-span-3">
                                   <VStack spacing={4} className="w-full">
                                     {/* Length Slider */}
                                     <Box className="w-full">
