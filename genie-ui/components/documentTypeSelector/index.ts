@@ -1,2 +1,2 @@
-export { default } from './DocDetailSlider'
-export type { DocumentType, DocumentTypeOption } from './DocDetailSlider'
+export { default } from './DocumentTypeSelector'
+export type { DocumentType, DocumentTypeOption } from './DocumentTypeSelector'

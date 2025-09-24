@@ -25,7 +25,6 @@ export default function Home() {
   const [prompt, setPrompt] = useState('')
   const [mode, setMode] = useState<'landing' | 'chat' | 'document'>('landing')
   const [selectedExistingInputs, setSelectedExistingInputs] = useState<Record<string, string>>({})
-  const [documentTitle, setDocumentTitle] = useState('')
   const [workbenchOpen, setWorkbenchOpen] = useState(false)
   const [selectedDocs, setSelectedDocs] = useState<Record<string, boolean>>({})
   const [suggestedDocs, setSuggestedDocs] = useState<string[]>([])
@@ -383,8 +382,7 @@ export default function Home() {
                                       <label htmlFor={`doc-${i}`} className="flex-1 cursor-pointer min-w-0">
                                         <Text 
                                           size="sm" 
-                                          className="text-gray-900 truncate" 
-                                          title={doc}
+                                          className="text-gray-900 truncate"
                                         >
                                           {i + 1}. {doc}
                                         </Text>
@@ -422,10 +420,9 @@ export default function Home() {
                                               <Box className="border-b bg-gray-50 px-3 py-3">
                                                 <Flex align="center" justify="between">
                                                   <Text size="md" className="text-gray-900 font-bold">Based on previous documents:</Text>
-                                                  <Flex align="center" className="text-xs text-gray-600" style={{ width: '180px' }}>
+                                                  <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
                                                     <Text className="w-20 text-center">Use as template</Text>
                                                     <Text className="w-20 text-center">Use as context</Text>
-                                                    <Box className="w-16" />
                                                   </Flex>
                                                 </Flex>
                                               </Box>
@@ -437,7 +434,7 @@ export default function Home() {
                                                       <FileText className="w-4 h-4 text-blue-500" />
                                                       <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
                                                     </Flex>
-                                                    <Flex align="center" style={{ width: '180px' }}>
+                                                    <Flex align="center" style={{ width: '140px' }}>
                                                       <Box className="w-20 flex justify-center">
                                                         <input
                                                           type="checkbox"
@@ -451,11 +448,6 @@ export default function Home() {
                                                           defaultChecked
                                                           className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                                                         />
-                                                      </Box>
-                                                      <Box className="w-16 flex justify-center">
-                                                        <Text size="xs" className="text-green-700 bg-green-100 px-2 py-0.5 rounded-md">
-                                                          Signed
-                                                        </Text>
                                                       </Box>
                                                     </Flex>
                                                   </Flex>
@@ -843,7 +835,7 @@ export default function Home() {
                                           <Box className="w-full flex justify-end">
                                             <Button 
                                               size="sm"
-                                              variant="outline"
+                                              variant="bordered"
                                               onClick={() => addCustomClause(docType)}
                                               className="text-purple-600 border-purple-600 hover:bg-purple-50"
                                             >
@@ -1039,8 +1031,8 @@ export default function Home() {
                               <p className="font-normal !text-size-2 leading-1 tracking-4 text-gray-900">Previous_document_2.docx</p>
                             </div>
                             <div className="flex gap-3 mt-4">
-                              <button type="button" tabIndex="0" data-react-aria-pressable="true" className="z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent transform-gpu data-[pressed=true]:scale-[0.97] outline-none data-[focus-visible=true]:z-10 data-[focus-visible=true]:outline-2 data-[focus-visible=true]:outline-focus data-[focus-visible=true]:outline-offset-2 text-small rounded-full [&amp;&gt;svg]:max-w-[theme(spacing.8)] transition-transform-colors-opacity motion-reduce:transition-none data-[hover=true]:opacity-hover bg-white border [&amp;[data-pressed=true]]:shadow-bordered !text-size-3 leading-3 tracking-1 font-weight-500 px-3 h-10 gap-1 [&amp;_svg]:w-5 [&amp;_svg]:h-5 min-w-fit hover:opacity-100 focus:opacity-100 flex-1 border-purple-200 text-purple-700 hover:bg-purple-50">Search Vault</button>
-                              <button type="button" tabIndex="0" data-react-aria-pressable="true" className="z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent transform-gpu data-[pressed=true]:scale-[0.97] outline-none data-[focus-visible=true]:z-10 data-[focus-visible=true]:outline-2 data-[focus-visible=true]:outline-focus data-[focus-visible=true]:outline-offset-2 text-small rounded-full [&amp;&gt;svg]:max-w-[theme(spacing.8)] transition-transform-colors-opacity motion-reduce:transition-none data-[hover=true]:opacity-hover bg-white border [&amp;[data-pressed=true]]:shadow-bordered !text-size-3 leading-3 tracking-1 font-weight-500 px-3 h-10 gap-1 [&amp;_svg]:w-5 [&amp;_svg]:h-5 min-w-fit hover:opacity-100 focus:opacity-100 flex-1 border-purple-200 text-purple-700 hover:bg-purple-50">Upload</button>
+                              <button type="button" tabIndex={0} data-react-aria-pressable="true" className="z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent transform-gpu data-[pressed=true]:scale-[0.97] outline-none data-[focus-visible=true]:z-10 data-[focus-visible=true]:outline-2 data-[focus-visible=true]:outline-focus data-[focus-visible=true]:outline-offset-2 text-small rounded-full [&amp;&gt;svg]:max-w-[theme(spacing.8)] transition-transform-colors-opacity motion-reduce:transition-none data-[hover=true]:opacity-hover bg-white border [&amp;[data-pressed=true]]:shadow-bordered !text-size-3 leading-3 tracking-1 font-weight-500 px-3 h-10 gap-1 [&amp;_svg]:w-5 [&amp;_svg]:h-5 min-w-fit hover:opacity-100 focus:opacity-100 flex-1 border-purple-200 text-purple-700 hover:bg-purple-50">Search Vault</button>
+                              <button type="button" tabIndex={0} data-react-aria-pressable="true" className="z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent transform-gpu data-[pressed=true]:scale-[0.97] outline-none data-[focus-visible=true]:z-10 data-[focus-visible=true]:outline-2 data-[focus-visible=true]:outline-focus data-[focus-visible=true]:outline-offset-2 text-small rounded-full [&amp;&gt;svg]:max-w-[theme(spacing.8)] transition-transform-colors-opacity motion-reduce:transition-none data-[hover=true]:opacity-hover bg-white border [&amp;[data-pressed=true]]:shadow-bordered !text-size-3 leading-3 tracking-1 font-weight-500 px-3 h-10 gap-1 [&amp;_svg]:w-5 [&amp;_svg]:h-5 min-w-fit hover:opacity-100 focus:opacity-100 flex-1 border-purple-200 text-purple-700 hover:bg-purple-50">Upload</button>
                             </div>
                           </Box>
                         </VStack>
@@ -1071,10 +1063,10 @@ export default function Home() {
                   <Box className="w-full pb-4 border-b border-zinc-200">
                     <VStack spacing={2} align="start">
                       <Text size="sm" className="text-zinc-500">
-                        Saved in / {documentTitle} project 🔒 Private and secure
+                        Saved in / Legal Documents project 🔒 Private and secure
                       </Text>
                       <Heading as="h1" size="xl" className="text-purple-600">
-                        {documentTitle} (19 August 2025) v1
+                        Legal Document (19 August 2025) v1
                       </Heading>
                     </VStack>
                   </Box>
@@ -1086,7 +1078,7 @@ export default function Home() {
                           This Agreement is made on the <span className="bg-yellow-200 px-2 py-1 rounded">[DATE]</span> day of <span className="bg-yellow-200 px-2 py-1 rounded">[MONTH]</span> <span className="bg-yellow-200 px-2 py-1 rounded">[YEAR]</span>
                         </Text>
                         <Text size="lg" className="leading-relaxed">
-                          Document content for: {documentTitle}
+                          Document content for: Legal Document
                         </Text>
                       </VStack>
                     </Box>
