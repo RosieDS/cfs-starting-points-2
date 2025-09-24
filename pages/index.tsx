@@ -38,6 +38,7 @@ export default function Home() {
   const [documentType, setDocumentType] = useState<DocumentType>('standard')
   const [governingLaw, setGoverningLaw] = useState('english-law')
   const [customClauses, setCustomClauses] = useState<Record<string, Array<{name: string, details: string, id: string}>>>({})
+  const [activeTab, setActiveTab] = useState<'documents' | 'context' | 'rules'>('documents')
 
   // Helper function to add a new custom clause
   const addCustomClause = (docType: string) => {
@@ -402,6 +403,188 @@ export default function Home() {
                                 )}
                               </Box>
                             </Box>
+
+                            {/* Based on previous documents sections - moved from right panel */}
+                            {Object.values(selectedDocs).some(v => v) && (
+                              <Box className="mt-6 pt-6 border-t border-gray-200">
+                                {(() => {
+                                  const selectedDocsList = Object.keys(selectedDocs).filter(k => selectedDocs[k])
+                                  const numSelected = selectedDocsList.length
+                                  
+                                  // Layout logic based on number of selected documents
+                                  if (numSelected === 1) {
+                                    // Single document - centrally aligned on right side
+                                    return (
+                                      <Box className="flex justify-center">
+                                        <Box className="w-full max-w-md">
+                                          {selectedDocsList.map((doc) => (
+                                            <Box key={doc} className="border rounded-lg bg-white shadow-sm overflow-hidden">
+                                              <Box className="border-b bg-gray-50 px-3 py-3">
+                                                <Flex align="center" justify="between">
+                                                  <Text size="md" className="text-gray-900 font-bold">Based on previous documents:</Text>
+                                                  <Flex align="center" className="text-xs text-gray-600" style={{ width: '180px' }}>
+                                                    <Text className="w-20 text-center">Use as template</Text>
+                                                    <Text className="w-20 text-center">Use as context</Text>
+                                                    <Box className="w-16" />
+                                                  </Flex>
+                                                </Flex>
+                                              </Box>
+                                              
+                                              {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
+                                                <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
+                                                  <Flex align="center" justify="between">
+                                                    <Flex align="center" gap={3} className="flex-1 min-w-0">
+                                                      <FileText className="w-4 h-4 text-blue-500" />
+                                                      <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
+                                                    </Flex>
+                                                    <Flex align="center" style={{ width: '180px' }}>
+                                                      <Box className="w-20 flex justify-center">
+                                                        <input
+                                                          type="checkbox"
+                                                          defaultChecked={rowIndex === 0}
+                                                          className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                                        />
+                                                      </Box>
+                                                      <Box className="w-20 flex justify-center">
+                                                        <input
+                                                          type="checkbox"
+                                                          defaultChecked
+                                                          className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                                        />
+                                                      </Box>
+                                                      <Box className="w-16 flex justify-center">
+                                                        <Text size="xs" className="text-green-700 bg-green-100 px-2 py-0.5 rounded-md">
+                                                          Signed
+                                                        </Text>
+                                                      </Box>
+                                                    </Flex>
+                                                  </Flex>
+                                                </Box>
+                                              ))}
+                                            </Box>
+                                          ))}
+                                        </Box>
+                                      </Box>
+                                    )
+                                  } else if (numSelected === 2) {
+                                    // Two documents - in same horizontal row
+                                    return (
+                                      <Box className="grid grid-cols-2 gap-4">
+                                        {selectedDocsList.map((doc) => (
+                                          <Box key={doc} className="border rounded-lg bg-white shadow-sm overflow-hidden">
+                                            <Box className="border-b bg-gray-50 px-3 py-3">
+                                              <Flex align="center" justify="between">
+                                                <Text size="sm" className="text-gray-900 font-bold">Based on previous:</Text>
+                                                <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
+                                                  <Text className="w-16 text-center">Template</Text>
+                                                  <Text className="w-16 text-center">Context</Text>
+                                                  <Box className="w-12" />
+                                                </Flex>
+                                              </Flex>
+                                            </Box>
+                                            
+                                            {[`${doc}_type_1`, `${doc}_type_2`].map((docName, rowIndex) => (
+                                              <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
+                                                <Flex align="center" justify="between">
+                                                  <Flex align="center" gap={2} className="flex-1 min-w-0">
+                                                    <FileText className="w-3 h-3 text-blue-500" />
+                                                    <Text size="xs" className="text-gray-900 truncate">{docName}.docx</Text>
+                                                  </Flex>
+                                                  <Flex align="center" style={{ width: '140px' }}>
+                                                    <Box className="w-16 flex justify-center">
+                                                      <input
+                                                        type="checkbox"
+                                                        defaultChecked={rowIndex === 0}
+                                                        className="w-3 h-3 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                                      />
+                                                    </Box>
+                                                    <Box className="w-16 flex justify-center">
+                                                      <input
+                                                        type="checkbox"
+                                                        defaultChecked
+                                                        className="w-3 h-3 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                                      />
+                                                    </Box>
+                                                    <Box className="w-12 flex justify-center">
+                                                      <Text size="xs" className="text-green-700 bg-green-100 px-1 py-0.5 rounded text-xs">
+                                                        ✓
+                                                      </Text>
+                                                    </Box>
+                                                  </Flex>
+                                                </Flex>
+                                              </Box>
+                                            ))}
+                                          </Box>
+                                        ))}
+                                      </Box>
+                                    )
+                                  } else {
+                                    // 3+ documents - grid layout with specific positioning
+                                    return (
+                                      <Box className="grid grid-cols-2 gap-4">
+                                        {selectedDocsList.map((doc, index) => {
+                                          let gridClass = ''
+                                          if (numSelected === 3 && index === 2) {
+                                            // Third document in second row, left-aligned
+                                            gridClass = 'col-start-1'
+                                          } else if (numSelected === 4 && index === 3) {
+                                            // Fourth document in second row, right-aligned  
+                                            gridClass = 'col-start-2'
+                                          }
+                                          
+                                          return (
+                                            <Box key={doc} className={`border rounded-lg bg-white shadow-sm overflow-hidden ${gridClass}`}>
+                                              <Box className="border-b bg-gray-50 px-3 py-3">
+                                                <Flex align="center" justify="between">
+                                                  <Text size="sm" className="text-gray-900 font-bold">Based on previous:</Text>
+                                                  <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
+                                                    <Text className="w-16 text-center">Template</Text>
+                                                    <Text className="w-16 text-center">Context</Text>
+                                                    <Box className="w-12" />
+                                                  </Flex>
+                                                </Flex>
+                                              </Box>
+                                              
+                                              {[`${doc}_type_1`, `${doc}_type_2`].map((docName, rowIndex) => (
+                                                <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
+                                                  <Flex align="center" justify="between">
+                                                    <Flex align="center" gap={2} className="flex-1 min-w-0">
+                                                      <FileText className="w-3 h-3 text-blue-500" />
+                                                      <Text size="xs" className="text-gray-900 truncate">{docName}.docx</Text>
+                                                    </Flex>
+                                                    <Flex align="center" style={{ width: '140px' }}>
+                                                      <Box className="w-16 flex justify-center">
+                                                        <input
+                                                          type="checkbox"
+                                                          defaultChecked={rowIndex === 0}
+                                                          className="w-3 h-3 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                                        />
+                                                      </Box>
+                                                      <Box className="w-16 flex justify-center">
+                                                        <input
+                                                          type="checkbox"
+                                                          defaultChecked
+                                                          className="w-3 h-3 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                                        />
+                                                      </Box>
+                                                      <Box className="w-12 flex justify-center">
+                                                        <Text size="xs" className="text-green-700 bg-green-100 px-1 py-0.5 rounded text-xs">
+                                                          ✓
+                                                        </Text>
+                                                      </Box>
+                                                    </Flex>
+                                                  </Flex>
+                                                </Box>
+                                              ))}
+                                            </Box>
+                                          )
+                                        })}
+                                      </Box>
+                                    )
+                                  }
+                                })()}
+                              </Box>
+                            )}
                           </Box>
 
                           {/* Governing Law Section - Show for Template and Standard */}
@@ -770,10 +953,34 @@ export default function Home() {
                     {/* Tab Header */}
                     <Box className="border-b border-gray-100 px-6 pt-6 pb-4">
                       <Flex gap={6}>
-                        <button className="pb-3 text-sm font-medium text-gray-900 border-b-2 border-gray-900 relative">
+                        <button 
+                          className={`pb-3 text-sm font-medium transition-colors ${
+                            activeTab === 'documents' 
+                              ? 'text-gray-900 border-b-2 border-gray-900 relative' 
+                              : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                          onClick={() => setActiveTab('documents')}
+                        >
                           Documents
                         </button>
-                        <button className="pb-3 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
+                        <button 
+                          className={`pb-3 text-sm font-medium transition-colors ${
+                            activeTab === 'context' 
+                              ? 'text-gray-900 border-b-2 border-gray-900 relative' 
+                              : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                          onClick={() => setActiveTab('context')}
+                        >
+                          Context
+                        </button>
+                        <button 
+                          className={`pb-3 text-sm font-medium transition-colors ${
+                            activeTab === 'rules' 
+                              ? 'text-gray-900 border-b-2 border-gray-900 relative' 
+                              : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                          onClick={() => setActiveTab('rules')}
+                        >
                           Rules
                         </button>
                       </Flex>
@@ -781,109 +988,81 @@ export default function Home() {
 
                     {/* Content */}
                     <Box className="flex-1 p-6 overflow-y-auto h-0">
-                      <VStack spacing={4} align="start" className="h-full">
-                        {/* Creating Section */}
-                        <Box className="w-full">
-                          {createDocs.map((doc, i) => (
-                            <Box key={`creating-section-${i}`} className={i > 0 ? "mt-6" : ""}>
-                              {i > 0 && <Box className="w-full h-px bg-gray-200 my-6" />}
-                              <Text size="lg" className="mb-4 text-gray-900 font-semibold">Creating document {i + 1}:</Text>
-                              <Box className="border rounded-lg bg-white shadow-sm mb-2">
-                                <Flex align="center" justify="between" className="p-3">
-                                  <Flex align="center" gap={3}>
-                                    <FileText className="w-4 h-4 text-blue-500" />
-                                    <Text size="sm" className="text-gray-900">{doc}.docx</Text>
-                                  </Flex>
-                                  <Text size="xs" className="text-purple-600 bg-purple-100 px-2 py-1 rounded-md animate-pulse">
-                                    Genie editing...
-                                  </Text>
-                                </Flex>
-                              </Box>
-                              
-                              {/* Template Selection Table */}
-                              <Box className="mt-3">
-                                <Box className="border rounded-lg bg-white shadow-sm overflow-hidden">
-                                  <Box className="border-b bg-gray-50 px-3 py-3">
-                                    <Flex align="center" justify="between">
-                                      <Text size="md" className="text-gray-900 font-bold">Based on previous documents:</Text>
-                                      <Flex align="center" className="text-xs text-gray-600" style={{ width: '180px' }}>
-                                        <Text className="w-20 text-center">Use as template</Text>
-                                        <Text className="w-20 text-center">Use as context</Text>
-                                        <Box className="w-16" />
-                                      </Flex>
+                      {activeTab === 'documents' && (
+                        <VStack spacing={4} align="start" className="h-full">
+                          {/* Creating Section */}
+                          <Box className="w-full">
+                            {createDocs.map((doc, i) => (
+                              <Box key={`creating-section-${i}`} className={i > 0 ? "mt-6" : ""}>
+                                {i > 0 && <Box className="w-full h-px bg-gray-200 my-6" />}
+                                <Text size="lg" className="mb-4 text-gray-900 font-semibold">Creating document {i + 1}:</Text>
+                                <Box className="border rounded-lg bg-white shadow-sm mb-2">
+                                  <Flex align="center" justify="between" className="p-3">
+                                    <Flex align="center" gap={3}>
+                                      <FileText className="w-4 h-4 text-blue-500" />
+                                      <Text size="sm" className="text-gray-900">{doc}.docx</Text>
                                     </Flex>
-                                  </Box>
-                                  
-                                  {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
-                                    <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
-                                      <Flex align="center" justify="between">
-                                        <Flex align="center" gap={3} className="flex-1 min-w-0">
-                                          <FileText className="w-4 h-4 text-blue-500" />
-                                          <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
-                                        </Flex>
-                                        <Flex align="center" style={{ width: '180px' }}>
-                                          <Box className="w-20 flex justify-center">
-                                            <input
-                                              type="checkbox"
-                                              defaultChecked={rowIndex === 0}
-                                              className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                            />
-                                          </Box>
-                                          <Box className="w-20 flex justify-center">
-                                            <input
-                                              type="checkbox"
-                                              defaultChecked
-                                              className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                            />
-                                          </Box>
-                                          <Box className="w-16 flex justify-center">
-                                            <Text size="xs" className="text-green-700 bg-green-100 px-2 py-0.5 rounded-md">
-                                              Signed
-                                            </Text>
-                                          </Box>
-                                        </Flex>
-                                      </Flex>
-                                    </Box>
-                                  ))}
+                                    <Text size="xs" className="text-purple-600 bg-purple-100 px-2 py-1 rounded-md animate-pulse">
+                                      Genie editing...
+                                    </Text>
+                                  </Flex>
                                 </Box>
                               </Box>
-                            </Box>
-                          ))}
-                        </Box>
+                            ))}
+                          </Box>
+                        </VStack>
+                      )}
 
-                        {/* Additional Context Section */}
-                        <Box className="w-full h-px bg-gray-200 my-6" />
-                        <Box className="w-full">
-                          <Text size="lg" className="mb-4 text-gray-900 font-semibold">Additional context:</Text>
-                          {['Previous_document_1', 'Previous_document_2'].map((doc, i) => (
-                            <Flex key={i} align="center" justify="between" className="py-2">
-                              <Flex align="center" gap={3}>
-                                <FileText className="w-4 h-4 text-blue-500" />
-                                <Text size="sm" className="text-gray-900">{doc}.docx</Text>
-                              </Flex>
-                              <Text size="xs" className="text-green-700 bg-green-100 px-2 py-1 rounded-md">
-                                Signed
-                              </Text>
-                            </Flex>
-                          ))}
-                          
-                          {/* Action Buttons */}
-                          <Flex gap={3} className="mt-4">
-                            <Button
-                              variant="bordered"
-                              className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
-                            >
-                              Search Vault
-                            </Button>
-                            <Button
-                              variant="bordered"
-                              className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
-                            >
-                              Upload
-                            </Button>
-                          </Flex>
-                        </Box>
-                      </VStack>
+                      {activeTab === 'context' && (
+                        <VStack spacing={4} align="start" className="h-full">
+                          {/* Additional Context Section - moved from Documents tab */}
+                          <Box className="w-full">
+                            <Text size="lg" className="!text-size-4 leading-3 tracking-2 mb-4 text-gray-900 font-semibold">Additional context:</Text>
+                            <div className="flex items-center justify-between py-2">
+                              <div className="flex items-center gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-file-text w-4 h-4 text-blue-500" aria-hidden="true">
+                                  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+                                  <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+                                  <path d="M10 9H8"></path>
+                                  <path d="M16 13H8"></path>
+                                  <path d="M16 17H8"></path>
+                                </svg>
+                                <p className="font-normal !text-size-2 leading-1 tracking-4 text-gray-900">Previous_document_1.docx</p>
+                              </div>
+                              <p className="font-normal !text-size-1 leading-1 tracking-1 text-green-700 bg-green-100 px-2 py-1 rounded-md">Signed</p>
+                            </div>
+                            <div className="flex items-center justify-between py-2">
+                              <div className="flex items-center gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-file-text w-4 h-4 text-blue-500" aria-hidden="true">
+                                  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+                                  <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+                                  <path d="M10 9H8"></path>
+                                  <path d="M16 13H8"></path>
+                                  <path d="M16 17H8"></path>
+                                </svg>
+                                <p className="font-normal !text-size-2 leading-1 tracking-4 text-gray-900">Previous_document_2.docx</p>
+                              </div>
+                              <p className="font-normal !text-size-1 leading-1 tracking-1 text-green-700 bg-green-100 px-2 py-1 rounded-md">Signed</p>
+                            </div>
+                            <div className="flex gap-3 mt-4">
+                              <button type="button" tabIndex="0" data-react-aria-pressable="true" className="z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent transform-gpu data-[pressed=true]:scale-[0.97] outline-none data-[focus-visible=true]:z-10 data-[focus-visible=true]:outline-2 data-[focus-visible=true]:outline-focus data-[focus-visible=true]:outline-offset-2 text-small rounded-full [&amp;&gt;svg]:max-w-[theme(spacing.8)] transition-transform-colors-opacity motion-reduce:transition-none data-[hover=true]:opacity-hover bg-white border [&amp;[data-pressed=true]]:shadow-bordered !text-size-3 leading-3 tracking-1 font-weight-500 px-3 h-10 gap-1 [&amp;_svg]:w-5 [&amp;_svg]:h-5 min-w-fit hover:opacity-100 focus:opacity-100 flex-1 border-purple-200 text-purple-700 hover:bg-purple-50">Search Vault</button>
+                              <button type="button" tabIndex="0" data-react-aria-pressable="true" className="z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent transform-gpu data-[pressed=true]:scale-[0.97] outline-none data-[focus-visible=true]:z-10 data-[focus-visible=true]:outline-2 data-[focus-visible=true]:outline-focus data-[focus-visible=true]:outline-offset-2 text-small rounded-full [&amp;&gt;svg]:max-w-[theme(spacing.8)] transition-transform-colors-opacity motion-reduce:transition-none data-[hover=true]:opacity-hover bg-white border [&amp;[data-pressed=true]]:shadow-bordered !text-size-3 leading-3 tracking-1 font-weight-500 px-3 h-10 gap-1 [&amp;_svg]:w-5 [&amp;_svg]:h-5 min-w-fit hover:opacity-100 focus:opacity-100 flex-1 border-purple-200 text-purple-700 hover:bg-purple-50">Upload</button>
+                            </div>
+                          </Box>
+                        </VStack>
+                      )}
+
+                      {activeTab === 'rules' && (
+                        <VStack spacing={4} align="start" className="h-full">
+                          {/* Rules content placeholder */}
+                          <Box className="w-full">
+                            <Text size="lg" className="mb-4 text-gray-900 font-semibold">Rules and Guidelines:</Text>
+                            <Text size="sm" className="text-gray-600">
+                              Configure your document rules and guidelines here.
+                            </Text>
+                          </Box>
+                        </VStack>
+                      )}
                     </Box>
                   </Box>
                 </aside>
