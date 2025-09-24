@@ -467,10 +467,9 @@ export default function Home() {
                                             <Box className="border-b bg-gray-50 px-3 py-3">
                                               <Flex align="center" justify="between">
                                                 <Text size="sm" className="text-gray-900 font-bold">Based on previous:</Text>
-                                                <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
+                                                <Flex align="center" className="text-xs text-gray-600" style={{ width: '128px' }}>
                                                   <Text className="w-16 text-center">Template</Text>
                                                   <Text className="w-16 text-center">Context</Text>
-                                                  <Box className="w-12" />
                                                 </Flex>
                                               </Flex>
                                             </Box>
@@ -482,7 +481,7 @@ export default function Home() {
                                                     <FileText className="w-3 h-3 text-blue-500" />
                                                     <Text size="xs" className="text-gray-900 truncate">{docName}.docx</Text>
                                                   </Flex>
-                                                  <Flex align="center" style={{ width: '140px' }}>
+                                                  <Flex align="center" style={{ width: '128px' }}>
                                                     <Box className="w-16 flex justify-center">
                                                       <input
                                                         type="checkbox"
@@ -496,11 +495,6 @@ export default function Home() {
                                                         defaultChecked
                                                         className="w-3 h-3 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                                                       />
-                                                    </Box>
-                                                    <Box className="w-12 flex justify-center">
-                                                      <Text size="xs" className="text-green-700 bg-green-100 px-1 py-0.5 rounded text-xs">
-                                                        ✓
-                                                      </Text>
                                                     </Box>
                                                   </Flex>
                                                 </Flex>
