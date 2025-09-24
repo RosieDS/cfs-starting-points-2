@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Box, 
   Flex, 
@@ -38,6 +38,138 @@ export default function Home() {
   const [governingLaw, setGoverningLaw] = useState('english-law')
   const [customClauses, setCustomClauses] = useState<Record<string, Array<{name: string, details: string, id: string}>>>({})
   const [activeTab, setActiveTab] = useState<'documents' | 'context' | 'rules'>('documents')
+  const [expandedDocs, setExpandedDocs] = useState<Record<string, boolean>>({})
+
+  // Set first document as expanded by default when createDocs changes
+  useEffect(() => {
+    if (createDocs.length > 0) {
+      setExpandedDocs(prev => ({
+        ...prev,
+        [createDocs[0]]: true
+      }))
+    }
+  }, [createDocs])
+
+  // Generate dummy content for different document types
+  const generateDummyContent = (docType: string) => {
+    const docTypeLower = docType.toLowerCase()
+    
+    if (docTypeLower.includes('employment') || docTypeLower.includes('contract')) {
+      return `EMPLOYMENT AGREEMENT
+
+This Employment Agreement is entered into between [COMPANY NAME] and [EMPLOYEE NAME].
+
+1. POSITION AND DUTIES
+Employee shall serve as [JOB TITLE] and perform duties including:
+- [DUTY 1]
+- [DUTY 2]
+- [DUTY 3]
+
+2. COMPENSATION
+Base salary: $[AMOUNT] per year
+Benefits: Health insurance, dental, vision
+Vacation: [NUMBER] days per year
+
+3. EMPLOYMENT TERMS
+Start date: [DATE]
+Employment is at-will and may be terminated by either party
+
+4. CONFIDENTIALITY
+Employee agrees to maintain confidentiality of company information
+
+5. GOVERNING LAW
+This agreement shall be governed by [STATE] law.
+
+[COMPANY NAME]
+By: _________________
+Name: [NAME]
+Title: [TITLE]
+
+EMPLOYEE
+By: _________________
+Name: [EMPLOYEE NAME]`
+    }
+    
+    if (docTypeLower.includes('offer')) {
+      return `OFFER LETTER
+
+Dear [CANDIDATE NAME],
+
+We are pleased to offer you the position of [JOB TITLE] at [COMPANY NAME].
+
+POSITION DETAILS:
+- Job Title: [JOB TITLE]
+- Start Date: [DATE]
+- Salary: $[AMOUNT] per year
+- Benefits: Health, dental, vision insurance
+- Vacation: [NUMBER] days per year
+
+REPORTING:
+You will report to [MANAGER NAME], [MANAGER TITLE].
+
+NEXT STEPS:
+Please sign and return this letter by [DATE] to accept this offer.
+
+We look forward to welcoming you to the team!
+
+Sincerely,
+[HIRING MANAGER NAME]
+[TITLE]
+[COMPANY NAME]
+
+ACCEPTANCE:
+I accept this offer of employment.
+
+Signature: _________________
+Date: _________________`
+    }
+    
+    if (docTypeLower.includes('nda') || docTypeLower.includes('disclosure')) {
+      return `MUTUAL NON-DISCLOSURE AGREEMENT
+
+This Mutual Non-Disclosure Agreement ("Agreement") is entered into on [DATE] by and between:
+
+Party 1: [COMPANY NAME]
+Address: [COMPANY ADDRESS]
+
+Party 2: [COUNTERPARTY NAME]  
+Address: [COUNTERPARTY ADDRESS]
+
+1. Governing Law. This Agreement is governed by the laws of England and Wales.
+
+2. Jurisdiction. The parties submit to the exclusive jurisdiction of the courts of England and Wales.
+
+3. Liability Cap. The total liability shall not exceed 475% of the fees paid in the 12 months preceding the claim.
+
+4. Confidentiality Duration. The confidentiality obligations survive for two (2) years from disclosure.`
+    }
+
+    // Default content for any other document type
+    return `${docType.toUpperCase()}
+
+This document contains the terms and conditions for [PURPOSE].
+
+1. PARTIES
+This agreement is between [PARTY 1] and [PARTY 2].
+
+2. TERMS
+The following terms apply:
+- [TERM 1]
+- [TERM 2]
+- [TERM 3]
+
+3. EFFECTIVE DATE
+This agreement is effective as of [DATE].
+
+4. SIGNATURES
+Both parties agree to the terms set forth above.
+
+[PARTY 1]
+By: _________________
+
+[PARTY 2]
+By: _________________`
+  }
 
   // Helper function to add a new custom clause
   const addCustomClause = (docType: string) => {
@@ -978,23 +1110,73 @@ export default function Home() {
                         <VStack spacing={4} align="start" className="h-full">
                           {/* Creating Section */}
                           <Box className="w-full">
-                            {createDocs.map((doc, i) => (
-                              <Box key={`creating-section-${i}`} className={i > 0 ? "mt-6" : ""}>
-                                {i > 0 && <Box className="w-full h-px bg-gray-200 my-6" />}
-                                <Text size="lg" className="mb-4 text-gray-900 font-semibold">Creating document {i + 1}:</Text>
-                                <Box className="border rounded-lg bg-white shadow-sm mb-2">
-                                  <Flex align="center" justify="between" className="p-3">
-                                    <Flex align="center" gap={3}>
-                                      <FileText className="w-4 h-4 text-blue-500" />
-                                      <Text size="sm" className="text-gray-900">{doc}.docx</Text>
+                            {createDocs.map((doc, i) => {
+                              const isExpanded = expandedDocs[doc]
+                              const toggleExpanded = () => {
+                                setExpandedDocs(prev => ({
+                                  ...prev,
+                                  [doc]: !prev[doc]
+                                }))
+                              }
+
+                              return (
+                                <Box key={`creating-section-${i}`} className={i > 0 ? "mt-6" : ""}>
+                                  {i > 0 && <Box className="w-full h-px bg-gray-200 my-6" />}
+                                  <Text size="lg" className="mb-4 text-gray-900 font-semibold">Creating document {i + 1}:</Text>
+                                  <Box className="border rounded-lg bg-white shadow-sm mb-2">
+                                    <Flex align="center" justify="between" className="p-3 cursor-pointer" onClick={toggleExpanded}>
+                                      <Flex align="center" gap={3}>
+                                        <FileText className="w-4 h-4 text-blue-500" />
+                                        <Text size="sm" className="text-gray-900">{doc}.docx</Text>
+                                      </Flex>
+                                      <Flex align="center" gap={3}>
+                                        <Text size="xs" className="text-purple-600 bg-purple-100 px-2 py-1 rounded-md animate-pulse">
+                                          Genie editing...
+                                        </Text>
+                                        {/* Expand/Contract Icon */}
+                                        <Box className="flex flex-col items-center justify-center w-4 h-4">
+                                          {isExpanded ? (
+                                            // Contract icon (arrows pointing toward each other)
+                                            <>
+                                              <svg className="w-3 h-1.5" viewBox="0 0 12 6" fill="none">
+                                                <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                              </svg>
+                                              <svg className="w-3 h-1.5 rotate-180" viewBox="0 0 12 6" fill="none">
+                                                <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                              </svg>
+                                            </>
+                                          ) : (
+                                            // Expand icon (arrows pointing away from each other)  
+                                            <>
+                                              <svg className="w-3 h-1.5 rotate-180" viewBox="0 0 12 6" fill="none">
+                                                <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                              </svg>
+                                              <svg className="w-3 h-1.5" viewBox="0 0 12 6" fill="none">
+                                                <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                              </svg>
+                                            </>
+                                          )}
+                                        </Box>
+                                      </Flex>
                                     </Flex>
-                                    <Text size="xs" className="text-purple-600 bg-purple-100 px-2 py-1 rounded-md animate-pulse">
-                                      Genie editing...
-                                    </Text>
-                                  </Flex>
+                                    
+                                    {/* Expanded Content */}
+                                    {isExpanded && (
+                                      <Box className="border-t p-4">
+                                        <Box 
+                                          className="bg-gray-50 p-4 rounded text-sm font-mono leading-relaxed overflow-y-auto"
+                                          style={{ maxHeight: '300px' }}
+                                        >
+                                          <pre className="whitespace-pre-wrap text-gray-800">
+                                            {generateDummyContent(doc)}
+                                          </pre>
+                                        </Box>
+                                      </Box>
+                                    )}
+                                  </Box>
                                 </Box>
-                              </Box>
-                            ))}
+                              )
+                            })}
                           </Box>
                         </VStack>
                       )}
