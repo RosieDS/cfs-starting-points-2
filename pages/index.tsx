@@ -551,7 +551,7 @@ By: _________________`
                                             <Box key={doc} className="border rounded-lg bg-white shadow-sm overflow-hidden">
                                               <Box className="border-b bg-gray-50 px-3 py-3">
                                                 <Flex align="center" justify="between">
-                                                  <Text size="md" className="text-gray-900 font-bold">Based on previous documents:</Text>
+                                                  <Text size="md" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
                                                   <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
                                                     <Text className="w-20 text-center">Use as template</Text>
                                                     <Text className="w-20 text-center">Use as context</Text>
@@ -598,7 +598,7 @@ By: _________________`
                                           <Box key={doc} className="border rounded-lg bg-white shadow-sm overflow-hidden">
                                             <Box className="border-b bg-gray-50 px-3 py-3">
                                               <Flex align="center" justify="between">
-                                                <Text size="sm" className="text-gray-900 font-bold">Based on previous:</Text>
+                                                <Text size="sm" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
                                                 <Flex align="center" className="text-xs text-gray-600" style={{ width: '128px' }}>
                                                   <Text className="w-16 text-center">Template</Text>
                                                   <Text className="w-16 text-center">Context</Text>
@@ -654,7 +654,7 @@ By: _________________`
                                             <Box key={doc} className={`border rounded-lg bg-white shadow-sm overflow-hidden ${gridClass}`}>
                                               <Box className="border-b bg-gray-50 px-3 py-3">
                                                 <Flex align="center" justify="between">
-                                                  <Text size="sm" className="text-gray-900 font-bold">Based on previous:</Text>
+                                                  <Text size="sm" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
                                                   <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
                                                     <Text className="w-16 text-center">Template</Text>
                                                     <Text className="w-16 text-center">Context</Text>
@@ -1107,77 +1107,74 @@ By: _________________`
                     {/* Content */}
                     <Box className="flex-1 p-6 overflow-y-auto h-0">
                       {activeTab === 'documents' && (
-                        <VStack spacing={4} align="start" className="h-full">
-                          {/* Creating Section */}
-                          <Box className="w-full">
-                            {createDocs.map((doc, i) => {
-                              const isExpanded = expandedDocs[doc]
-                              const toggleExpanded = () => {
-                                setExpandedDocs(prev => ({
-                                  ...prev,
-                                  [doc]: !prev[doc]
-                                }))
-                              }
+                        <VStack spacing={6} align="start" className="w-full">
+                          {/* Accordion-style document list where multiple can be expanded */}
+                          {createDocs.map((doc, i) => {
+                            const isExpanded = expandedDocs[doc]
+                            const toggleExpanded = () => {
+                              setExpandedDocs(prev => ({
+                                ...prev,
+                                [doc]: !prev[doc]
+                              }))
+                            }
 
-                              return (
-                                <Box key={`creating-section-${i}`} className={i > 0 ? "mt-6" : ""}>
-                                  {i > 0 && <Box className="w-full h-px bg-gray-200 my-6" />}
-                                  <Text size="lg" className="mb-4 text-gray-900 font-semibold">Creating document {i + 1}:</Text>
-                                  <Box className="border rounded-lg bg-white shadow-sm mb-2">
-                                    <Flex align="center" justify="between" className="p-3 cursor-pointer" onClick={toggleExpanded}>
-                                      <Flex align="center" gap={3}>
-                                        <FileText className="w-4 h-4 text-blue-500" />
-                                        <Text size="sm" className="text-gray-900">{doc}.docx</Text>
-                                      </Flex>
-                                      <Flex align="center" gap={3}>
-                                        <Text size="xs" className="text-purple-600 bg-purple-100 px-2 py-1 rounded-md animate-pulse">
-                                          Genie editing...
-                                        </Text>
-                                        {/* Expand/Contract Icon */}
-                                        <Box className="flex flex-col items-center justify-center w-4 h-4">
-                                          {isExpanded ? (
-                                            // Contract icon (arrows pointing toward each other)
-                                            <>
-                                              <svg className="w-3 h-1.5" viewBox="0 0 12 6" fill="none">
-                                                <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                              </svg>
-                                              <svg className="w-3 h-1.5 rotate-180" viewBox="0 0 12 6" fill="none">
-                                                <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                              </svg>
-                                            </>
-                                          ) : (
-                                            // Expand icon (arrows pointing away from each other)  
-                                            <>
-                                              <svg className="w-3 h-1.5 rotate-180" viewBox="0 0 12 6" fill="none">
-                                                <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                              </svg>
-                                              <svg className="w-3 h-1.5" viewBox="0 0 12 6" fill="none">
-                                                <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                              </svg>
-                                            </>
-                                          )}
-                                        </Box>
-                                      </Flex>
+                            return (
+                              <Box key={`doc-${i}`} className="w-full">
+                                <Text size="lg" className="mb-4 text-gray-900 font-semibold">Creating document {i + 1}:</Text>
+                                <Box className="border rounded-lg bg-white shadow-sm">
+                                  <Flex align="center" justify="between" className="p-3 cursor-pointer" onClick={toggleExpanded}>
+                                    <Flex align="center" gap={3}>
+                                      <FileText className="w-4 h-4 text-blue-500" />
+                                      <Text size="sm" className="text-gray-900">{doc}.docx</Text>
                                     </Flex>
-                                    
-                                    {/* Expanded Content */}
-                                    {isExpanded && (
-                                      <Box className="border-t p-4">
-                                        <Box 
-                                          className="bg-gray-50 p-4 rounded text-sm font-mono leading-relaxed overflow-y-auto"
-                                          style={{ maxHeight: '300px' }}
-                                        >
-                                          <pre className="whitespace-pre-wrap text-gray-800">
-                                            {generateDummyContent(doc)}
-                                          </pre>
-                                        </Box>
+                                    <Flex align="center" gap={3}>
+                                      <Text size="xs" className="text-purple-600 bg-purple-100 px-2 py-1 rounded-md animate-pulse">
+                                        Genie editing...
+                                      </Text>
+                                      {/* Expand/Contract Icon */}
+                                      <Box className="flex flex-col items-center justify-center w-4 h-4">
+                                        {isExpanded ? (
+                                          // Contract icon (arrows pointing toward each other)
+                                          <>
+                                            <svg className="w-3 h-1.5" viewBox="0 0 12 6" fill="none">
+                                              <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                            <svg className="w-3 h-1.5 rotate-180" viewBox="0 0 12 6" fill="none">
+                                              <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                          </>
+                                        ) : (
+                                          // Expand icon (arrows pointing away from each other)
+                                          <>
+                                            <svg className="w-3 h-1.5 rotate-180" viewBox="0 0 12 6" fill="none">
+                                              <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                            <svg className="w-3 h-1.5" viewBox="0 0 12 6" fill="none">
+                                              <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                          </>
+                                        )}
                                       </Box>
-                                    )}
-                                  </Box>
+                                    </Flex>
+                                  </Flex>
+                                  
+                                  {/* Expanded Content */}
+                                  {isExpanded && (
+                                    <Box className="border-t p-4">
+                                      <Box 
+                                        className="bg-gray-50 p-4 rounded text-sm font-mono leading-relaxed overflow-y-auto"
+                                        style={{ height: '700px' }}
+                                      >
+                                        <pre className="whitespace-pre-wrap text-gray-800">
+                                          {generateDummyContent(doc)}
+                                        </pre>
+                                      </Box>
+                                    </Box>
+                                  )}
                                 </Box>
-                              )
-                            })}
-                          </Box>
+                              </Box>
+                            )
+                          })}
                         </VStack>
                       )}
 
