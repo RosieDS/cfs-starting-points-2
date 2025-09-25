@@ -705,8 +705,8 @@ By: _________________`
                             )}
                           </Box>
 
-                          {/* Governing Law Section - Show for Template and Standard */}
-                          {(documentType === 'template' || documentType === 'standard') && (
+                          {/* Governing Law Section - Show for Template, Standard, and Customised */}
+                          {(documentType === 'template' || documentType === 'standard' || documentType === 'customised') && (
                             <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                               <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                                 <Box className="lg:col-span-2">
