@@ -668,7 +668,7 @@ By: _________________`
 
                       {/* Chat messages - smaller when artifact is open */}
                       <Box className={`overflow-y-auto p-4 ${artifactState === 'open' ? 'flex-none h-32' : 'flex-1'}`}>
-                        <VStack spacing={4} align="start" className="w-full">
+                        <VStack spacing={6} align="start" className="w-full">
                           {messages.map((message) => (
                             <Box key={message.id} className="w-full">
                               {message.id === MESSAGE_IDS.FORM_ARTIFACT_PREVIEW ? (
@@ -677,17 +677,33 @@ By: _________________`
                                   selectedDocCount={selectedDocCount}
                                 />
                               ) : (
-                                <Box className={`max-w-3xl ${message.role === 'user' ? 'ml-auto' : ''}`}>
-                                  <Box
-                                    className={`p-4 rounded-lg ${
-                                      message.role === 'user'
-                                        ? 'bg-purple-600 text-white'
-                                        : 'bg-white border border-gray-200'
-                                    }`}
-                                  >
-                                    <Text size="sm" className={message.role === 'user' ? 'text-white' : 'text-gray-900'}>
-                                      {message.content}
-                                    </Text>
+                                <Box className={`w-full flex gap-3 ${message.role === 'user' ? 'flex-row-reverse justify-start' : 'justify-start'}`}>
+                                  {/* Avatar/Icon area */}
+                                  <Box className="flex-shrink-0">
+                                    {message.role === 'user' ? (
+                                      <Box className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                                        <Text size="sm" className="text-white font-medium">R</Text>
+                                      </Box>
+                                    ) : (
+                                      <Box className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <Wand2 className="w-4 h-4 text-purple-600" />
+                                      </Box>
+                                    )}
+                                  </Box>
+
+                                  {/* Message content */}
+                                  <Box className="flex-shrink-0 max-w-md">
+                                    <Box
+                                      className={`p-4 rounded-2xl inline-block ${
+                                        message.role === 'user'
+                                          ? 'bg-gray-100 text-gray-900'
+                                          : 'bg-[#F9F5FE] text-gray-900'
+                                      }`}
+                                    >
+                                      <Text size="sm" className="text-gray-900 leading-relaxed whitespace-pre-wrap">
+                                        {message.content}
+                                      </Text>
+                                    </Box>
                                   </Box>
                                 </Box>
                               )}
@@ -697,14 +713,28 @@ By: _________________`
                       </Box>
 
                       {/* Chat input - always visible at bottom */}
-                      <Box className="p-4 bg-white border-t border-gray-200">
-                        <Replybox
-                          handleSubmit={handleSendMessage}
-                          placeholder="Type a message..."
-                          classNames={{
-                            inputWrapper: 'border border-gray-300',
-                          }}
-                        />
+                      <Box className="p-4 bg-gray-50">
+                        <Flex align="end" gap={3}>
+                          {/* User avatar */}
+                          <Box className="flex-shrink-0 mb-2">
+                            <Box className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                              <Text size="sm" className="text-white font-medium">R</Text>
+                            </Box>
+                          </Box>
+
+                          {/* Input area */}
+                          <Box className="flex-1">
+                            <Replybox
+                              handleSubmit={handleSendMessage}
+                              placeholder="Message Genie"
+                              className="min-h-[44px]"
+                              classNames={{
+                                inputWrapper: 'border border-gray-300 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow',
+                                input: 'px-4 py-3',
+                              }}
+                            />
+                          </Box>
+                        </Flex>
                       </Box>
                     </div>
                   </Box>
