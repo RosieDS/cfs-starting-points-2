@@ -36,6 +36,9 @@ export const MESSAGE_IDS = {
   
   // Dynamic assistant responses during conversation (with suffix)
   ASSISTANT_MESSAGE_PREFIX: 'assistant-msg-',
+
+  // Form artifact preview card message
+  FORM_ARTIFACT_PREVIEW: 'form-artifact-preview',
 } as const
 
 export type MessageId = typeof MESSAGE_IDS[keyof typeof MESSAGE_IDS]

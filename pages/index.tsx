@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react'
-import { 
-  Box, 
-  Flex, 
-  VStack, 
-  Container, 
-  Button, 
-  Heading, 
+import { useState, useEffect, useCallback } from 'react'
+import {
+  Box,
+  Flex,
+  VStack,
+  Container,
+  Button,
+  Heading,
   Text,
   Textarea,
+  Replybox,
 } from '@/genie-ui'
 import { Select, SelectItem } from '@/genie-ui/components/select'
 import DocDetailSlider, { DocumentType } from '@/genie-ui/components/docDetailSlider'
@@ -19,11 +20,33 @@ import {
   Plus,
   X,
 } from 'lucide-react'
-// import { motion, AnimatePresence } from 'framer-motion'
+import { MESSAGE_IDS } from '@/constants/messageIds'
+import { FormArtifactPreview } from '@/components/chat/FormArtifactPreview'
+import { FormArtifactPanel } from '@/components/chat/FormArtifactPanel'
+import { FormArtifactChip } from '@/components/chat/FormArtifactChip'
+import { DocumentForm } from '@/components/DocumentForm'
+
+// Message type definition
+type Message = {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: number
+}
+
+// Artifact state type
+type ArtifactState = 'preview' | 'open' | 'pinned' | 'closed'
 
 export default function Home() {
   const [prompt, setPrompt] = useState('')
   const [mode, setMode] = useState<'landing' | 'chat' | 'document'>('landing')
+
+  // Chat-related state
+  const [messages, setMessages] = useState<Message[]>([])
+  const [artifactState, setArtifactState] = useState<ArtifactState>('closed')
+
+  // Sequential message counter for dynamic IDs
+  const [messageCounter, setMessageCounter] = useState(0)
   const [selectedExistingInputs, setSelectedExistingInputs] = useState<Record<string, string>>({})
   const [workbenchOpen, setWorkbenchOpen] = useState(false)
   const [selectedDocs, setSelectedDocs] = useState<Record<string, boolean>>({})
@@ -49,6 +72,97 @@ export default function Home() {
       }))
     }
   }, [createDocs])
+
+  // Message helper functions
+  const addMessage = useCallback((role: 'user' | 'assistant', content: string, customId?: string) => {
+    const id = customId || `${role === 'user' ? MESSAGE_IDS.USER_MESSAGE_PREFIX : MESSAGE_IDS.ASSISTANT_MESSAGE_PREFIX}${messageCounter}`
+    const newMessage: Message = {
+      id,
+      role,
+      content,
+      timestamp: Date.now()
+    }
+
+    setMessages(prev => {
+      // Check if message with this ID already exists
+      if (prev.some(msg => msg.id === id)) {
+        return prev
+      }
+      return [...prev, newMessage]
+    })
+
+    if (!customId) {
+      setMessageCounter(prev => prev + 1)
+    }
+  }, [messageCounter])
+
+  const findMessageById = useCallback((messageId: string): Message | undefined => {
+    return messages.find(msg => msg.id === messageId)
+  }, [messages])
+
+  const updateMessageById = useCallback((messageId: string, newContent: string) => {
+    setMessages(prev =>
+      prev.map(msg =>
+        msg.id === messageId ? { ...msg, content: newContent } : msg
+      )
+    )
+  }, [])
+
+  // Calculate selected document count
+  const selectedDocCount = Object.values(selectedDocs).filter(Boolean).length
+
+  // Handle artifact state changes
+  const openArtifact = () => setArtifactState('open')
+  const minimizeArtifact = () => setArtifactState('pinned')
+  const closeArtifact = () => setArtifactState('closed')
+
+  // Handle "Create Form" button
+  const handleCreateForm = () => {
+    // Check if preview message already exists
+    if (!findMessageById(MESSAGE_IDS.FORM_ARTIFACT_PREVIEW)) {
+      addMessage('assistant', 'Form artifact preview', MESSAGE_IDS.FORM_ARTIFACT_PREVIEW)
+    }
+    setArtifactState('preview')
+  }
+
+  // Handle message sending
+  const handleSendMessage = async (messageContent: string, skipUserMessage = false) => {
+    if (!messageContent.trim()) return
+
+    // Add user message only if not skipping (to avoid duplicates from landing page)
+    if (!skipUserMessage) {
+      addMessage('user', messageContent)
+    }
+
+    // If artifact is open, minimize it
+    if (artifactState === 'open') {
+      setArtifactState('pinned')
+    }
+
+    // Send to API
+    try {
+      const currentMessages = skipUserMessage
+        ? [...messages, { role: 'user', content: messageContent }]
+        : [...messages, { role: 'user', content: messageContent }]
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: currentMessages
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        addMessage('assistant', data.content)
+      } else {
+        addMessage('assistant', 'Sorry, I encountered an error. Please try again.')
+      }
+    } catch (error) {
+      addMessage('assistant', 'Sorry, I encountered an error. Please try again.')
+    }
+  }
 
   // Generate dummy content for different document types
   const generateDummyContent = (docType: string) => {
@@ -360,11 +474,16 @@ By: _________________`
                               if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault()
                                 if (prompt.trim()) {
-                                  // Generate suggested documents and go directly to form
+                                  // Add initial user message and get AI response
+                                  addMessage('user', prompt)
+                                  handleSendMessage(prompt, true) // Skip adding user message again
+                                  // Generate suggested documents for the form
                                   const suggested = generateSuggestedDocs(prompt)
                                   setSuggestedDocs(suggested)
                                   setMode('chat')
                                   setWorkbenchOpen(true)
+                                  // Clear the prompt since it's now in chat
+                                  setPrompt('')
                                 }
                               }
                             }}
@@ -389,11 +508,16 @@ By: _________________`
                               className="bg-purple-600 hover:bg-purple-700 text-white"
                               onPress={() => {
                                 if (prompt.trim()) {
-                                  // Generate suggested documents and go directly to form
+                                  // Add initial user message and get AI response
+                                  addMessage('user', prompt)
+                                  handleSendMessage(prompt, true) // Skip adding user message again
+                                  // Generate suggested documents for the form
                                   const suggested = generateSuggestedDocs(prompt)
                                   setSuggestedDocs(suggested)
                                   setMode('chat')
                                   setWorkbenchOpen(true)
+                                  // Clear the prompt since it's now in chat
+                                  setPrompt('')
                                 }
                               }}
                             >
@@ -461,608 +585,132 @@ By: _________________`
                 </Box>
               </Box>
 
-              {/* Form-based interface */}
+              {/* Chat interface with artifact integration */}
               <Box className="flex flex-col bg-gray-50 h-screen">
                 <Box className="h-full flex justify-center">
                   <Box className="w-full max-w-4xl flex flex-col h-full">
+                    {/* Chat header with Create Form button */}
+                    <Box className="p-4 bg-white border-b border-gray-200">
+                      <Flex align="center" justify="between">
+                        <Text size="lg" className="font-semibold text-gray-900">Chat</Text>
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                          onPress={handleCreateForm}
+                        >
+                          Create Form
+                        </Button>
+                      </Flex>
+                    </Box>
+
                     <div className="flex-1 flex flex-col h-full">
-                      <Box className="flex-1 p-6 overflow-y-auto h-0">
-                        <VStack spacing={8} align="start" className="w-full">
-                          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                            <Box>
-                              <Text size="lg" className="font-semibold text-gray-900 mb-2">Customise your document</Text>
-                              <Text size="md" className="text-gray-600">Come back any time to edit or iterate</Text>
-                            </Box>
-                          </Box>
+                      {/* Artifact chip when pinned */}
+                      {artifactState === 'pinned' && (
+                        <FormArtifactChip
+                          selectedDocCount={selectedDocCount}
+                          onOpen={openArtifact}
+                          onClose={closeArtifact}
+                        />
+                      )}
 
-                          {/* Doc Detail Slider */}
-                          <Box className="w-full">
-                            <DocDetailSlider
-                              value={documentType}
-                              onChange={setDocumentType}
+                      {/* Artifact panel when open - takes most of the space */}
+                      {artifactState === 'open' && (
+                        <Box className="flex-1 px-4 pt-4 min-h-0">
+                          <FormArtifactPanel
+                            onMinimize={minimizeArtifact}
+                            onSelectedDocsChange={(count) => {
+                              // Update preview message content if needed
+                              if (findMessageById(MESSAGE_IDS.FORM_ARTIFACT_PREVIEW)) {
+                                updateMessageById(
+                                  MESSAGE_IDS.FORM_ARTIFACT_PREVIEW,
+                                  count > 0 ? `Creating ${count} documents` : 'Form artifact preview'
+                                )
+                              }
+                            }}
+                          >
+                            <DocumentForm
+                              prompt={prompt}
+                              setPrompt={setPrompt}
+                              selectedExistingInputs={selectedExistingInputs}
+                              setSelectedExistingInputs={setSelectedExistingInputs}
+                              selectedDocs={selectedDocs}
+                              setSelectedDocs={setSelectedDocs}
+                              suggestedDocs={suggestedDocs}
+                              createDocs={createDocs}
+                              setCreateDocs={setCreateDocs}
+                              selectedClauses={selectedClauses}
+                              setSelectedClauses={setSelectedClauses}
+                              clauseDetailsText={clauseDetailsText}
+                              setClauseDetailsText={setClauseDetailsText}
+                              lengthValue={lengthValue}
+                              setLengthValue={setLengthValue}
+                              favourabilityValue={favourabilityValue}
+                              setFavourabilityValue={setFavourabilityValue}
+                              toneValue={toneValue}
+                              setToneValue={setToneValue}
+                              documentType={documentType}
+                              setDocumentType={setDocumentType}
+                              governingLaw={governingLaw}
+                              setGoverningLaw={setGoverningLaw}
+                              customClauses={customClauses}
+                              setCustomClauses={setCustomClauses}
+                              addCustomClause={addCustomClause}
+                              updateCustomClauseName={updateCustomClauseName}
+                              updateCustomClauseDetails={updateCustomClauseDetails}
+                              removeCustomClause={removeCustomClause}
+                              generateKeyClauses={generateKeyClauses}
+                              generateDetailQuestions={generateDetailQuestions}
                             />
-                          </Box>
+                          </FormArtifactPanel>
+                        </Box>
+                      )}
 
-                          {/* Document Selection Section */}
-                          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                            <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                              <Box className="lg:col-span-2">
-                                <Text size="lg" className="font-medium text-gray-900 mb-2">Select docs to create</Text>
-                                <Text size="sm" className="text-gray-600">Choose which documents you need</Text>
-                              </Box>
-                              
-                              <Box className="lg:col-span-3">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                  {suggestedDocs.map((doc, i) => (
-                                    <Box key={i} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 w-full">
-                                      <input
-                                        type="checkbox"
-                                        id={`doc-${i}`}
-                                        checked={selectedDocs[doc] || false}
-                                        onChange={(e) => {
-                                          const newSelected = {
-                                            ...selectedDocs,
-                                            [doc]: e.target.checked
-                                          }
-                                          setSelectedDocs(newSelected)
-                                          // Update createDocs immediately
-                                          const chosen = Object.keys(newSelected).filter(k => newSelected[k])
-                                          setCreateDocs(chosen)
-                                        }}
-                                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                      />
-                                      <label htmlFor={`doc-${i}`} className="flex-1 cursor-pointer min-w-0">
-                                        <Text 
-                                          size="sm" 
-                                          className="text-gray-900 truncate"
-                                        >
-                                          {i + 1}. {doc}
-                                        </Text>
-                                      </label>
-                                    </Box>
-                                  ))}
-                                </div>
-                                
-                                {/* Show customise link when more than one document is selected */}
-                                {Object.values(selectedDocs).filter(Boolean).length > 1 && (
-                                  <Box className="w-full flex justify-start mt-4">
-                                    <button className="text-xs text-purple-600 hover:text-purple-800 underline">
-                                      Customise documents separately.
-                                    </button>
-                                  </Box>
-                                )}
-                              </Box>
-                            </Box>
-
-                            {/* Based on previous documents sections - moved from right panel */}
-                            {Object.values(selectedDocs).some(v => v) && (
-                              <Box className="mt-6 pt-6 border-t border-gray-200">
-                                {(() => {
-                                  const selectedDocsList = Object.keys(selectedDocs).filter(k => selectedDocs[k])
-                                  const numSelected = selectedDocsList.length
-                                  
-                                  // Layout logic based on number of selected documents
-                                  if (numSelected === 1) {
-                                    // Single document - centrally aligned on right side
-                                    return (
-                                      <Box className="flex justify-center">
-                                        <Box className="w-full max-w-md">
-                                          {selectedDocsList.map((doc) => (
-                                            <Box key={doc} className="border rounded-lg bg-white shadow-sm overflow-hidden">
-                                              <Box className="border-b bg-gray-50 px-3 py-3">
-                                                <Flex align="center" justify="between">
-                                                  <Text size="md" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
-                                                  <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
-                                                    <Text className="w-20 text-center">Use as template</Text>
-                                                    <Text className="w-20 text-center">Use as context</Text>
-                                                  </Flex>
-                                                </Flex>
-                                              </Box>
-                                              
-                                              {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
-                                                <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
-                                                  <Flex align="center" justify="between">
-                                                    <Flex align="center" gap={3} className="flex-1 min-w-0">
-                                                      <FileText className="w-4 h-4 text-blue-500" />
-                                                      <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
-                                                    </Flex>
-                                                    <Flex align="center" style={{ width: '140px' }}>
-                                                      <Box className="w-20 flex justify-center">
-                                                        <input
-                                                          type="checkbox"
-                                                          defaultChecked={rowIndex === 0}
-                                                          className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                                        />
-                                                      </Box>
-                                                      <Box className="w-20 flex justify-center">
-                                                        <input
-                                                          type="checkbox"
-                                                          defaultChecked
-                                                          className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                                        />
-                                                      </Box>
-                                                    </Flex>
-                                                  </Flex>
-                                                </Box>
-                                              ))}
-                                            </Box>
-                                          ))}
-                                        </Box>
-                                      </Box>
-                                    )
-                                  } else if (numSelected === 2) {
-                                    // Two documents - in same horizontal row
-                                    return (
-                                      <Box className="grid grid-cols-2 gap-4">
-                                        {selectedDocsList.map((doc) => (
-                                          <Box key={doc} className="border rounded-lg bg-white shadow-sm overflow-hidden">
-                                            <Box className="border-b bg-gray-50 px-3 py-3">
-                                              <Flex align="center" justify="between">
-                                                <Text size="sm" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
-                                                <Flex align="center" className="text-xs text-gray-600" style={{ width: '128px' }}>
-                                                  <Text className="w-16 text-center">Template</Text>
-                                                  <Text className="w-16 text-center">Context</Text>
-                                                </Flex>
-                                              </Flex>
-                                            </Box>
-                                            
-                                            {[`${doc}_type_1`, `${doc}_type_2`].map((docName, rowIndex) => (
-                                              <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
-                                                <Flex align="center" justify="between">
-                                                  <Flex align="center" gap={2} className="flex-1 min-w-0">
-                                                    <FileText className="w-3 h-3 text-blue-500" />
-                                                    <Text size="xs" className="text-gray-900 truncate">{docName}.docx</Text>
-                                                  </Flex>
-                                                  <Flex align="center" style={{ width: '128px' }}>
-                                                    <Box className="w-16 flex justify-center">
-                                                      <input
-                                                        type="checkbox"
-                                                        defaultChecked={rowIndex === 0}
-                                                        className="w-3 h-3 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                                      />
-                                                    </Box>
-                                                    <Box className="w-16 flex justify-center">
-                                                      <input
-                                                        type="checkbox"
-                                                        defaultChecked
-                                                        className="w-3 h-3 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                                      />
-                                                    </Box>
-                                                  </Flex>
-                                                </Flex>
-                                              </Box>
-                                            ))}
-                                          </Box>
-                                        ))}
-                                      </Box>
-                                    )
-                                  } else {
-                                    // 3+ documents - grid layout with specific positioning
-                                    return (
-                                      <Box className="grid grid-cols-2 gap-4">
-                                        {selectedDocsList.map((doc, index) => {
-                                          let gridClass = ''
-                                          if (numSelected === 3 && index === 2) {
-                                            // Third document in second row, left-aligned
-                                            gridClass = 'col-start-1'
-                                          } else if (numSelected === 4 && index === 3) {
-                                            // Fourth document in second row, right-aligned  
-                                            gridClass = 'col-start-2'
-                                          }
-                                          
-                                          return (
-                                            <Box key={doc} className={`border rounded-lg bg-white shadow-sm overflow-hidden ${gridClass}`}>
-                                              <Box className="border-b bg-gray-50 px-3 py-3">
-                                                <Flex align="center" justify="between">
-                                                  <Text size="sm" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
-                                                  <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
-                                                    <Text className="w-16 text-center">Template</Text>
-                                                    <Text className="w-16 text-center">Context</Text>
-                                                    <Box className="w-12" />
-                                                  </Flex>
-                                                </Flex>
-                                              </Box>
-                                              
-                                              {[`${doc}_type_1`, `${doc}_type_2`].map((docName, rowIndex) => (
-                                                <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
-                                                  <Flex align="center" justify="between">
-                                                    <Flex align="center" gap={2} className="flex-1 min-w-0">
-                                                      <FileText className="w-3 h-3 text-blue-500" />
-                                                      <Text size="xs" className="text-gray-900 truncate">{docName}.docx</Text>
-                                                    </Flex>
-                                                    <Flex align="center" style={{ width: '140px' }}>
-                                                      <Box className="w-16 flex justify-center">
-                                                        <input
-                                                          type="checkbox"
-                                                          defaultChecked={rowIndex === 0}
-                                                          className="w-3 h-3 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                                        />
-                                                      </Box>
-                                                      <Box className="w-16 flex justify-center">
-                                                        <input
-                                                          type="checkbox"
-                                                          defaultChecked
-                                                          className="w-3 h-3 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                                        />
-                                                      </Box>
-                                                      <Box className="w-12 flex justify-center">
-                                                        <Text size="xs" className="text-green-700 bg-green-100 px-1 py-0.5 rounded text-xs">
-                                                          ✓
-                                                        </Text>
-                                                      </Box>
-                                                    </Flex>
-                                                  </Flex>
-                                                </Box>
-                                              ))}
-                                            </Box>
-                                          )
-                                        })}
-                                      </Box>
-                                    )
-                                  }
-                                })()}
-                              </Box>
-                            )}
-                          </Box>
-
-                          {/* Governing Law Section - Show for Template, Standard, and Customised */}
-                          {(documentType === 'template' || documentType === 'standard' || documentType === 'customised') && (
-                            <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                              <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                                <Box className="lg:col-span-2">
-                                  <Text size="lg" className="font-medium text-gray-900 mb-2">Governing Law</Text>
-                                  <Text size="sm" className="text-gray-600">Select the governing law for your documents</Text>
-                                </Box>
-                                
-                                <Box className="lg:col-span-3">
-                                  <Select
-                                    selectedKeys={[governingLaw]}
-                                    onSelectionChange={(keys) => {
-                                      const selected = Array.from(keys)[0] as string
-                                      setGoverningLaw(selected)
-                                    }}
-                                    placeholder="Select governing law"
-                                    className="w-1/2"
-                                    classNames={{
-                                      trigger: "h-[40px] min-h-[40px]",
-                                      selectorIcon: "right-3 absolute"
-                                    }}
-                                    size="md"
+                      {/* Chat messages - smaller when artifact is open */}
+                      <Box className={`overflow-y-auto p-4 ${artifactState === 'open' ? 'flex-none h-32' : 'flex-1'}`}>
+                        <VStack spacing={4} align="start" className="w-full">
+                          {messages.map((message) => (
+                            <Box key={message.id} className="w-full">
+                              {message.id === MESSAGE_IDS.FORM_ARTIFACT_PREVIEW ? (
+                                <FormArtifactPreview
+                                  onClick={openArtifact}
+                                  selectedDocCount={selectedDocCount}
+                                />
+                              ) : (
+                                <Box className={`max-w-3xl ${message.role === 'user' ? 'ml-auto' : ''}`}>
+                                  <Box
+                                    className={`p-4 rounded-lg ${
+                                      message.role === 'user'
+                                        ? 'bg-purple-600 text-white'
+                                        : 'bg-white border border-gray-200'
+                                    }`}
                                   >
-                                    <SelectItem key="english-law">English Law</SelectItem>
-                                    <SelectItem key="scottish-law">Scottish Law</SelectItem>
-                                    <SelectItem key="northern-ireland-law">Northern Ireland Law</SelectItem>
-                                    <SelectItem key="us-federal">US Federal Law</SelectItem>
-                                    <SelectItem key="california-law">California State Law</SelectItem>
-                                    <SelectItem key="new-york-law">New York State Law</SelectItem>
-                                    <SelectItem key="delaware-law">Delaware State Law</SelectItem>
-                                    <SelectItem key="australian-law">Australian Law</SelectItem>
-                                    <SelectItem key="canadian-law">Canadian Law</SelectItem>
-                                    <SelectItem key="eu-law">European Union Law</SelectItem>
-                                    <SelectItem key="german-law">German Law</SelectItem>
-                                    <SelectItem key="french-law">French Law</SelectItem>
-                                    <SelectItem key="singapore-law">Singapore Law</SelectItem>
-                                    <SelectItem key="hong-kong-law">Hong Kong Law</SelectItem>
-                                  </Select>
-                                </Box>
-                              </Box>
-                            </Box>
-                          )}
-
-                          {/* Document Purpose & Details - Combined card for Standard and Customised */}
-                          {(documentType === 'standard' || documentType === 'customised') && (
-                            <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                              <VStack spacing={6} align="start">
-                                {/* Document Purpose Section */}
-                                <Box className="w-full">
-                                  <Text size="lg" className="font-medium text-gray-900 mb-4">Document Purpose</Text>
-                                  
-                                  <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                                    <Box className="lg:col-span-2">
-                                      <Text size="sm" className="text-gray-600 mb-4">Why are you doing this work now and what must it achieve for this deal to be a success?</Text>
-                                      <Text size="sm" className="text-gray-600">List the 2–3 outcomes that matter most.</Text>
-                                    </Box>
-                                    
-                                    <Box className="lg:col-span-3">
-                                      <Textarea
-                                        minRows={3}
-                                        value={prompt}
-                                        onValueChange={(val) => setPrompt(val)}
-                                        placeholder="E.g., 'Hire a Sales person', 'Apply for investment funding'"
-                                        className="w-full"
-                                        classNames={{
-                                          inputWrapper: 'rounded-lg border border-gray-200',
-                                          input: 'text-gray-900 placeholder:text-gray-400',
-                                        }}
-                                      />
-                                    </Box>
+                                    <Text size="sm" className={message.role === 'user' ? 'text-white' : 'text-gray-900'}>
+                                      {message.content}
+                                    </Text>
                                   </Box>
                                 </Box>
-
-                                {/* Document Details Section */}
-                                <Box className="w-full">
-                                  <Text size="lg" className="font-medium text-gray-900 mb-4">Document Details</Text>
-                                  
-                                  <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                                    <Box className="lg:col-span-2">
-                                      <Text size="sm" className="text-gray-600 mb-4">What specific details do I need to include? eg.</Text>
-                                      {/* Show numbered questions when documents are selected */}
-                                      {Object.values(selectedDocs).some(v => v) && (
-                                        <Box className="mt-4">
-                                          <VStack spacing={3} align="start">
-                                            {generateDetailQuestions().map((question, i) => (
-                                              <Text key={i} size="sm" className="text-gray-600">
-                                                {i + 1}. {question}
-                                              </Text>
-                                            ))}
-                                          </VStack>
-                                        </Box>
-                                      )}
-                                    </Box>
-                                    
-                                    <Box className="lg:col-span-3">
-                                      <Textarea
-                                        minRows={4}
-                                        value={selectedExistingInputs['document-details'] || ''}
-                                        onValueChange={(val) => setSelectedExistingInputs(prev => ({...prev, 'document-details': val}))}
-                                        placeholder="E.g., salary range £40-50k, hybrid working 2 days/week, reporting to CMO"
-                                        className="w-full mb-4"
-                                        classNames={{
-                                          inputWrapper: 'rounded-lg border border-gray-200',
-                                          input: 'text-gray-900 placeholder:text-gray-400',
-                                        }}
-                                      />
-                                      <Flex align="center" gap={3}>
-                                        <Text size="sm" className="text-gray-600">Any supporting documents?</Text>
-                                        <Button
-                                          variant="bordered"
-                                          size="sm"
-                                          className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                                        >
-                                          Upload Documents
-                                        </Button>
-                                      </Flex>
-                                    </Box>
-                                  </Box>
-                                </Box>
-                              </VStack>
+                              )}
                             </Box>
-                          )}
-
-                          {/* Key Clauses Section - Show for Customised mode */}
-                          {documentType === 'customised' && (
-                            <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                              <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                                <Box className="lg:col-span-5">
-                                  <Text size="lg" className="font-medium text-gray-900 mb-4">Key clauses:</Text>
-                                  
-                                  {/* Show placeholder when no documents are selected */}
-                                  {!Object.values(selectedDocs).some(v => v) ? (
-                                    <Box className="text-center py-12">
-                                      <Text size="md" className="text-gray-500">
-                                        Select a document to customise your clauses.
-                                      </Text>
-                                    </Box>
-                                  ) : (
-                                    <>
-                                      <button className="text-purple-600 underline hover:text-purple-800 transition-colors text-sm mb-4 block">
-                                        Customise standard clauses
-                                      </button>
-                                      <Text size="sm" className="text-gray-600 mb-6">
-                                        Add detail below to customise the most important clauses in this document.
-                                      </Text>
-                                      
-                                      {/* Each document type */}
-                                      <VStack spacing={6} align="start">
-                                        {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((docType) => (
-                                      <Box key={docType} className="w-full">
-                                        <Text size="md" className="font-semibold text-gray-900 mb-4">{docType}</Text>
-                                        <VStack spacing={4} align="start">
-                                          {generateKeyClauses(docType).map((clause, i) => {
-                                            const clauseKey = `${docType}-${i}`
-                                            // Show clause unless explicitly hidden
-                                            const isVisible = selectedClauses[clauseKey] !== false
-                                            if (!isVisible) return null
-                                            
-                                            return (
-                                              <Box key={i} className="w-full">
-                                                {/* Each clause row: left clause + right text box */}
-                                                <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                                                  {/* Left: Clause name + explainer */}
-                                                  <Box className="lg:col-span-2">
-                                                    <Flex align="center" gap={2} className="mb-1">
-                                                      <Text size="sm" className="font-medium text-gray-900">{clause.name}</Text>
-                                                      <button 
-                                                        onClick={() => {
-                                                          setSelectedClauses(prev => ({
-                                                            ...prev,
-                                                            [clauseKey]: false
-                                                          }))
-                                                        }}
-                                                        className="text-gray-400 hover:text-red-500 transition-colors"
-                                                      >
-                                                        <X className="w-3 h-3" />
-                                                      </button>
-                                                    </Flex>
-                                                    <Text size="xs" className="text-gray-600">{clause.explainer}</Text>
-                                                  </Box>
-                                                  
-                                                  {/* Right: Text input aligned with this clause */}
-                                                  <Box className="lg:col-span-3">
-                                                    <Textarea
-                                                      minRows={2}
-                                                      value={clauseDetailsText[clauseKey] || ''}
-                                                      onValueChange={(val) => setClauseDetailsText(prev => ({
-                                                        ...prev, 
-                                                        [clauseKey]: val
-                                                      }))}
-                                                      placeholder={`Add specific requirements for ${clause.name.toLowerCase()}...`}
-                                                      className="w-full"
-                                                      classNames={{
-                                                        inputWrapper: 'rounded-lg border border-gray-200',
-                                                        input: 'text-gray-900 placeholder:text-gray-400 text-sm',
-                                                      }}
-                                                    />
-                                                  </Box>
-                                                </Box>
-                                              </Box>
-                                            )
-                                          })}
-                                          
-                                          {/* Custom Clauses */}
-                                          {(customClauses[docType] || []).map((customClause) => (
-                                            <Box key={customClause.id} className="w-full">
-                                              {/* Each custom clause row: left clause name input + right details textarea */}
-                                              <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                                                {/* Left: Custom clause name input */}
-                                                <Box className="lg:col-span-2">
-                                                  <Flex align="center" gap={2} className="mb-1">
-                                                    <Box className="flex-1">
-                                                      <Textarea
-                                                        minRows={1}
-                                                        value={customClause.name}
-                                                        onValueChange={(val) => updateCustomClauseName(docType, customClause.id, val)}
-                                                        placeholder="What clause would you like to add?"
-                                                        className="w-full"
-                                                        classNames={{
-                                                          inputWrapper: 'rounded-lg border border-gray-200',
-                                                          input: 'text-gray-900 placeholder:text-gray-400 text-sm font-medium',
-                                                        }}
-                                                      />
-                                                    </Box>
-                                                    <button 
-                                                      onClick={() => removeCustomClause(docType, customClause.id)}
-                                                      className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
-                                                    >
-                                                      <X className="w-3 h-3" />
-                                                    </button>
-                                                  </Flex>
-                                                </Box>
-                                                
-                                                {/* Right: Custom clause details textarea */}
-                                                <Box className="lg:col-span-3">
-                                                  <Textarea
-                                                    minRows={2}
-                                                    value={customClause.details}
-                                                    onValueChange={(val) => updateCustomClauseDetails(docType, customClause.id, val)}
-                                                    placeholder="Add specific requirements for this clause..."
-                                                    className="w-full"
-                                                    classNames={{
-                                                      inputWrapper: 'rounded-lg border border-gray-200',
-                                                      input: 'text-gray-900 placeholder:text-gray-400 text-sm',
-                                                    }}
-                                                  />
-                                                </Box>
-                                              </Box>
-                                            </Box>
-                                          ))}
-                                          
-                                          {/* Add another clause button */}
-                                          <Box className="w-full flex justify-end">
-                                            <Button 
-                                              size="sm"
-                                              variant="bordered"
-                                              onClick={() => addCustomClause(docType)}
-                                              className="text-purple-600 border-purple-600 hover:bg-purple-50"
-                                            >
-                                              <Plus className="w-4 h-4 mr-2" />
-                                              Add another clause
-                                            </Button>
-                                          </Box>
-                                        </VStack>
-                                      </Box>
-                                    ))}
-                                  </VStack>
-                                    </>
-                                  )}
-                                </Box>
-                              </Box>
-                            </Box>
-                          )}
-
-                          {/* Draft Customization Sliders - Show for all document types */}
-                          {(documentType === 'template' || documentType === 'standard' || documentType === 'customised') && (
-                            <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                              <Box className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                                <Box className="lg:col-span-2">
-                                  <Text size="lg" className="font-medium text-gray-900 mb-2">
-                                    Customise your {documentType === 'template' && Object.values(selectedDocs).filter(v => v).length === 0 
-                                      ? 'template' 
-                                      : Object.values(selectedDocs).filter(v => v).length === 1 ? 'draft' : 'drafts'}
-                                  </Text>
-                                  <Text size="sm" className="text-gray-600">
-                                    Adjust your {documentType === 'template' && Object.values(selectedDocs).filter(v => v).length === 0 
-                                      ? 'template' 
-                                      : Object.values(selectedDocs).filter(v => v).length === 1 ? 'document' : 'documents'} along key dimensions
-                                  </Text>
-                                </Box>
-                                
-                                <Box className="lg:col-span-3">
-                                  <VStack spacing={4} className="w-full">
-                                    {/* Length Slider */}
-                                    <Box className="w-full">
-                                      <Text size="sm" className="font-medium mb-2">Length</Text>
-                                      <Flex justify="between" className="mb-1">
-                                        <Text size="sm" className="text-gray-600">Simple</Text>
-                                        <Text size="sm" className="text-gray-600">Comprehensive</Text>
-                                      </Flex>
-                                      <input
-                                        type="range"
-                                        min="0"
-                                        max="100"
-                                        value={lengthValue}
-                                        onChange={(e) => setLengthValue(Number(e.target.value))}
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                                      />
-                                    </Box>
-                                    
-                                    {/* Favourability Slider - Show for Standard and Customised */}
-                                    {(documentType === 'standard' || documentType === 'customised') && (
-                                      <Box className="w-full">
-                                        <Text size="sm" className="font-medium mb-2">Favourability</Text>
-                                        <Flex justify="between" className="mb-1">
-                                          <Text size="sm" className="text-gray-600">Favours them</Text>
-                                          <Text size="sm" className="text-gray-600">Favours me</Text>
-                                        </Flex>
-                                        <input
-                                          type="range"
-                                          min="0"
-                                          max="100"
-                                          value={favourabilityValue}
-                                          onChange={(e) => setFavourabilityValue(Number(e.target.value))}
-                                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                                        />
-                                      </Box>
-                                    )}
-                                    
-                                    {/* Tone Slider */}
-                                    <Box className="w-full">
-                                      <Text size="sm" className="font-medium mb-2">Tone</Text>
-                                      <Flex justify="between" className="mb-1">
-                                        <Text size="sm" className="text-gray-600">Plain English</Text>
-                                        <Text size="sm" className="text-gray-600">Formal</Text>
-                                      </Flex>
-                                      <input
-                                        type="range"
-                                        min="0"
-                                        max="100"
-                                        value={toneValue}
-                                        onChange={(e) => setToneValue(Number(e.target.value))}
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                                      />
-                                    </Box>
-                                  </VStack>
-                                </Box>
-                              </Box>
-                            </Box>
-                          )}
-
+                          ))}
                         </VStack>
+                      </Box>
+
+                      {/* Chat input - always visible at bottom */}
+                      <Box className="p-4 bg-white border-t border-gray-200">
+                        <Replybox
+                          handleSubmit={handleSendMessage}
+                          placeholder="Type a message..."
+                          classNames={{
+                            inputWrapper: 'border border-gray-300',
+                          }}
+                        />
                       </Box>
                     </div>
                   </Box>
                 </Box>
               </Box>
+
 
               {/* Right workbench panel */}
               {workbenchOpen && (
