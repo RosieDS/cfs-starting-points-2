@@ -21,30 +21,31 @@ export const FormArtifactChip: React.FC<FormArtifactChipProps> = ({
   return (
     <Box className="sticky top-0 z-10 bg-white border-b border-gray-100 shadow-sm">
       <Box className="px-4 py-2">
-        <Flex align="center" justify="between">
-          {/* Main chip area - clickable to open */}
-          <button
-            onClick={onOpen}
-            className="flex-1 flex items-center gap-3 py-2 px-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
-          >
-            <FileText className="w-4 h-4 text-purple-600" />
-            <Text size="sm" className="font-medium text-purple-700">
-              Creating {selectedDocCount} document{selectedDocCount !== 1 ? 's' : ''}
-            </Text>
-            <Text size="xs" className="text-purple-600 opacity-75">
-              Click to configure
-            </Text>
-          </button>
+        {/* Main chip area - clickable to open with close button inside */}
+        <button
+          onClick={onOpen}
+          className="flex items-center gap-3 py-2 px-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+        >
+          <FileText className="w-4 h-4 text-purple-600" />
+          <Text size="sm" className="font-medium text-purple-700">
+            Creating {selectedDocCount} document{selectedDocCount !== 1 ? 's' : ''}
+          </Text>
+          <Text size="xs" className="text-purple-600 opacity-75">
+            Click to configure
+          </Text>
 
-          {/* Close button */}
+          {/* Close button inside the main button */}
           <button
-            onClick={onClose}
-            className="ml-2 p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation()
+              onClose()
+            }}
+            className="ml-2 p-1 rounded hover:bg-purple-200 text-purple-500 hover:text-purple-700 transition-colors"
             aria-label="Close form"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3 h-3" />
           </button>
-        </Flex>
+        </button>
       </Box>
     </Box>
   )

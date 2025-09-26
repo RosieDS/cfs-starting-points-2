@@ -586,25 +586,27 @@ By: _________________`
               </Box>
 
               {/* Chat interface with artifact integration */}
-              <Box className="flex flex-col bg-gray-50 h-screen">
+              <Box className="flex flex-col bg-white h-screen">
                 <Box className="h-full flex justify-center">
                   <Box className="w-full max-w-4xl flex flex-col h-full">
-                    {/* Chat header with Create Form button */}
-                    <Box className="p-4 bg-white border-b border-gray-200">
-                      <Flex align="center" justify="between">
-                        <Text size="lg" className="font-semibold text-gray-900">Chat</Text>
-                        <Button
-                          variant="bordered"
-                          size="sm"
-                          className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                          onPress={handleCreateForm}
-                        >
-                          Create Form
-                        </Button>
-                      </Flex>
-                    </Box>
+                    {/* Chat header with Create Form button - hidden when artifact is open */}
+                    {artifactState !== 'open' && (
+                      <Box className="p-4 bg-white border-b border-gray-200">
+                        <Flex align="center" justify="between">
+                          <Text size="lg" className="font-semibold text-gray-900">Chat</Text>
+                          <Button
+                            variant="bordered"
+                            size="sm"
+                            className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                            onPress={handleCreateForm}
+                          >
+                            Create Form
+                          </Button>
+                        </Flex>
+                      </Box>
+                    )}
 
-                    <div className="flex-1 flex flex-col h-full">
+                    <div className="flex-1 flex flex-col min-h-0">
                       {/* Artifact chip when pinned */}
                       {artifactState === 'pinned' && (
                         <FormArtifactChip
@@ -615,8 +617,8 @@ By: _________________`
                       )}
 
                       {/* Artifact panel when open - takes most of the space */}
-                      {artifactState === 'open' && (
-                        <Box className="flex-1 px-4 pt-4 min-h-0">
+                      {artifactState === 'open' ? (
+                        <Box className="flex-1 min-h-0">
                           <FormArtifactPanel
                             onMinimize={minimizeArtifact}
                             onSelectedDocsChange={(count) => {
@@ -664,77 +666,67 @@ By: _________________`
                             />
                           </FormArtifactPanel>
                         </Box>
-                      )}
+                      ) : (
+                        /* Chat messages - only visible when artifact is not open */
+                        <Box className="flex-1 overflow-y-auto p-4 min-h-0">
+                          <VStack spacing={6} align="start" className="w-full">
+                            {messages.map((message) => (
+                              <Box key={message.id} className="w-full">
+                                {message.id === MESSAGE_IDS.FORM_ARTIFACT_PREVIEW ? (
+                                  <FormArtifactPreview
+                                    onClick={openArtifact}
+                                    selectedDocCount={selectedDocCount}
+                                  />
+                                ) : (
+                                  <Box className={`w-full flex gap-3 ${message.role === 'user' ? 'flex-row-reverse justify-start' : 'justify-start'}`}>
+                                    {/* Avatar/Icon area */}
+                                    <Box className="flex-shrink-0">
+                                      {message.role === 'user' ? (
+                                        <Box className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                                          <Text size="sm" className="text-white font-medium">R</Text>
+                                        </Box>
+                                      ) : (
+                                        <Box className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                          <Wand2 className="w-4 h-4 text-purple-600" />
+                                        </Box>
+                                      )}
+                                    </Box>
 
-                      {/* Chat messages - smaller when artifact is open */}
-                      <Box className={`overflow-y-auto p-4 ${artifactState === 'open' ? 'flex-none h-32' : 'flex-1'}`}>
-                        <VStack spacing={6} align="start" className="w-full">
-                          {messages.map((message) => (
-                            <Box key={message.id} className="w-full">
-                              {message.id === MESSAGE_IDS.FORM_ARTIFACT_PREVIEW ? (
-                                <FormArtifactPreview
-                                  onClick={openArtifact}
-                                  selectedDocCount={selectedDocCount}
-                                />
-                              ) : (
-                                <Box className={`w-full flex gap-3 ${message.role === 'user' ? 'flex-row-reverse justify-start' : 'justify-start'}`}>
-                                  {/* Avatar/Icon area */}
-                                  <Box className="flex-shrink-0">
-                                    {message.role === 'user' ? (
-                                      <Box className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                                        <Text size="sm" className="text-white font-medium">R</Text>
+                                    {/* Message content */}
+                                    <Box className="flex-shrink-0 max-w-md">
+                                      <Box
+                                        className={`p-4 rounded-2xl inline-block ${
+                                          message.role === 'user'
+                                            ? 'bg-gray-100 text-gray-900'
+                                            : 'bg-[#F9F5FE] text-gray-900'
+                                        }`}
+                                      >
+                                        <Text size="sm" className="text-gray-900 leading-relaxed whitespace-pre-wrap">
+                                          {message.content}
+                                        </Text>
                                       </Box>
-                                    ) : (
-                                      <Box className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                                        <Wand2 className="w-4 h-4 text-purple-600" />
-                                      </Box>
-                                    )}
-                                  </Box>
-
-                                  {/* Message content */}
-                                  <Box className="flex-shrink-0 max-w-md">
-                                    <Box
-                                      className={`p-4 rounded-2xl inline-block ${
-                                        message.role === 'user'
-                                          ? 'bg-gray-100 text-gray-900'
-                                          : 'bg-[#F9F5FE] text-gray-900'
-                                      }`}
-                                    >
-                                      <Text size="sm" className="text-gray-900 leading-relaxed whitespace-pre-wrap">
-                                        {message.content}
-                                      </Text>
                                     </Box>
                                   </Box>
-                                </Box>
-                              )}
-                            </Box>
-                          ))}
-                        </VStack>
-                      </Box>
+                                )}
+                              </Box>
+                            ))}
+                          </VStack>
+                        </Box>
+                      )}
 
                       {/* Chat input - always visible at bottom */}
-                      <Box className="p-4 bg-gray-50">
-                        <Flex align="end" gap={3}>
-                          {/* User avatar */}
-                          <Box className="flex-shrink-0 mb-2">
-                            <Box className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                              <Text size="sm" className="text-white font-medium">R</Text>
-                            </Box>
-                          </Box>
-
-                          {/* Input area */}
-                          <Box className="flex-1">
-                            <Replybox
-                              handleSubmit={handleSendMessage}
-                              placeholder="Message Genie"
-                              className="min-h-[44px]"
-                              classNames={{
-                                inputWrapper: 'border border-gray-300 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow',
-                                input: 'px-4 py-3',
-                              }}
-                            />
-                          </Box>
-                        </Flex>
+                      <Box className="flex-shrink-0 p-4 bg-white">
+                        <Box className="w-full max-w-[600px] mx-auto">
+                          <Replybox
+                            handleSubmit={handleSendMessage}
+                            placeholder="Message Genie"
+                            className="min-h-[44px]"
+                            classNames={{
+                              inputWrapper: 'border border-gray-300 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow',
+                              input: 'px-4 py-3',
+                            }}
+                          />
+                        </Box>
                       </Box>
                     </div>
                   </Box>

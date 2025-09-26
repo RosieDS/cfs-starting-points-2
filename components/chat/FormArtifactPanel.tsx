@@ -38,7 +38,7 @@ export const FormArtifactPanel: React.FC<FormArtifactPanelProps> = ({
       </Box>
 
       {/* Form content - scrollable within the panel */}
-      <Box className="flex-1 min-h-0 overflow-y-auto">
+      <Box className="flex-1 min-h-0 overflow-y-auto bg-gray-50">
         {children}
       </Box>
     </Box>
