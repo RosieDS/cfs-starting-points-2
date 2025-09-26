@@ -24,6 +24,7 @@ import { MESSAGE_IDS } from '@/constants/messageIds'
 import { FormArtifactPreview } from '@/components/chat/FormArtifactPreview'
 import { FormArtifactPanel } from '@/components/chat/FormArtifactPanel'
 import { FormArtifactChip } from '@/components/chat/FormArtifactChip'
+import { FloatingChatInput } from '@/components/chat/FloatingChatInput'
 import { DocumentForm } from '@/components/DocumentForm'
 
 // Message type definition
@@ -44,6 +45,8 @@ export default function Home() {
   // Chat-related state
   const [messages, setMessages] = useState<Message[]>([])
   const [artifactState, setArtifactState] = useState<ArtifactState>('closed')
+  const [chatTitle, setChatTitle] = useState('Chat')
+  const [showChatPreview, setShowChatPreview] = useState(false)
 
   // Sequential message counter for dynamic IDs
   const [messageCounter, setMessageCounter] = useState(0)
@@ -125,6 +128,57 @@ export default function Home() {
     setArtifactState('preview')
   }
 
+  // Generate chat title from user intent
+  const generateChatTitle = (userMessage: string): string => {
+    const message = userMessage.toLowerCase().trim()
+
+    // Handle common patterns like "I want to..." or "I need to..."
+    if (message.startsWith('i want to ')) {
+      return userMessage.substring(10).replace(/^./, c => c.toUpperCase())
+    }
+    if (message.startsWith('i need to ')) {
+      return userMessage.substring(10).replace(/^./, c => c.toUpperCase())
+    }
+    if (message.startsWith('i am ') || message.startsWith('i\'m ')) {
+      const start = message.startsWith('i am ') ? 5 : 4
+      return userMessage.substring(start).replace(/^./, c => c.toUpperCase())
+    }
+    if (message.startsWith('help me ')) {
+      return userMessage.substring(8).replace(/^./, c => c.toUpperCase())
+    }
+    if (message.startsWith('create ')) {
+      return 'Creating ' + userMessage.substring(7).toLowerCase()
+    }
+    if (message.startsWith('draft ')) {
+      return 'Drafting ' + userMessage.substring(6).toLowerCase()
+    }
+
+    // Default: take first few words and capitalize
+    const words = userMessage.split(' ').slice(0, 4).join(' ')
+    return words.length > 50 ? words.substring(0, 47) + '...' : words.replace(/^./, c => c.toUpperCase())
+  }
+
+  // Generate welcome response based on user intent
+  const generateWelcomeResponse = (userMessage: string): string => {
+    const message = userMessage.toLowerCase().trim()
+
+    // Extract the core intent to use in the response
+    let intent = userMessage.toLowerCase()
+
+    if (message.startsWith('i want to ')) {
+      intent = userMessage.substring(10)
+    } else if (message.startsWith('i need to ')) {
+      intent = userMessage.substring(10)
+    } else if (message.startsWith('help me ')) {
+      intent = userMessage.substring(8)
+    } else {
+      // Use the first few words as the intent
+      intent = userMessage.split(' ').slice(0, 6).join(' ').toLowerCase()
+    }
+
+    return `Sure, I can get you started with all of the documents you might need to ${intent}. Let me show you the form to configure your documents.`
+  }
+
   // Handle message sending
   const handleSendMessage = async (messageContent: string, skipUserMessage = false) => {
     if (!messageContent.trim()) return
@@ -139,11 +193,23 @@ export default function Home() {
       setArtifactState('pinned')
     }
 
-    // Send to API
+    // If this is the first message from landing page (skipUserMessage = true),
+    // provide a custom welcome response and show the form artifact
+    if (skipUserMessage) {
+      const welcomeResponse = generateWelcomeResponse(messageContent)
+      addMessage('assistant', welcomeResponse)
+
+      // Show the FormArtifactPreview immediately
+      if (!findMessageById(MESSAGE_IDS.FORM_ARTIFACT_PREVIEW)) {
+        addMessage('assistant', 'Form artifact preview', MESSAGE_IDS.FORM_ARTIFACT_PREVIEW)
+      }
+      setArtifactState('preview')
+      return
+    }
+
+    // For subsequent messages, use the API
     try {
-      const currentMessages = skipUserMessage
-        ? [...messages, { role: 'user', content: messageContent }]
-        : [...messages, { role: 'user', content: messageContent }]
+      const currentMessages = [...messages, { role: 'user', content: messageContent }]
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -476,6 +542,8 @@ By: _________________`
                                 if (prompt.trim()) {
                                   // Add initial user message and get AI response
                                   addMessage('user', prompt)
+                                  // Set chat title based on user intent
+                                  setChatTitle(generateChatTitle(prompt))
                                   handleSendMessage(prompt, true) // Skip adding user message again
                                   // Generate suggested documents for the form
                                   const suggested = generateSuggestedDocs(prompt)
@@ -510,6 +578,8 @@ By: _________________`
                                 if (prompt.trim()) {
                                   // Add initial user message and get AI response
                                   addMessage('user', prompt)
+                                  // Set chat title based on user intent
+                                  setChatTitle(generateChatTitle(prompt))
                                   handleSendMessage(prompt, true) // Skip adding user message again
                                   // Generate suggested documents for the form
                                   const suggested = generateSuggestedDocs(prompt)
@@ -588,12 +658,12 @@ By: _________________`
               {/* Chat interface with artifact integration */}
               <Box className="flex flex-col bg-white h-screen">
                 <Box className="h-full flex justify-center">
-                  <Box className="w-full max-w-4xl flex flex-col h-full">
+                  <Box className="w-full max-w-4xl flex flex-col h-full relative">
                     {/* Chat header with Create Form button - hidden when artifact is open */}
                     {artifactState !== 'open' && (
                       <Box className="p-4 bg-white border-b border-gray-200">
                         <Flex align="center" justify="between">
-                          <Text size="lg" className="font-semibold text-gray-900">Chat</Text>
+                          <Text size="lg" className="font-semibold text-gray-900">{chatTitle}</Text>
                           <Button
                             variant="bordered"
                             size="sm"
@@ -606,7 +676,7 @@ By: _________________`
                       </Box>
                     )}
 
-                    <div className="flex-1 flex flex-col min-h-0">
+                    <div className="flex-1 flex flex-col min-h-0 relative">
                       {/* Artifact chip when pinned */}
                       {artifactState === 'pinned' && (
                         <FormArtifactChip
@@ -616,8 +686,8 @@ By: _________________`
                         />
                       )}
 
-                      {/* Artifact panel when open - takes most of the space */}
-                      {artifactState === 'open' ? (
+                      {/* Artifact panel when open - takes most of the space, hidden during chat preview */}
+                      {artifactState === 'open' && !showChatPreview ? (
                         <Box className="flex-1 min-h-0">
                           <FormArtifactPanel
                             onMinimize={minimizeArtifact}
@@ -666,9 +736,28 @@ By: _________________`
                             />
                           </FormArtifactPanel>
                         </Box>
-                      ) : (
-                        /* Chat messages - only visible when artifact is not open */
-                        <Box className="flex-1 overflow-y-auto p-4 min-h-0">
+                      ) : null}
+
+                      {/* Chat messages - visible when artifact is not open OR during chat preview */}
+                      {(artifactState !== 'open' || showChatPreview) && (
+                        <Box 
+                          className="flex-1 overflow-y-auto p-4 min-h-0"
+                          data-chat-preview-area
+                          onMouseLeave={() => {
+                            if (showChatPreview && artifactState === 'open') {
+                              // Hide preview when leaving chat area (back to form)
+                              setTimeout(() => {
+                                // Double-check we're not hovering over button or input
+                                const hoveredElement = document.querySelector(':hover')
+                                const isHoveringChatArea = hoveredElement?.closest('[data-chat-preview-area]') || 
+                                                          hoveredElement?.closest('[data-floating-chat-button]')
+                                if (!isHoveringChatArea) {
+                                  setShowChatPreview(false)
+                                }
+                              }, 150)
+                            }
+                          }}
+                        >
                           <VStack spacing={6} align="start" className="w-full">
                             {messages.map((message) => (
                               <Box key={message.id} className="w-full">
@@ -714,21 +803,64 @@ By: _________________`
                         </Box>
                       )}
 
-                      {/* Chat input - always visible at bottom */}
-                      <Box className="flex-shrink-0 p-4 bg-white">
-                        <Box className="w-full max-w-[600px] mx-auto">
-                          <Replybox
-                            handleSubmit={handleSendMessage}
-                            placeholder="Message Genie"
-                            className="min-h-[44px]"
-                            classNames={{
-                              inputWrapper: 'border border-gray-300 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow',
-                              input: 'px-4 py-3',
-                            }}
-                          />
+                      {/* Chat input - visible when artifact is not open OR during chat preview */}
+                      {(artifactState !== 'open' || showChatPreview) && (
+                        <Box 
+                          className="flex-shrink-0 p-4 bg-white"
+                          data-chat-preview-area
+                          onMouseLeave={() => {
+                            if (showChatPreview && artifactState === 'open') {
+                              // Hide preview when leaving input area
+                              setTimeout(() => {
+                                // Double-check we're not hovering over button or other chat areas
+                                const hoveredElement = document.querySelector(':hover')
+                                const isHoveringChatArea = hoveredElement?.closest('[data-chat-preview-area]') || 
+                                                          hoveredElement?.closest('[data-floating-chat-button]')
+                                if (!isHoveringChatArea) {
+                                  setShowChatPreview(false)
+                                }
+                              }, 150)
+                            }
+                          }}
+                        >
+                          <Box className="w-full max-w-[600px] mx-auto">
+                            <Replybox
+                              handleSubmit={(message) => {
+                                // If we're in preview mode and user sends a message, commit to chat
+                                if (showChatPreview && artifactState === 'open') {
+                                  setArtifactState('pinned')
+                                  setShowChatPreview(false)
+                                }
+                                handleSendMessage(message)
+                              }}
+                              placeholder="Message Genie"
+                              className="min-h-[44px]"
+                              classNames={{
+                                inputWrapper: 'border border-gray-300 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow',
+                                input: 'px-4 py-3',
+                              }}
+                              onFocus={() => {
+                                // If user focuses on input during preview, commit to chat mode
+                                if (showChatPreview && artifactState === 'open') {
+                                  setArtifactState('pinned')
+                                  setShowChatPreview(false)
+                                }
+                              }}
+                            />
+                          </Box>
                         </Box>
-                      </Box>
+                      )}
+
                     </div>
+
+                    {/* Floating chat input - positioned outside the scrollable area */}
+                    {artifactState === 'open' && !showChatPreview && (
+                      <FloatingChatInput
+                        onShowChatPreview={() => setShowChatPreview(true)}
+                        onHideChatPreview={() => setShowChatPreview(false)}
+                        onCommitToChat={() => setArtifactState('pinned')}
+                      />
+                    )}
                   </Box>
                 </Box>
               </Box>
