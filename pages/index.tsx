@@ -701,39 +701,50 @@ By: _________________`
                               }
                             }}
                           >
-                            <DocumentForm
-                              prompt={prompt}
-                              setPrompt={setPrompt}
-                              selectedExistingInputs={selectedExistingInputs}
-                              setSelectedExistingInputs={setSelectedExistingInputs}
-                              selectedDocs={selectedDocs}
-                              setSelectedDocs={setSelectedDocs}
-                              suggestedDocs={suggestedDocs}
-                              createDocs={createDocs}
-                              setCreateDocs={setCreateDocs}
-                              selectedClauses={selectedClauses}
-                              setSelectedClauses={setSelectedClauses}
-                              clauseDetailsText={clauseDetailsText}
-                              setClauseDetailsText={setClauseDetailsText}
-                              lengthValue={lengthValue}
-                              setLengthValue={setLengthValue}
-                              favourabilityValue={favourabilityValue}
-                              setFavourabilityValue={setFavourabilityValue}
-                              toneValue={toneValue}
-                              setToneValue={setToneValue}
-                              documentType={documentType}
-                              setDocumentType={setDocumentType}
-                              governingLaw={governingLaw}
-                              setGoverningLaw={setGoverningLaw}
-                              customClauses={customClauses}
-                              setCustomClauses={setCustomClauses}
-                              addCustomClause={addCustomClause}
-                              updateCustomClauseName={updateCustomClauseName}
-                              updateCustomClauseDetails={updateCustomClauseDetails}
-                              removeCustomClause={removeCustomClause}
-                              generateKeyClauses={generateKeyClauses}
-                              generateDetailQuestions={generateDetailQuestions}
-                            />
+                            <Box className="relative h-full">
+                              <DocumentForm
+                                prompt={prompt}
+                                setPrompt={setPrompt}
+                                selectedExistingInputs={selectedExistingInputs}
+                                setSelectedExistingInputs={setSelectedExistingInputs}
+                                selectedDocs={selectedDocs}
+                                setSelectedDocs={setSelectedDocs}
+                                suggestedDocs={suggestedDocs}
+                                createDocs={createDocs}
+                                setCreateDocs={setCreateDocs}
+                                selectedClauses={selectedClauses}
+                                setSelectedClauses={setSelectedClauses}
+                                clauseDetailsText={clauseDetailsText}
+                                setClauseDetailsText={setClauseDetailsText}
+                                lengthValue={lengthValue}
+                                setLengthValue={setLengthValue}
+                                favourabilityValue={favourabilityValue}
+                                setFavourabilityValue={setFavourabilityValue}
+                                toneValue={toneValue}
+                                setToneValue={setToneValue}
+                                documentType={documentType}
+                                setDocumentType={setDocumentType}
+                                governingLaw={governingLaw}
+                                setGoverningLaw={setGoverningLaw}
+                                customClauses={customClauses}
+                                setCustomClauses={setCustomClauses}
+                                addCustomClause={addCustomClause}
+                                updateCustomClauseName={updateCustomClauseName}
+                                updateCustomClauseDetails={updateCustomClauseDetails}
+                                removeCustomClause={removeCustomClause}
+                                generateKeyClauses={generateKeyClauses}
+                                generateDetailQuestions={generateDetailQuestions}
+                              />
+                              
+                              {/* Floating button fixed over the form content */}
+                              {!showChatPreview && (
+                                <FloatingChatInput
+                                  onShowChatPreview={() => setShowChatPreview(true)}
+                                  onHideChatPreview={() => setShowChatPreview(false)}
+                                  onCommitToChat={() => setArtifactState('pinned')}
+                                />
+                              )}
+                            </Box>
                           </FormArtifactPanel>
                         </Box>
                       ) : null}
@@ -852,15 +863,6 @@ By: _________________`
                       )}
 
                     </div>
-
-                    {/* Floating chat input - positioned outside the scrollable area */}
-                    {artifactState === 'open' && !showChatPreview && (
-                      <FloatingChatInput
-                        onShowChatPreview={() => setShowChatPreview(true)}
-                        onHideChatPreview={() => setShowChatPreview(false)}
-                        onCommitToChat={() => setArtifactState('pinned')}
-                      />
-                    )}
                   </Box>
                 </Box>
               </Box>

@@ -43,7 +43,7 @@ export const FloatingChatInput: React.FC<FloatingChatInputProps> = ({
 
   return (
     <div
-      className="absolute bottom-4 right-4 z-50"
+      className="absolute bottom-6 right-6 z-50"
       data-floating-chat-button
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

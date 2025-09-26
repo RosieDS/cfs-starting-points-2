@@ -42,6 +42,9 @@ interface DocumentFormProps {
   removeCustomClause: (docType: string, clauseId: string) => void
   generateKeyClauses: (docType: string) => Array<{name: string, explainer: string}>
   generateDetailQuestions: () => string[]
+  
+  // Optional floating button
+  floatingButton?: React.ReactNode
 }
 
 /**
@@ -80,7 +83,8 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   updateCustomClauseDetails,
   removeCustomClause,
   generateKeyClauses,
-  generateDetailQuestions
+  generateDetailQuestions,
+  floatingButton
 }) => {
 
   return (
