@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Box, Flex, VStack, Text, Textarea, Button } from '@/genie-ui'
 import { Select, SelectItem } from '@/genie-ui/components/select'
 import DocDetailSlider, { DocumentType } from '@/genie-ui/components/docDetailSlider'
@@ -108,6 +108,67 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
     }
   }
 
+  // Loading state for document library search - track which documents are loading
+  const [loadingDocuments, setLoadingDocuments] = useState<Record<string, boolean>>({})
+  const [previousSelectedDocs, setPreviousSelectedDocs] = useState<Record<string, boolean>>({})
+
+  // Effect to trigger loading when documents are selected/deselected
+  useEffect(() => {
+    const currentSelected = Object.keys(selectedDocs).filter(doc => selectedDocs[doc])
+    const previousSelected = Object.keys(previousSelectedDocs).filter(doc => previousSelectedDocs[doc])
+    
+    // Find newly selected documents
+    const newlySelected = currentSelected.filter(doc => !previousSelected.includes(doc))
+    
+    if (newlySelected.length > 0) {
+      // Set loading state for newly selected documents
+      const newLoadingState = { ...loadingDocuments }
+      newlySelected.forEach(doc => {
+        newLoadingState[doc] = true
+      })
+      setLoadingDocuments(newLoadingState)
+
+      // Set timers for each newly selected document
+      newlySelected.forEach(doc => {
+        setTimeout(() => {
+          setLoadingDocuments(prev => ({
+            ...prev,
+            [doc]: false
+          }))
+        }, 2000)
+      })
+    }
+
+    // Remove loading state for deselected documents
+    const deselected = previousSelected.filter(doc => !currentSelected.includes(doc))
+    if (deselected.length > 0) {
+      setLoadingDocuments(prev => {
+        const newState = { ...prev }
+        deselected.forEach(doc => {
+          delete newState[doc]
+        })
+        return newState
+      })
+    }
+
+    // Update previous selected docs for next comparison
+    setPreviousSelectedDocs(selectedDocs)
+  }, [selectedDocs])
+
+  // Loading component for document library search
+  const DocumentLibraryLoading = () => (
+    <Box className="w-full">
+      <Box className="border rounded-lg bg-white shadow-sm overflow-hidden p-6">
+        <Flex align="center" justify="center" className="min-h-[100px]">
+          <VStack spacing={3} align="center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+            <Text size="sm" className="text-gray-600">Searching your document library.</Text>
+          </VStack>
+        </Flex>
+      </Box>
+    </Box>
+  )
+
   return (
     <Box className={`p-6 overflow-y-auto ${getBackgroundColor()}`}>
       <VStack spacing={8} align="start" className="w-full">
@@ -216,46 +277,50 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                   {documentType === 'template' ? (
                     <VStack spacing={6} align="start" className="w-full">
                       {/* Re-use previous document - Full Width */}
-                      <Box className="w-full">
-                        <Box className="border rounded-lg bg-white shadow-sm overflow-hidden">
-                          <Box className="border-b bg-gray-50 px-3 py-3">
-                            <Flex align="center" justify="between">
-                              <Text size="md" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
-                              <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
-                                <Text className="w-20 text-center">Use as template</Text>
-                                <Text className="w-20 text-center">Use as context</Text>
-                              </Flex>
-                            </Flex>
-                          </Box>
-
-                          {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
-                            <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
+                      {loadingDocuments[doc] ? (
+                        <DocumentLibraryLoading />
+                      ) : (
+                        <Box className="w-full">
+                          <Box className="border rounded-lg bg-white shadow-sm overflow-hidden">
+                            <Box className="border-b bg-gray-50 px-3 py-3">
                               <Flex align="center" justify="between">
-                                <Flex align="center" gap={3} className="flex-1 min-w-0">
-                                  <FileText className="w-4 h-4 text-blue-500" />
-                                  <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
-                                </Flex>
-                                <Flex align="center" style={{ width: '140px' }}>
-                                  <Box className="w-20 flex justify-center">
-                                    <input
-                                      type="checkbox"
-                                      defaultChecked={rowIndex === 0}
-                                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                    />
-                                  </Box>
-                                  <Box className="w-20 flex justify-center">
-                                    <input
-                                      type="checkbox"
-                                      defaultChecked
-                                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                    />
-                                  </Box>
+                                <Text size="md" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
+                                <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
+                                  <Text className="w-20 text-center">Use as template</Text>
+                                  <Text className="w-20 text-center">Use as context</Text>
                                 </Flex>
                               </Flex>
                             </Box>
-                          ))}
+
+                            {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
+                              <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
+                                <Flex align="center" justify="between">
+                                  <Flex align="center" gap={3} className="flex-1 min-w-0">
+                                    <FileText className="w-4 h-4 text-blue-500" />
+                                    <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
+                                  </Flex>
+                                  <Flex align="center" style={{ width: '140px' }}>
+                                    <Box className="w-20 flex justify-center">
+                                      <input
+                                        type="checkbox"
+                                        defaultChecked={rowIndex === 0}
+                                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                      />
+                                    </Box>
+                                    <Box className="w-20 flex justify-center">
+                                      <input
+                                        type="checkbox"
+                                        defaultChecked
+                                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                      />
+                                    </Box>
+                                  </Flex>
+                                </Flex>
+                              </Box>
+                            ))}
+                          </Box>
                         </Box>
-                      </Box>
+                      )}
 
                       {/* Bottom Row - 50/50 Split */}
                       <Box className="w-full grid grid-cols-2 gap-6">
@@ -507,46 +572,50 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                       <Box className="flex-1">
                       <VStack spacing={6} align="start" className="w-full">
                         {/* Re-use previous document for this specific document */}
-                        <Box className="w-full">
-                          <Box className="border rounded-lg bg-white shadow-sm overflow-hidden">
-                            <Box className="border-b bg-gray-50 px-3 py-3">
-                              <Flex align="center" justify="between">
-                                <Text size="md" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
-                                <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
-                                  <Text className="w-20 text-center">Use as template</Text>
-                                  <Text className="w-20 text-center">Use as context</Text>
-                                </Flex>
-                              </Flex>
-                            </Box>
-
-                            {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
-                              <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
+                        {loadingDocuments[doc] ? (
+                          <DocumentLibraryLoading />
+                        ) : (
+                          <Box className="w-full">
+                            <Box className="border rounded-lg bg-white shadow-sm overflow-hidden">
+                              <Box className="border-b bg-gray-50 px-3 py-3">
                                 <Flex align="center" justify="between">
-                                  <Flex align="center" gap={3} className="flex-1 min-w-0">
-                                    <FileText className="w-4 h-4 text-blue-500" />
-                                    <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
-                                  </Flex>
-                                  <Flex align="center" style={{ width: '140px' }}>
-                                    <Box className="w-20 flex justify-center">
-                                      <input
-                                        type="checkbox"
-                                        defaultChecked={rowIndex === 0}
-                                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                      />
-                                    </Box>
-                                    <Box className="w-20 flex justify-center">
-                                      <input
-                                        type="checkbox"
-                                        defaultChecked
-                                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                      />
-                                    </Box>
+                                  <Text size="md" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
+                                  <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
+                                    <Text className="w-20 text-center">Use as template</Text>
+                                    <Text className="w-20 text-center">Use as context</Text>
                                   </Flex>
                                 </Flex>
                               </Box>
-                            ))}
+
+                              {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
+                                <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
+                                  <Flex align="center" justify="between">
+                                    <Flex align="center" gap={3} className="flex-1 min-w-0">
+                                      <FileText className="w-4 h-4 text-blue-500" />
+                                      <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
+                                    </Flex>
+                                    <Flex align="center" style={{ width: '140px' }}>
+                                      <Box className="w-20 flex justify-center">
+                                        <input
+                                          type="checkbox"
+                                          defaultChecked={rowIndex === 0}
+                                          className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                        />
+                                      </Box>
+                                      <Box className="w-20 flex justify-center">
+                                        <input
+                                          type="checkbox"
+                                          defaultChecked
+                                          className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                        />
+                                      </Box>
+                                    </Flex>
+                                  </Flex>
+                                </Box>
+                              ))}
+                            </Box>
                           </Box>
-                        </Box>
+                        )}
 
                         {/* Any other details to include for this specific document */}
                         <Box className="w-full">

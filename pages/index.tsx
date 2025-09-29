@@ -200,13 +200,20 @@ export default function Home() {
     // provide a custom welcome response and show the form artifact
     if (skipUserMessage) {
       const welcomeResponse = generateWelcomeResponse(messageContent)
-      addMessage('assistant', welcomeResponse)
-
-      // Show the FormArtifactPreview immediately
-      if (!findMessageById(MESSAGE_IDS.FORM_ARTIFACT_PREVIEW)) {
-        addMessage('assistant', 'Form artifact preview', MESSAGE_IDS.FORM_ARTIFACT_PREVIEW)
-      }
-      setArtifactState('preview')
+      
+      // Add a short delay before showing the assistant response (typical system message delay)
+      setTimeout(() => {
+        addMessage('assistant', welcomeResponse)
+        
+        // Add another short delay before showing the form artifact
+        setTimeout(() => {
+          if (!findMessageById(MESSAGE_IDS.FORM_ARTIFACT_PREVIEW)) {
+            addMessage('assistant', 'Form artifact preview', MESSAGE_IDS.FORM_ARTIFACT_PREVIEW)
+          }
+          setArtifactState('preview')
+        }, 500) // 0.5 second delay for the artifact
+      }, 800) // 0.8 second delay for the assistant response
+      
       return
     }
 
