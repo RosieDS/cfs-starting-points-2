@@ -664,7 +664,7 @@ By: _________________`
               {/* Chat interface with artifact integration */}
               <Box className="flex flex-col bg-white h-screen">
                 <Box className="h-full flex justify-center">
-                  <Box className="w-full max-w-4xl flex flex-col h-full relative">
+                  <Box className={`w-full flex flex-col h-full relative ${artifactState === 'open' ? '' : 'max-w-4xl'}`}>
                     {/* Chat header with Create Form button - hidden when artifact is open */}
                     {artifactState !== 'open' && (
                       <Box className="p-4 bg-white border-b border-gray-200">
@@ -746,19 +746,17 @@ By: _________________`
                                 generateKeyClauses={generateKeyClauses}
                                 generateDetailQuestions={generateDetailQuestions}
                               />
-                              
-                              {/* Floating button fixed over the form content */}
-                              {!showChatPreview && (
-                                <FloatingChatInput
-                                  onShowChatPreview={() => setShowChatPreview(true)}
-                                  onHideChatPreview={() => setShowChatPreview(false)}
-                                  onCommitToChat={() => setArtifactState('pinned')}
-                                />
-                              )}
                             </Box>
                           </FormArtifactPanel>
                         </Box>
                       ) : null}
+
+                      {/* Floating chat button - positioned relative to central panel */}
+                      {artifactState === 'open' && (
+                        <FloatingChatInput
+                          onCommitToChat={() => setArtifactState('pinned')}
+                        />
+                      )}
 
                       {/* Chat messages - visible when artifact is not open OR during chat preview */}
                       {(artifactState !== 'open' || showChatPreview) && (

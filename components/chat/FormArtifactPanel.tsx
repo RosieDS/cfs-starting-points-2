@@ -18,9 +18,9 @@ export const FormArtifactPanel: React.FC<FormArtifactPanelProps> = ({
   children
 }) => {
   return (
-    <Box className="bg-white border border-gray-200 rounded-lg shadow-lg mb-4 h-full flex flex-col max-h-[80vh]">
+    <Box className="bg-white h-full flex flex-col">
       {/* Sticky header with title and minimize button */}
-      <Box className="sticky top-0 bg-white border-b border-gray-100 rounded-t-lg z-20 flex-shrink-0">
+      <Box className="sticky top-0 bg-white border-b border-gray-100 z-20 flex-shrink-0">
         <Flex align="center" justify="between" className="px-4 py-3">
           <Text size="lg" className="font-semibold text-gray-900">
             Customise your document

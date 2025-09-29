@@ -97,8 +97,19 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   floatingButton
 }) => {
 
+  const getBackgroundColor = () => {
+    switch (documentType) {
+      case 'customised':
+        return 'bg-[#F2E7FE]'
+      case 'standard':
+        return 'bg-[#EDEFFF]'
+      default:
+        return 'bg-gray-50'
+    }
+  }
+
   return (
-    <Box className="p-6 overflow-y-auto">
+    <Box className={`p-6 overflow-y-auto ${getBackgroundColor()}`}>
       <VStack spacing={8} align="start" className="w-full">
         {/* Doc Detail Slider */}
         <Box className="w-full">
@@ -315,7 +326,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
 
                         {/* Right Half - Sliders */}
                         <Box className="flex-1">
-                          <VStack spacing={4} className="w-full">
+                          <VStack spacing={4} className={`w-full ${documentType === 'standard' ? 'mt-6' : ''}`}>
                             {/* Length Slider */}
                             <Box className="w-full">
                               <Text size="sm" className="font-medium mb-2">Length</Text>
@@ -437,7 +448,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                             </Box>
 
                             {/* Sliders */}
-                            <VStack spacing={4} className="w-full">
+                            <VStack spacing={4} className={`w-full ${documentType === 'standard' || documentType === 'customised' ? 'mt-6' : ''}`}>
                               {/* Length Slider */}
                               <Box className="w-full">
                                 <Text size="sm" className="font-medium mb-2">Length</Text>
