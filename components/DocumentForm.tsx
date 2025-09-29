@@ -190,196 +190,131 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             </Box>
           </Box>
 
-          {/* Based on previous documents sections - only for template documents */}
-          {documentType === 'template' && Object.values(selectedDocs).some(v => v) && (
-            <Box className="mt-6 pt-6 border-t border-gray-200">
-              {(() => {
-                const selectedDocsList = Object.keys(selectedDocs).filter(k => selectedDocs[k])
-                const numSelected = selectedDocsList.length
-
-                // Layout logic based on number of selected documents
-                if (numSelected === 1) {
-                  return (
-                    <Box className="flex justify-center">
-                      <Box className="w-full max-w-md">
-                        {selectedDocsList.map((doc) => (
-                          <Box key={doc} className="border rounded-lg bg-white shadow-sm overflow-hidden">
-                            <Box className="border-b bg-gray-50 px-3 py-3">
-                              <Flex align="center" justify="between">
-                                <Text size="md" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
-                                <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
-                                  <Text className="w-20 text-center">Use as template</Text>
-                                  <Text className="w-20 text-center">Use as context</Text>
-                                </Flex>
-                              </Flex>
-                            </Box>
-
-                            {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
-                              <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
-                                <Flex align="center" justify="between">
-                                  <Flex align="center" gap={3} className="flex-1 min-w-0">
-                                    <FileText className="w-4 h-4 text-blue-500" />
-                                    <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
-                                  </Flex>
-                                  <Flex align="center" style={{ width: '140px' }}>
-                                    <Box className="w-20 flex justify-center">
-                                      <input
-                                        type="checkbox"
-                                        defaultChecked={rowIndex === 0}
-                                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                      />
-                                    </Box>
-                                    <Box className="w-20 flex justify-center">
-                                      <input
-                                        type="checkbox"
-                                        defaultChecked
-                                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                      />
-                                    </Box>
-                                  </Flex>
-                                </Flex>
-                              </Box>
-                            ))}
-                          </Box>
-                        ))}
-                      </Box>
-                    </Box>
-                  )
-                } else {
-                  return (
-                    <Box className="grid grid-cols-2 gap-4">
-                      {selectedDocsList.map((doc, index) => {
-                        let gridClass = ''
-                        if (numSelected === 3 && index === 2) {
-                          gridClass = 'col-start-1'
-                        } else if (numSelected === 4 && index === 3) {
-                          gridClass = 'col-start-2'
-                        }
-
-                        return (
-                          <Box key={doc} className={`border rounded-lg bg-white shadow-sm overflow-hidden ${gridClass}`}>
-                            <Box className="border-b bg-gray-50 px-3 py-3">
-                              <Flex align="center" justify="between">
-                                <Text size="sm" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
-                                <Flex align="center" className="text-xs text-gray-600" style={{ width: '128px' }}>
-                                  <Text className="w-16 text-center">Template</Text>
-                                  <Text className="w-16 text-center">Context</Text>
-                                </Flex>
-                              </Flex>
-                            </Box>
-
-                            {[`${doc}_type_1`, `${doc}_type_2`].map((docName, rowIndex) => (
-                              <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
-                                <Flex align="center" justify="between">
-                                  <Flex align="center" gap={2} className="flex-1 min-w-0">
-                                    <FileText className="w-3 h-3 text-blue-500" />
-                                    <Text size="xs" className="text-gray-900 truncate">{docName}.docx</Text>
-                                  </Flex>
-                                  <Flex align="center" style={{ width: '128px' }}>
-                                    <Box className="w-16 flex justify-center">
-                                      <input
-                                        type="checkbox"
-                                        defaultChecked={rowIndex === 0}
-                                        className="w-3 h-3 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                      />
-                                    </Box>
-                                    <Box className="w-16 flex justify-center">
-                                      <input
-                                        type="checkbox"
-                                        defaultChecked
-                                        className="w-3 h-3 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                      />
-                                    </Box>
-                                  </Flex>
-                                </Flex>
-                              </Box>
-                            ))}
-                          </Box>
-                        )
-                      })}
-                    </Box>
-                  )
-                }
-              })()}
-            </Box>
-          )}
         </Box>
 
-        {/* New Layout for Standard and Customised Document Types */}
-        {(documentType === 'standard' || documentType === 'customised') && (
+        {/* New Layout for Standard, Customised, and Template Document Types */}
+        {(documentType === 'standard' || documentType === 'customised' || documentType === 'template') && (
           <Box className="w-full">
             <VStack spacing={6} align="start" className="w-full">
               {/* Individual Document Sections - One per selected document */}
               {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((doc) => (
-                <Box key={doc} className="w-full">
+                <Box key={doc} className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                   <Text size="xl" className="font-semibold text-gray-900 mb-6">{doc}</Text>
                   
-                  <Box className="flex gap-6">
-                    {/* Left Column - 30% width with outline */}
-                    <Box className="w-[30%] flex-shrink-0">
-                      <Box className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                        <VStack spacing={6} align="start">
-                          {/* Governing Law Dropdown */}
-                          <Box className="w-full">
-                            <Text size="sm" className="font-medium text-gray-900 mb-2">Governing law:</Text>
-                            <Select
-                              selectedKeys={[governingLaw]}
-                              onSelectionChange={(keys) => {
-                                const selected = Array.from(keys)[0] as string
-                                setGoverningLaw(selected)
-                              }}
-                              placeholder="Select governing law"
-                              className="w-full"
-                              classNames={{
-                                trigger: "h-[40px] min-h-[40px]",
-                                selectorIcon: "right-3 absolute"
-                              }}
-                              size="md"
-                            >
-                              <SelectItem key="english-law">England and Wales</SelectItem>
-                              <SelectItem key="scottish-law">Scottish Law</SelectItem>
-                              <SelectItem key="northern-ireland-law">Northern Ireland Law</SelectItem>
-                              <SelectItem key="us-federal">US Federal Law</SelectItem>
-                              <SelectItem key="california-law">California State Law</SelectItem>
-                              <SelectItem key="new-york-law">New York State Law</SelectItem>
-                              <SelectItem key="delaware-law">Delaware State Law</SelectItem>
-                              <SelectItem key="australian-law">Australian Law</SelectItem>
-                              <SelectItem key="canadian-law">Canadian Law</SelectItem>
-                              <SelectItem key="eu-law">European Union Law</SelectItem>
-                              <SelectItem key="german-law">German Law</SelectItem>
-                              <SelectItem key="french-law">French Law</SelectItem>
-                              <SelectItem key="singapore-law">Singapore Law</SelectItem>
-                              <SelectItem key="hong-kong-law">Hong Kong Law</SelectItem>
-                            </Select>
+                  {/* Template mode shows template selection with controls */}
+                  {documentType === 'template' ? (
+                    <VStack spacing={6} align="start" className="w-full">
+                      {/* Re-use previous document - Full Width */}
+                      <Box className="w-full">
+                        <Box className="border rounded-lg bg-white shadow-sm overflow-hidden">
+                          <Box className="border-b bg-gray-50 px-3 py-3">
+                            <Flex align="center" justify="between">
+                              <Text size="md" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
+                              <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
+                                <Text className="w-20 text-center">Use as template</Text>
+                                <Text className="w-20 text-center">Use as context</Text>
+                              </Flex>
+                            </Flex>
                           </Box>
 
-                          {/* Language Dropdown */}
-                          <Box className="w-full">
-                            <Text size="sm" className="font-medium text-gray-900 mb-2">Language:</Text>
-                            <Select
-                              selectedKeys={[language]}
-                              onSelectionChange={(keys) => {
-                                const selected = Array.from(keys)[0] as string
-                                setLanguage(selected)
-                              }}
-                              placeholder="Select language"
-                              className="w-full"
-                              classNames={{
-                                trigger: "h-[40px] min-h-[40px]",
-                                selectorIcon: "right-3 absolute"
-                              }}
-                              size="md"
-                            >
-                              <SelectItem key="english">English</SelectItem>
-                              <SelectItem key="spanish">Spanish</SelectItem>
-                              <SelectItem key="french">French</SelectItem>
-                              <SelectItem key="german">German</SelectItem>
-                              <SelectItem key="italian">Italian</SelectItem>
-                              <SelectItem key="portuguese">Portuguese</SelectItem>
-                            </Select>
-                          </Box>
+                          {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
+                            <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
+                              <Flex align="center" justify="between">
+                                <Flex align="center" gap={3} className="flex-1 min-w-0">
+                                  <FileText className="w-4 h-4 text-blue-500" />
+                                  <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
+                                </Flex>
+                                <Flex align="center" style={{ width: '140px' }}>
+                                  <Box className="w-20 flex justify-center">
+                                    <input
+                                      type="checkbox"
+                                      defaultChecked={rowIndex === 0}
+                                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                    />
+                                  </Box>
+                                  <Box className="w-20 flex justify-center">
+                                    <input
+                                      type="checkbox"
+                                      defaultChecked
+                                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                    />
+                                  </Box>
+                                </Flex>
+                              </Flex>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
 
-                          {/* Sliders */}
+                      {/* Bottom Row - 50/50 Split */}
+                      <Box className="w-full grid grid-cols-2 gap-6">
+                        {/* Left Half - Dropdowns */}
+                        <Box className="flex-1">
+                          <VStack spacing={6} align="start">
+                            {/* Governing Law Dropdown */}
+                            <Box className="w-full">
+                              <Text size="sm" className="font-medium text-gray-900 mb-2">Governing law:</Text>
+                              <Select
+                                selectedKeys={[governingLaw]}
+                                onSelectionChange={(keys) => {
+                                  const selected = Array.from(keys)[0] as string
+                                  setGoverningLaw(selected)
+                                }}
+                                placeholder="Select governing law"
+                                className="w-full"
+                                classNames={{
+                                  trigger: "h-[40px] min-h-[40px]",
+                                  selectorIcon: "right-3 absolute"
+                                }}
+                                size="md"
+                              >
+                                  <SelectItem key="english-law">England and Wales</SelectItem>
+                                  <SelectItem key="scottish-law">Scottish Law</SelectItem>
+                                  <SelectItem key="northern-ireland-law">Northern Ireland Law</SelectItem>
+                                  <SelectItem key="us-federal">US Federal Law</SelectItem>
+                                  <SelectItem key="california-law">California State Law</SelectItem>
+                                  <SelectItem key="new-york-law">New York State Law</SelectItem>
+                                  <SelectItem key="delaware-law">Delaware State Law</SelectItem>
+                                  <SelectItem key="australian-law">Australian Law</SelectItem>
+                                  <SelectItem key="canadian-law">Canadian Law</SelectItem>
+                                  <SelectItem key="eu-law">European Union Law</SelectItem>
+                                  <SelectItem key="german-law">German Law</SelectItem>
+                                  <SelectItem key="french-law">French Law</SelectItem>
+                                  <SelectItem key="singapore-law">Singapore Law</SelectItem>
+                                  <SelectItem key="hong-kong-law">Hong Kong Law</SelectItem>
+                                </Select>
+                              </Box>
+
+                              {/* Language Dropdown */}
+                              <Box className="w-full">
+                                <Text size="sm" className="font-medium text-gray-900 mb-2">Language:</Text>
+                                <Select
+                                  selectedKeys={[language]}
+                                  onSelectionChange={(keys) => {
+                                    const selected = Array.from(keys)[0] as string
+                                    setLanguage(selected)
+                                  }}
+                                  placeholder="Select language"
+                                  className="w-full"
+                                  classNames={{
+                                    trigger: "h-[40px] min-h-[40px]",
+                                    selectorIcon: "right-3 absolute"
+                                  }}
+                                  size="md"
+                                >
+                                  <SelectItem key="english">English</SelectItem>
+                                  <SelectItem key="spanish">Spanish</SelectItem>
+                                  <SelectItem key="french">French</SelectItem>
+                                  <SelectItem key="german">German</SelectItem>
+                                  <SelectItem key="italian">Italian</SelectItem>
+                                  <SelectItem key="portuguese">Portuguese</SelectItem>
+                                </Select>
+                              </Box>
+                            </VStack>
+                        </Box>
+
+                        {/* Right Half - Sliders */}
+                        <Box className="flex-1">
                           <VStack spacing={4} className="w-full">
                             {/* Length Slider */}
                             <Box className="w-full">
@@ -432,12 +367,133 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                               />
                             </Box>
                           </VStack>
-                        </VStack>
+                        </Box>
                       </Box>
-                    </Box>
+                    </VStack>
+                  ) : (
+                    /* Standard and Customised modes show the full layout */
+                    <Box className="flex gap-6">
+                      {/* Left Column - 30% width */}
+                      <Box className="w-[30%] flex-shrink-0">
+                        <VStack spacing={6} align="start">
+                          {/* Governing Law Dropdown */}
+                          <Box className="w-full">
+                            <Text size="sm" className="font-medium text-gray-900 mb-2">Governing law:</Text>
+                            <Select
+                              selectedKeys={[governingLaw]}
+                              onSelectionChange={(keys) => {
+                                const selected = Array.from(keys)[0] as string
+                                setGoverningLaw(selected)
+                              }}
+                              placeholder="Select governing law"
+                              className="w-full"
+                              classNames={{
+                                trigger: "h-[40px] min-h-[40px]",
+                                selectorIcon: "right-3 absolute"
+                              }}
+                              size="md"
+                            >
+                                <SelectItem key="english-law">England and Wales</SelectItem>
+                                <SelectItem key="scottish-law">Scottish Law</SelectItem>
+                                <SelectItem key="northern-ireland-law">Northern Ireland Law</SelectItem>
+                                <SelectItem key="us-federal">US Federal Law</SelectItem>
+                                <SelectItem key="california-law">California State Law</SelectItem>
+                                <SelectItem key="new-york-law">New York State Law</SelectItem>
+                                <SelectItem key="delaware-law">Delaware State Law</SelectItem>
+                                <SelectItem key="australian-law">Australian Law</SelectItem>
+                                <SelectItem key="canadian-law">Canadian Law</SelectItem>
+                                <SelectItem key="eu-law">European Union Law</SelectItem>
+                                <SelectItem key="german-law">German Law</SelectItem>
+                                <SelectItem key="french-law">French Law</SelectItem>
+                                <SelectItem key="singapore-law">Singapore Law</SelectItem>
+                                <SelectItem key="hong-kong-law">Hong Kong Law</SelectItem>
+                              </Select>
+                            </Box>
 
-                    {/* Right Column - 70% width */}
-                    <Box className="flex-1">
+                            {/* Language Dropdown */}
+                            <Box className="w-full">
+                              <Text size="sm" className="font-medium text-gray-900 mb-2">Language:</Text>
+                              <Select
+                                selectedKeys={[language]}
+                                onSelectionChange={(keys) => {
+                                  const selected = Array.from(keys)[0] as string
+                                  setLanguage(selected)
+                                }}
+                                placeholder="Select language"
+                                className="w-full"
+                                classNames={{
+                                  trigger: "h-[40px] min-h-[40px]",
+                                  selectorIcon: "right-3 absolute"
+                                }}
+                                size="md"
+                              >
+                                <SelectItem key="english">English</SelectItem>
+                                <SelectItem key="spanish">Spanish</SelectItem>
+                                <SelectItem key="french">French</SelectItem>
+                                <SelectItem key="german">German</SelectItem>
+                                <SelectItem key="italian">Italian</SelectItem>
+                                <SelectItem key="portuguese">Portuguese</SelectItem>
+                              </Select>
+                            </Box>
+
+                            {/* Sliders */}
+                            <VStack spacing={4} className="w-full">
+                              {/* Length Slider */}
+                              <Box className="w-full">
+                                <Text size="sm" className="font-medium mb-2">Length</Text>
+                                <Flex justify="between" className="mb-1">
+                                  <Text size="xs" className="text-gray-600">Simple</Text>
+                                  <Text size="xs" className="text-gray-600">Comprehensive</Text>
+                                </Flex>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={lengthValue}
+                                  onChange={(e) => setLengthValue(Number(e.target.value))}
+                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
+                                />
+                              </Box>
+
+                              {/* Favourability Slider */}
+                              <Box className="w-full">
+                                <Text size="sm" className="font-medium mb-2">Favourability</Text>
+                                <Flex justify="between" className="mb-1">
+                                  <Text size="xs" className="text-gray-600">Favours them</Text>
+                                  <Text size="xs" className="text-gray-600">Favours me</Text>
+                                </Flex>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={favourabilityValue}
+                                  onChange={(e) => setFavourabilityValue(Number(e.target.value))}
+                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
+                                />
+                              </Box>
+
+                              {/* Tone Slider */}
+                              <Box className="w-full">
+                                <Text size="sm" className="font-medium mb-2">Tone</Text>
+                                <Flex justify="between" className="mb-1">
+                                  <Text size="xs" className="text-gray-600">Plain English</Text>
+                                  <Text size="xs" className="text-gray-600">Formal</Text>
+                                </Flex>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={toneValue}
+                                  onChange={(e) => setToneValue(Number(e.target.value))}
+                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
+                                />
+                            </Box>
+                            </VStack>
+                          </VStack>
+                      </Box>
+
+                      {/* Right Column - 70% width */}
+                      <Box className="flex-1">
                       <VStack spacing={6} align="start" className="w-full">
                         {/* Re-use previous document for this specific document */}
                         <Box className="w-full">
@@ -482,7 +538,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                         </Box>
 
                         {/* Any other details to include for this specific document */}
-                        <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                        <Box className="w-full">
                           <Text size="lg" className="font-medium text-gray-900 mb-4">Any other details to include:</Text>
                           <Textarea
                             minRows={4}
@@ -509,7 +565,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
 
                         {/* Key clauses for this specific document (only for customised type) */}
                         {documentType === 'customised' && (
-                          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                          <Box className="w-full">
                             <Text size="lg" className="font-medium text-gray-900 mb-4">Key clauses</Text>
                             <VStack spacing={4} align="start">
                               {generateKeyClauses(doc).map((clause, i) => {
@@ -603,9 +659,10 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                             </VStack>
                           </Box>
                         )}
-                      </VStack>
+                        </VStack>
+                      </Box>
                     </Box>
-                  </Box>
+                  )}
                 </Box>
               ))}
 
