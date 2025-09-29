@@ -40,6 +40,8 @@ type ArtifactState = 'preview' | 'open' | 'pinned' | 'closed'
 
 export default function Home() {
   const [prompt, setPrompt] = useState('')
+  const [initialUserIntent, setInitialUserIntent] = useState('') // Store original user input
+  const [workDescription, setWorkDescription] = useState('') // For the "Tell us about this work" section
   const [mode, setMode] = useState<'landing' | 'chat' | 'document'>('landing')
 
   // Chat-related state
@@ -62,6 +64,7 @@ export default function Home() {
   const [toneValue, setToneValue] = useState(50)
   const [documentType, setDocumentType] = useState<DocumentType>('standard')
   const [governingLaw, setGoverningLaw] = useState('english-law')
+  const [language, setLanguage] = useState('english')
   const [customClauses, setCustomClauses] = useState<Record<string, Array<{name: string, details: string, id: string}>>>({})
   const [activeTab, setActiveTab] = useState<'documents' | 'context' | 'rules'>('documents')
   const [expandedDocs, setExpandedDocs] = useState<Record<string, boolean>>({})
@@ -540,6 +543,9 @@ By: _________________`
                               if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault()
                                 if (prompt.trim()) {
+                                  // Store the initial user intent for the form
+                                  setInitialUserIntent(prompt)
+                                  setWorkDescription(prompt) // Initialize work description with user intent
                                   // Add initial user message and get AI response
                                   addMessage('user', prompt)
                                   // Set chat title based on user intent
@@ -705,6 +711,9 @@ By: _________________`
                               <DocumentForm
                                 prompt={prompt}
                                 setPrompt={setPrompt}
+                                initialUserIntent={initialUserIntent}
+                                workDescription={workDescription}
+                                setWorkDescription={setWorkDescription}
                                 selectedExistingInputs={selectedExistingInputs}
                                 setSelectedExistingInputs={setSelectedExistingInputs}
                                 selectedDocs={selectedDocs}
@@ -726,6 +735,8 @@ By: _________________`
                                 setDocumentType={setDocumentType}
                                 governingLaw={governingLaw}
                                 setGoverningLaw={setGoverningLaw}
+                                language={language}
+                                setLanguage={setLanguage}
                                 customClauses={customClauses}
                                 setCustomClauses={setCustomClauses}
                                 addCustomClause={addCustomClause}

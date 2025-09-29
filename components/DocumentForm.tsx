@@ -8,6 +8,9 @@ interface DocumentFormProps {
   // Form state props
   prompt: string
   setPrompt: (value: string) => void
+  initialUserIntent: string // The original user input from landing page
+  workDescription: string // Current value for "Tell us about this work" section
+  setWorkDescription: (value: string) => void
   selectedExistingInputs: Record<string, string>
   setSelectedExistingInputs: (value: Record<string, string>) => void
   selectedDocs: Record<string, boolean>
@@ -29,6 +32,8 @@ interface DocumentFormProps {
   setDocumentType: (value: DocumentType) => void
   governingLaw: string
   setGoverningLaw: (value: string) => void
+  language: string
+  setLanguage: (value: string) => void
   customClauses: Record<string, Array<{name: string, details: string, id: string}>>
   setCustomClauses: (value: Record<string, Array<{name: string, details: string, id: string}>>) => void
 
@@ -54,6 +59,9 @@ interface DocumentFormProps {
 export const DocumentForm: React.FC<DocumentFormProps> = ({
   prompt,
   setPrompt,
+  initialUserIntent,
+  workDescription,
+  setWorkDescription,
   selectedExistingInputs,
   setSelectedExistingInputs,
   selectedDocs,
@@ -75,6 +83,8 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   setDocumentType,
   governingLaw,
   setGoverningLaw,
+  language,
+  setLanguage,
   customClauses,
   setCustomClauses,
   onSelectedDocsChange,
@@ -97,6 +107,33 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             onChange={setDocumentType}
           />
         </Box>
+
+        {/* Tell us about this work section */}
+        {(documentType === 'standard' || documentType === 'customised') && (
+          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+            <Box className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Box>
+                <Text size="lg" className="font-medium text-gray-900 mb-4">Tell us about this work</Text>
+                <Text size="sm" className="text-gray-600 mb-4">Why are you doing this work now and what must it achieve for this deal to be a success?</Text>
+                <Text size="sm" className="text-gray-600">List the 2–3 outcomes that matter most.</Text>
+              </Box>
+
+              <Box>
+                <Textarea
+                  minRows={3}
+                  value={workDescription}
+                  onValueChange={(val) => setWorkDescription(val)}
+                  placeholder="E.g., 'Hire a Sales person', 'Apply for investment funding'"
+                  className="w-full"
+                  classNames={{
+                    inputWrapper: 'rounded-lg border border-gray-200',
+                    input: 'text-gray-900 placeholder:text-gray-400',
+                  }}
+                />
+              </Box>
+            </Box>
+          </Box>
+        )}
 
         {/* Document Selection Section */}
         <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
@@ -153,8 +190,8 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             </Box>
           </Box>
 
-          {/* Based on previous documents sections */}
-          {Object.values(selectedDocs).some(v => v) && (
+          {/* Based on previous documents sections - only for template documents */}
+          {documentType === 'template' && Object.values(selectedDocs).some(v => v) && (
             <Box className="mt-6 pt-6 border-t border-gray-200">
               {(() => {
                 const selectedDocsList = Object.keys(selectedDocs).filter(k => selectedDocs[k])
@@ -268,340 +305,319 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
           )}
         </Box>
 
-        {/* Governing Law Section */}
-        {(documentType === 'template' || documentType === 'standard' || documentType === 'customised') && (
-          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-            <Box className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Box>
-                <Text size="lg" className="font-medium text-gray-900 mb-2">Governing Law</Text>
-                <Text size="sm" className="text-gray-600">Select the governing law for your documents</Text>
-              </Box>
-
-              <Box>
-                <Select
-                  selectedKeys={[governingLaw]}
-                  onSelectionChange={(keys) => {
-                    const selected = Array.from(keys)[0] as string
-                    setGoverningLaw(selected)
-                  }}
-                  placeholder="Select governing law"
-                  className="w-1/2"
-                  classNames={{
-                    trigger: "h-[40px] min-h-[40px]",
-                    selectorIcon: "right-3 absolute"
-                  }}
-                  size="md"
-                >
-                  <SelectItem key="english-law">English Law</SelectItem>
-                  <SelectItem key="scottish-law">Scottish Law</SelectItem>
-                  <SelectItem key="northern-ireland-law">Northern Ireland Law</SelectItem>
-                  <SelectItem key="us-federal">US Federal Law</SelectItem>
-                  <SelectItem key="california-law">California State Law</SelectItem>
-                  <SelectItem key="new-york-law">New York State Law</SelectItem>
-                  <SelectItem key="delaware-law">Delaware State Law</SelectItem>
-                  <SelectItem key="australian-law">Australian Law</SelectItem>
-                  <SelectItem key="canadian-law">Canadian Law</SelectItem>
-                  <SelectItem key="eu-law">European Union Law</SelectItem>
-                  <SelectItem key="german-law">German Law</SelectItem>
-                  <SelectItem key="french-law">French Law</SelectItem>
-                  <SelectItem key="singapore-law">Singapore Law</SelectItem>
-                  <SelectItem key="hong-kong-law">Hong Kong Law</SelectItem>
-                </Select>
-              </Box>
-            </Box>
-          </Box>
-        )}
-
-        {/* Document Purpose & Details */}
+        {/* New Layout for Standard and Customised Document Types */}
         {(documentType === 'standard' || documentType === 'customised') && (
-          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-            <VStack spacing={6} align="start">
-              <Box className="w-full">
-                <Text size="lg" className="font-medium text-gray-900 mb-4">Document Purpose</Text>
+          <Box className="w-full">
+            <VStack spacing={6} align="start" className="w-full">
+              {/* Individual Document Sections - One per selected document */}
+              {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((doc) => (
+                <Box key={doc} className="w-full">
+                  <Text size="xl" className="font-semibold text-gray-900 mb-6">{doc}</Text>
+                  
+                  <Box className="flex gap-6">
+                    {/* Left Column - 30% width with outline */}
+                    <Box className="w-[30%] flex-shrink-0">
+                      <Box className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                        <VStack spacing={6} align="start">
+                          {/* Governing Law Dropdown */}
+                          <Box className="w-full">
+                            <Text size="sm" className="font-medium text-gray-900 mb-2">Governing law:</Text>
+                            <Select
+                              selectedKeys={[governingLaw]}
+                              onSelectionChange={(keys) => {
+                                const selected = Array.from(keys)[0] as string
+                                setGoverningLaw(selected)
+                              }}
+                              placeholder="Select governing law"
+                              className="w-full"
+                              classNames={{
+                                trigger: "h-[40px] min-h-[40px]",
+                                selectorIcon: "right-3 absolute"
+                              }}
+                              size="md"
+                            >
+                              <SelectItem key="english-law">England and Wales</SelectItem>
+                              <SelectItem key="scottish-law">Scottish Law</SelectItem>
+                              <SelectItem key="northern-ireland-law">Northern Ireland Law</SelectItem>
+                              <SelectItem key="us-federal">US Federal Law</SelectItem>
+                              <SelectItem key="california-law">California State Law</SelectItem>
+                              <SelectItem key="new-york-law">New York State Law</SelectItem>
+                              <SelectItem key="delaware-law">Delaware State Law</SelectItem>
+                              <SelectItem key="australian-law">Australian Law</SelectItem>
+                              <SelectItem key="canadian-law">Canadian Law</SelectItem>
+                              <SelectItem key="eu-law">European Union Law</SelectItem>
+                              <SelectItem key="german-law">German Law</SelectItem>
+                              <SelectItem key="french-law">French Law</SelectItem>
+                              <SelectItem key="singapore-law">Singapore Law</SelectItem>
+                              <SelectItem key="hong-kong-law">Hong Kong Law</SelectItem>
+                            </Select>
+                          </Box>
 
-                <Box className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Box>
-                    <Text size="sm" className="text-gray-600 mb-4">Why are you doing this work now and what must it achieve for this deal to be a success?</Text>
-                    <Text size="sm" className="text-gray-600">List the 2–3 outcomes that matter most.</Text>
-                  </Box>
+                          {/* Language Dropdown */}
+                          <Box className="w-full">
+                            <Text size="sm" className="font-medium text-gray-900 mb-2">Language:</Text>
+                            <Select
+                              selectedKeys={[language]}
+                              onSelectionChange={(keys) => {
+                                const selected = Array.from(keys)[0] as string
+                                setLanguage(selected)
+                              }}
+                              placeholder="Select language"
+                              className="w-full"
+                              classNames={{
+                                trigger: "h-[40px] min-h-[40px]",
+                                selectorIcon: "right-3 absolute"
+                              }}
+                              size="md"
+                            >
+                              <SelectItem key="english">English</SelectItem>
+                              <SelectItem key="spanish">Spanish</SelectItem>
+                              <SelectItem key="french">French</SelectItem>
+                              <SelectItem key="german">German</SelectItem>
+                              <SelectItem key="italian">Italian</SelectItem>
+                              <SelectItem key="portuguese">Portuguese</SelectItem>
+                            </Select>
+                          </Box>
 
-                  <Box>
-                    <Textarea
-                      minRows={3}
-                      value={prompt}
-                      onValueChange={(val) => setPrompt(val)}
-                      placeholder="E.g., 'Hire a Sales person', 'Apply for investment funding'"
-                      className="w-full"
-                      classNames={{
-                        inputWrapper: 'rounded-lg border border-gray-200',
-                        input: 'text-gray-900 placeholder:text-gray-400',
-                      }}
-                    />
-                  </Box>
-                </Box>
-              </Box>
+                          {/* Sliders */}
+                          <VStack spacing={4} className="w-full">
+                            {/* Length Slider */}
+                            <Box className="w-full">
+                              <Text size="sm" className="font-medium mb-2">Length</Text>
+                              <Flex justify="between" className="mb-1">
+                                <Text size="xs" className="text-gray-600">Simple</Text>
+                                <Text size="xs" className="text-gray-600">Comprehensive</Text>
+                              </Flex>
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={lengthValue}
+                                onChange={(e) => setLengthValue(Number(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
+                              />
+                            </Box>
 
-              <Box className="w-full">
-                <Text size="lg" className="font-medium text-gray-900 mb-4">Document Details</Text>
+                            {/* Favourability Slider */}
+                            <Box className="w-full">
+                              <Text size="sm" className="font-medium mb-2">Favourability</Text>
+                              <Flex justify="between" className="mb-1">
+                                <Text size="xs" className="text-gray-600">Favours them</Text>
+                                <Text size="xs" className="text-gray-600">Favours me</Text>
+                              </Flex>
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={favourabilityValue}
+                                onChange={(e) => setFavourabilityValue(Number(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
+                              />
+                            </Box>
 
-                <Box className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Box>
-                    <Text size="sm" className="text-gray-600 mb-4">What specific details do I need to include? eg.</Text>
-                    {Object.values(selectedDocs).some(v => v) && (
-                      <Box className="mt-4">
-                        <VStack spacing={3} align="start">
-                          {generateDetailQuestions().map((question, i) => (
-                            <Text key={i} size="sm" className="text-gray-600">
-                              {i + 1}. {question}
-                            </Text>
-                          ))}
+                            {/* Tone Slider */}
+                            <Box className="w-full">
+                              <Text size="sm" className="font-medium mb-2">Tone</Text>
+                              <Flex justify="between" className="mb-1">
+                                <Text size="xs" className="text-gray-600">Plain English</Text>
+                                <Text size="xs" className="text-gray-600">Formal</Text>
+                              </Flex>
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={toneValue}
+                                onChange={(e) => setToneValue(Number(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
+                              />
+                            </Box>
+                          </VStack>
                         </VStack>
                       </Box>
-                    )}
-                  </Box>
+                    </Box>
 
-                  <Box>
-                    <Textarea
-                      minRows={4}
-                      value={selectedExistingInputs['document-details'] || ''}
-                      onValueChange={(val) => setSelectedExistingInputs(prev => ({...prev, 'document-details': val}))}
-                      placeholder="E.g., salary range £40-50k, hybrid working 2 days/week, reporting to CMO"
-                      className="w-full mb-4"
-                      classNames={{
-                        inputWrapper: 'rounded-lg border border-gray-200',
-                        input: 'text-gray-900 placeholder:text-gray-400',
-                      }}
-                    />
-                    <Flex align="center" gap={3}>
-                      <Text size="sm" className="text-gray-600">Any supporting documents?</Text>
-                      <Button
-                        variant="bordered"
-                        size="sm"
-                        className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                      >
-                        Upload Documents
-                      </Button>
-                    </Flex>
-                  </Box>
-                </Box>
-              </Box>
-            </VStack>
-          </Box>
-        )}
+                    {/* Right Column - 70% width */}
+                    <Box className="flex-1">
+                      <VStack spacing={6} align="start" className="w-full">
+                        {/* Re-use previous document for this specific document */}
+                        <Box className="w-full">
+                          <Box className="border rounded-lg bg-white shadow-sm overflow-hidden">
+                            <Box className="border-b bg-gray-50 px-3 py-3">
+                              <Flex align="center" justify="between">
+                                <Text size="md" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
+                                <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
+                                  <Text className="w-20 text-center">Use as template</Text>
+                                  <Text className="w-20 text-center">Use as context</Text>
+                                </Flex>
+                              </Flex>
+                            </Box>
 
-        {/* Key Clauses Section */}
-        {documentType === 'customised' && (
-          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-            <Box className="w-full">
-                <Text size="lg" className="font-medium text-gray-900 mb-4">Key clauses:</Text>
-
-                {!Object.values(selectedDocs).some(v => v) ? (
-                  <Box className="text-center py-12">
-                    <Text size="md" className="text-gray-500">
-                      Select a document to customise your clauses.
-                    </Text>
-                  </Box>
-                ) : (
-                  <>
-                    <button className="text-purple-600 underline hover:text-purple-800 transition-colors text-sm mb-4 block">
-                      Customise standard clauses
-                    </button>
-                    <Text size="sm" className="text-gray-600 mb-6">
-                      Add detail below to customise the most important clauses in this document.
-                    </Text>
-
-                    <VStack spacing={6} align="start">
-                      {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((docType) => (
-                        <Box key={docType} className="w-full">
-                          <Text size="md" className="font-semibold text-gray-900 mb-4">{docType}</Text>
-                          <VStack spacing={4} align="start">
-                            {generateKeyClauses(docType).map((clause, i) => {
-                              const clauseKey = `${docType}-${i}`
-                              const isVisible = selectedClauses[clauseKey] !== false
-                              if (!isVisible) return null
-
-                              return (
-                                <Box key={i} className="w-full">
-                                  <Box className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <Box>
-                                      <Flex align="center" gap={2} className="mb-1">
-                                        <Text size="sm" className="font-medium text-gray-900">{clause.name}</Text>
-                                        <button
-                                          onClick={() => {
-                                            setSelectedClauses(prev => ({
-                                              ...prev,
-                                              [clauseKey]: false
-                                            }))
-                                          }}
-                                          className="text-gray-400 hover:text-red-500 transition-colors"
-                                        >
-                                          <X className="w-3 h-3" />
-                                        </button>
-                                      </Flex>
-                                      <Text size="xs" className="text-gray-600">{clause.explainer}</Text>
-                                    </Box>
-
-                                    <Box>
-                                      <Textarea
-                                        minRows={2}
-                                        value={clauseDetailsText[clauseKey] || ''}
-                                        onValueChange={(val) => setClauseDetailsText(prev => ({
-                                          ...prev,
-                                          [clauseKey]: val
-                                        }))}
-                                        placeholder={`Add specific requirements for ${clause.name.toLowerCase()}...`}
-                                        className="w-full"
-                                        classNames={{
-                                          inputWrapper: 'rounded-lg border border-gray-200',
-                                          input: 'text-gray-900 placeholder:text-gray-400 text-sm',
-                                        }}
+                            {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
+                              <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
+                                <Flex align="center" justify="between">
+                                  <Flex align="center" gap={3} className="flex-1 min-w-0">
+                                    <FileText className="w-4 h-4 text-blue-500" />
+                                    <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
+                                  </Flex>
+                                  <Flex align="center" style={{ width: '140px' }}>
+                                    <Box className="w-20 flex justify-center">
+                                      <input
+                                        type="checkbox"
+                                        defaultChecked={rowIndex === 0}
+                                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                                       />
                                     </Box>
-                                  </Box>
-                                </Box>
-                              )
-                            })}
+                                    <Box className="w-20 flex justify-center">
+                                      <input
+                                        type="checkbox"
+                                        defaultChecked
+                                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                      />
+                                    </Box>
+                                  </Flex>
+                                </Flex>
+                              </Box>
+                            ))}
+                          </Box>
+                        </Box>
 
-                            {/* Custom Clauses */}
-                            {(customClauses[docType] || []).map((customClause) => (
-                              <Box key={customClause.id} className="w-full">
-                                <Box className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                  <Box>
-                                    <Flex align="center" gap={2} className="mb-1">
-                                      <Box className="flex-1">
-                                        <Textarea
-                                          minRows={1}
-                                          value={customClause.name}
-                                          onValueChange={(val) => updateCustomClauseName(docType, customClause.id, val)}
-                                          placeholder="What clause would you like to add?"
-                                          className="w-full"
-                                          classNames={{
-                                            inputWrapper: 'rounded-lg border border-gray-200',
-                                            input: 'text-gray-900 placeholder:text-gray-400 text-sm font-medium',
-                                          }}
-                                        />
-                                      </Box>
+                        {/* Any other details to include for this specific document */}
+                        <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                          <Text size="lg" className="font-medium text-gray-900 mb-4">Any other details to include:</Text>
+                          <Textarea
+                            minRows={4}
+                            value={selectedExistingInputs[`document-details-${doc}`] || ''}
+                            onValueChange={(val) => setSelectedExistingInputs(prev => ({...prev, [`document-details-${doc}`]: val}))}
+                            placeholder="E.g., salary range £40-50k, hybrid working 2 days/week, reporting to CMO"
+                            className="w-full mb-4"
+                            style={{ width: '100%' }}
+                            classNames={{
+                              inputWrapper: 'rounded-lg border border-gray-200',
+                              input: 'text-gray-900 placeholder:text-gray-400',
+                            }}
+                          />
+                          <Box className="flex justify-end">
+                            <Button
+                              variant="bordered"
+                              size="sm"
+                              className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                            >
+                              Upload documents
+                            </Button>
+                          </Box>
+                        </Box>
+
+                        {/* Key clauses for this specific document (only for customised type) */}
+                        {documentType === 'customised' && (
+                          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                            <Text size="lg" className="font-medium text-gray-900 mb-4">Key clauses</Text>
+                            <VStack spacing={4} align="start">
+                              {generateKeyClauses(doc).map((clause, i) => {
+                                const clauseKey = `${doc}-${i}`
+                                const isVisible = selectedClauses[clauseKey] !== false
+                                if (!isVisible) return null
+
+                                return (
+                                  <Box key={i} className="w-full bg-gray-50 rounded-lg p-4">
+                                    <Flex align="center" gap={2} className="mb-2">
+                                      <Text size="sm" className="font-medium text-gray-900">{clause.name}</Text>
                                       <button
-                                        onClick={() => removeCustomClause(docType, customClause.id)}
-                                        className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                                        onClick={() => {
+                                          setSelectedClauses(prev => ({
+                                            ...prev,
+                                            [clauseKey]: false
+                                          }))
+                                        }}
+                                        className="text-gray-400 hover:text-red-500 transition-colors"
                                       >
                                         <X className="w-3 h-3" />
                                       </button>
                                     </Flex>
-                                  </Box>
-
-                                  <Box>
                                     <Textarea
                                       minRows={2}
-                                      value={customClause.details}
-                                      onValueChange={(val) => updateCustomClauseDetails(docType, customClause.id, val)}
-                                      placeholder="Add specific requirements for this clause..."
+                                      value={clauseDetailsText[clauseKey] || ''}
+                                      onValueChange={(val) => setClauseDetailsText(prev => ({
+                                        ...prev,
+                                        [clauseKey]: val
+                                      }))}
+                                      placeholder="Add specific requirements..."
                                       className="w-full"
                                       classNames={{
-                                        inputWrapper: 'rounded-lg border border-gray-200',
+                                        inputWrapper: 'rounded-lg border border-gray-200 bg-white',
                                         input: 'text-gray-900 placeholder:text-gray-400 text-sm',
                                       }}
                                     />
                                   </Box>
+                                )
+                              })}
+
+                              {/* Custom Clauses for this document */}
+                              {(customClauses[doc] || []).map((customClause) => (
+                                <Box key={customClause.id} className="w-full bg-gray-50 rounded-lg p-4">
+                                  <Flex align="center" gap={2} className="mb-2">
+                                    <Box className="flex-1">
+                                      <Textarea
+                                        minRows={1}
+                                        value={customClause.name}
+                                        onValueChange={(val) => updateCustomClauseName(doc, customClause.id, val)}
+                                        placeholder="What clause would you like to add?"
+                                        className="w-full"
+                                        classNames={{
+                                          inputWrapper: 'rounded-lg border border-gray-200 bg-white',
+                                          input: 'text-gray-900 placeholder:text-gray-400 text-sm font-medium',
+                                        }}
+                                      />
+                                    </Box>
+                                    <button
+                                      onClick={() => removeCustomClause(doc, customClause.id)}
+                                      className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </Flex>
+                                  <Textarea
+                                    minRows={2}
+                                    value={customClause.details}
+                                    onValueChange={(val) => updateCustomClauseDetails(doc, customClause.id, val)}
+                                    placeholder="Add specific requirements for this clause..."
+                                    className="w-full"
+                                    classNames={{
+                                      inputWrapper: 'rounded-lg border border-gray-200 bg-white',
+                                      input: 'text-gray-900 placeholder:text-gray-400 text-sm',
+                                    }}
+                                  />
                                 </Box>
+                              ))}
+
+                              <Box className="w-full flex justify-center">
+                                <Button
+                                  size="sm"
+                                  variant="bordered"
+                                  onClick={() => addCustomClause(doc)}
+                                  className="text-purple-600 border-purple-600 hover:bg-purple-50"
+                                >
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Add another clause
+                                </Button>
                               </Box>
-                            ))}
-
-                            <Box className="w-full flex justify-end">
-                              <Button
-                                size="sm"
-                                variant="bordered"
-                                onClick={() => addCustomClause(docType)}
-                                className="text-purple-600 border-purple-600 hover:bg-purple-50"
-                              >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Add another clause
-                              </Button>
-                            </Box>
-                          </VStack>
-                        </Box>
-                      ))}
-                    </VStack>
-                  </>
-                )}
-            </Box>
-          </Box>
-        )}
-
-        {/* Draft Customization Sliders */}
-        {(documentType === 'template' || documentType === 'standard' || documentType === 'customised') && (
-          <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-            <Box className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Box>
-                <Text size="lg" className="font-medium text-gray-900 mb-2">
-                  Customise your {documentType === 'template' && Object.values(selectedDocs).filter(v => v).length === 0
-                    ? 'template'
-                    : Object.values(selectedDocs).filter(v => v).length === 1 ? 'draft' : 'drafts'}
-                </Text>
-                <Text size="sm" className="text-gray-600">
-                  Adjust your {documentType === 'template' && Object.values(selectedDocs).filter(v => v).length === 0
-                    ? 'template'
-                    : Object.values(selectedDocs).filter(v => v).length === 1 ? 'document' : 'documents'} along key dimensions
-                </Text>
-              </Box>
-
-              <Box>
-                <VStack spacing={4} className="w-full">
-                  {/* Length Slider */}
-                  <Box className="w-full">
-                    <Text size="sm" className="font-medium mb-2">Length</Text>
-                    <Flex justify="between" className="mb-1">
-                      <Text size="sm" className="text-gray-600">Simple</Text>
-                      <Text size="sm" className="text-gray-600">Comprehensive</Text>
-                    </Flex>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={lengthValue}
-                      onChange={(e) => setLengthValue(Number(e.target.value))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                    />
-                  </Box>
-
-                  {/* Favourability Slider */}
-                  {(documentType === 'standard' || documentType === 'customised') && (
-                    <Box className="w-full">
-                      <Text size="sm" className="font-medium mb-2">Favourability</Text>
-                      <Flex justify="between" className="mb-1">
-                        <Text size="sm" className="text-gray-600">Favours them</Text>
-                        <Text size="sm" className="text-gray-600">Favours me</Text>
-                      </Flex>
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={favourabilityValue}
-                        onChange={(e) => setFavourabilityValue(Number(e.target.value))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                      />
+                            </VStack>
+                          </Box>
+                        )}
+                      </VStack>
                     </Box>
-                  )}
-
-                  {/* Tone Slider */}
-                  <Box className="w-full">
-                    <Text size="sm" className="font-medium mb-2">Tone</Text>
-                    <Flex justify="between" className="mb-1">
-                      <Text size="sm" className="text-gray-600">Plain English</Text>
-                      <Text size="sm" className="text-gray-600">Formal</Text>
-                    </Flex>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={toneValue}
-                      onChange={(e) => setToneValue(Number(e.target.value))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                    />
                   </Box>
-                </VStack>
-              </Box>
-            </Box>
+                </Box>
+              ))}
+
+              {/* Show message if no documents selected */}
+              {!Object.values(selectedDocs).some(v => v) && (
+                <Box className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center">
+                  <Text size="md" className="text-gray-500">
+                    Select documents above to configure them here.
+                  </Text>
+                </Box>
+              )}
+            </VStack>
           </Box>
         )}
 
