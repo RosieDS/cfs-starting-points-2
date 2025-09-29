@@ -62,7 +62,7 @@ export default function Home() {
   const [lengthValue, setLengthValue] = useState(50)
   const [favourabilityValue, setFavourabilityValue] = useState(50)
   const [toneValue, setToneValue] = useState(50)
-  const [documentType, setDocumentType] = useState<DocumentType>('standard')
+  const [documentType, setDocumentType] = useState<DocumentType>('customised')
   const [governingLaw, setGoverningLaw] = useState('english-law')
   const [language, setLanguage] = useState('english')
   const [customClauses, setCustomClauses] = useState<Record<string, Array<{name: string, details: string, id: string}>>>({})
@@ -528,7 +528,7 @@ By: _________________`
                     </div>
                     <VStack spacing={3} align="center">
                       <Heading as="h1" size="2xl" className="text-center font-bold text-gray-900">
-                        What kind of document do you need?
+                        What kind of document(s) do you need?
                       </Heading>
                       <Text size="lg" className="text-center text-gray-600 max-w-2xl">
                         Type what you need and we&apos;ll create your legal documents in seconds. 

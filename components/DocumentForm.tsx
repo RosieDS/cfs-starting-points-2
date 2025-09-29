@@ -212,7 +212,76 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
           <Box className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Box>
               <Text size="lg" className="font-medium text-gray-900 mb-2">Select docs to create</Text>
-              <Text size="sm" className="text-gray-600">Choose which documents you need</Text>
+              <Text size="sm" className="text-gray-600 mb-4">Choose which documents you need</Text>
+              
+              {/* Governing Law Dropdown */}
+              <Box className="w-full mb-4">
+                <Text size="sm" className="font-medium text-gray-900 mb-2">Governing law:</Text>
+                <Select
+                  selectedKeys={[governingLaw]}
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0] as string
+                    setGoverningLaw(selected)
+                  }}
+                  placeholder="Select governing law"
+                  className="w-full"
+                  classNames={{
+                    trigger: "h-[40px] min-h-[40px]",
+                    selectorIcon: "right-3 absolute"
+                  }}
+                  size="md"
+                >
+                  <SelectItem key="english-law">England and Wales</SelectItem>
+                  <SelectItem key="scottish-law">Scottish Law</SelectItem>
+                  <SelectItem key="northern-ireland-law">Northern Ireland Law</SelectItem>
+                  <SelectItem key="us-federal">US Federal Law</SelectItem>
+                  <SelectItem key="california-law">California State Law</SelectItem>
+                  <SelectItem key="new-york-law">New York State Law</SelectItem>
+                  <SelectItem key="delaware-law">Delaware State Law</SelectItem>
+                  <SelectItem key="australian-law">Australian Law</SelectItem>
+                  <SelectItem key="canadian-law">Canadian Law</SelectItem>
+                  <SelectItem key="eu-law">European Union Law</SelectItem>
+                  <SelectItem key="german-law">German Law</SelectItem>
+                  <SelectItem key="french-law">French Law</SelectItem>
+                  <SelectItem key="singapore-law">Singapore Law</SelectItem>
+                  <SelectItem key="hong-kong-law">Hong Kong Law</SelectItem>
+                </Select>
+              </Box>
+
+              {/* Language Dropdown */}
+              <Box className="w-full mb-4">
+                <Text size="sm" className="font-medium text-gray-900 mb-2">Language:</Text>
+                <Select
+                  selectedKeys={[language]}
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0] as string
+                    setLanguage(selected)
+                  }}
+                  placeholder="Select language"
+                  className="w-full"
+                  classNames={{
+                    trigger: "h-[40px] min-h-[40px]",
+                    selectorIcon: "right-3 absolute"
+                  }}
+                  size="md"
+                >
+                  <SelectItem key="english">English</SelectItem>
+                  <SelectItem key="spanish">Spanish</SelectItem>
+                  <SelectItem key="french">French</SelectItem>
+                  <SelectItem key="german">German</SelectItem>
+                  <SelectItem key="italian">Italian</SelectItem>
+                  <SelectItem key="portuguese">Portuguese</SelectItem>
+                </Select>
+              </Box>
+
+              {/* Show customise link when more than one document is selected */}
+              {Object.values(selectedDocs).filter(Boolean).length > 1 && (
+                <Box className="w-full flex justify-start">
+                  <button className="text-xs text-purple-600 hover:text-purple-800 underline">
+                    Customise documents separately.
+                  </button>
+                </Box>
+              )}
             </Box>
 
             <Box>
@@ -250,15 +319,6 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                   </Box>
                 ))}
               </div>
-
-              {/* Show customise link when more than one document is selected */}
-              {Object.values(selectedDocs).filter(Boolean).length > 1 && (
-                <Box className="w-full flex justify-start mt-4">
-                  <button className="text-xs text-purple-600 hover:text-purple-800 underline">
-                    Customise documents separately.
-                  </button>
-                </Box>
-              )}
             </Box>
           </Box>
 
@@ -327,65 +387,6 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                         {/* Left Half - Dropdowns */}
                         <Box className="flex-1">
                           <VStack spacing={6} align="start">
-                            {/* Governing Law Dropdown */}
-                            <Box className="w-full">
-                              <Text size="sm" className="font-medium text-gray-900 mb-2">Governing law:</Text>
-                              <Select
-                                selectedKeys={[governingLaw]}
-                                onSelectionChange={(keys) => {
-                                  const selected = Array.from(keys)[0] as string
-                                  setGoverningLaw(selected)
-                                }}
-                                placeholder="Select governing law"
-                                className="w-full"
-                                classNames={{
-                                  trigger: "h-[40px] min-h-[40px]",
-                                  selectorIcon: "right-3 absolute"
-                                }}
-                                size="md"
-                              >
-                                  <SelectItem key="english-law">England and Wales</SelectItem>
-                                  <SelectItem key="scottish-law">Scottish Law</SelectItem>
-                                  <SelectItem key="northern-ireland-law">Northern Ireland Law</SelectItem>
-                                  <SelectItem key="us-federal">US Federal Law</SelectItem>
-                                  <SelectItem key="california-law">California State Law</SelectItem>
-                                  <SelectItem key="new-york-law">New York State Law</SelectItem>
-                                  <SelectItem key="delaware-law">Delaware State Law</SelectItem>
-                                  <SelectItem key="australian-law">Australian Law</SelectItem>
-                                  <SelectItem key="canadian-law">Canadian Law</SelectItem>
-                                  <SelectItem key="eu-law">European Union Law</SelectItem>
-                                  <SelectItem key="german-law">German Law</SelectItem>
-                                  <SelectItem key="french-law">French Law</SelectItem>
-                                  <SelectItem key="singapore-law">Singapore Law</SelectItem>
-                                  <SelectItem key="hong-kong-law">Hong Kong Law</SelectItem>
-                                </Select>
-                              </Box>
-
-                              {/* Language Dropdown */}
-                              <Box className="w-full">
-                                <Text size="sm" className="font-medium text-gray-900 mb-2">Language:</Text>
-                                <Select
-                                  selectedKeys={[language]}
-                                  onSelectionChange={(keys) => {
-                                    const selected = Array.from(keys)[0] as string
-                                    setLanguage(selected)
-                                  }}
-                                  placeholder="Select language"
-                                  className="w-full"
-                                  classNames={{
-                                    trigger: "h-[40px] min-h-[40px]",
-                                    selectorIcon: "right-3 absolute"
-                                  }}
-                                  size="md"
-                                >
-                                  <SelectItem key="english">English</SelectItem>
-                                  <SelectItem key="spanish">Spanish</SelectItem>
-                                  <SelectItem key="french">French</SelectItem>
-                                  <SelectItem key="german">German</SelectItem>
-                                  <SelectItem key="italian">Italian</SelectItem>
-                                  <SelectItem key="portuguese">Portuguese</SelectItem>
-                                </Select>
-                              </Box>
                             </VStack>
                         </Box>
 
@@ -452,65 +453,6 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                       {/* Left Column - 30% width */}
                       <Box className="w-[30%] flex-shrink-0">
                         <VStack spacing={6} align="start">
-                          {/* Governing Law Dropdown */}
-                          <Box className="w-full">
-                            <Text size="sm" className="font-medium text-gray-900 mb-2">Governing law:</Text>
-                            <Select
-                              selectedKeys={[governingLaw]}
-                              onSelectionChange={(keys) => {
-                                const selected = Array.from(keys)[0] as string
-                                setGoverningLaw(selected)
-                              }}
-                              placeholder="Select governing law"
-                              className="w-full"
-                              classNames={{
-                                trigger: "h-[40px] min-h-[40px]",
-                                selectorIcon: "right-3 absolute"
-                              }}
-                              size="md"
-                            >
-                                <SelectItem key="english-law">England and Wales</SelectItem>
-                                <SelectItem key="scottish-law">Scottish Law</SelectItem>
-                                <SelectItem key="northern-ireland-law">Northern Ireland Law</SelectItem>
-                                <SelectItem key="us-federal">US Federal Law</SelectItem>
-                                <SelectItem key="california-law">California State Law</SelectItem>
-                                <SelectItem key="new-york-law">New York State Law</SelectItem>
-                                <SelectItem key="delaware-law">Delaware State Law</SelectItem>
-                                <SelectItem key="australian-law">Australian Law</SelectItem>
-                                <SelectItem key="canadian-law">Canadian Law</SelectItem>
-                                <SelectItem key="eu-law">European Union Law</SelectItem>
-                                <SelectItem key="german-law">German Law</SelectItem>
-                                <SelectItem key="french-law">French Law</SelectItem>
-                                <SelectItem key="singapore-law">Singapore Law</SelectItem>
-                                <SelectItem key="hong-kong-law">Hong Kong Law</SelectItem>
-                              </Select>
-                            </Box>
-
-                            {/* Language Dropdown */}
-                            <Box className="w-full">
-                              <Text size="sm" className="font-medium text-gray-900 mb-2">Language:</Text>
-                              <Select
-                                selectedKeys={[language]}
-                                onSelectionChange={(keys) => {
-                                  const selected = Array.from(keys)[0] as string
-                                  setLanguage(selected)
-                                }}
-                                placeholder="Select language"
-                                className="w-full"
-                                classNames={{
-                                  trigger: "h-[40px] min-h-[40px]",
-                                  selectorIcon: "right-3 absolute"
-                                }}
-                                size="md"
-                              >
-                                <SelectItem key="english">English</SelectItem>
-                                <SelectItem key="spanish">Spanish</SelectItem>
-                                <SelectItem key="french">French</SelectItem>
-                                <SelectItem key="german">German</SelectItem>
-                                <SelectItem key="italian">Italian</SelectItem>
-                                <SelectItem key="portuguese">Portuguese</SelectItem>
-                              </Select>
-                            </Box>
 
                             {/* Sliders */}
                             <VStack spacing={4} className={`w-full ${documentType === 'standard' || documentType === 'customised' ? 'mt-6' : ''}`}>

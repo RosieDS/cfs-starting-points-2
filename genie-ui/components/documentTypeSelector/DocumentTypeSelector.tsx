@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Box, Flex, VStack, Text } from '@/genie-ui'
 
-export type DocumentType = 'template' | 'standard' | 'customised'
+export type DocumentType = 'template' | 'customised'
 
 export interface DocumentTypeOption {
   id: DocumentType
@@ -20,12 +20,7 @@ const documentTypeOptions: DocumentTypeOption[] = [
   {
     id: 'template',
     title: 'Template',
-    description: 'A quick document, not customised to you'
-  },
-  {
-    id: 'standard',
-    title: 'Standard',
-    description: 'A lightweight doc, customised to you'
+    description: 'A quick standard template'
   },
   {
     id: 'customised',
@@ -49,13 +44,11 @@ export default function DocDetailSlider({
   const getCirclePosition = () => {
     switch (selectedType) {
       case 'template':
-        return '16.67%' // Center of first card (1/6 of total width)
-      case 'standard':
-        return '50%'    // Center of middle card  
+        return '25%'     // Center of first card (1/4 of total width)
       case 'customised':
-        return '83.33%' // Center of last card (5/6 of total width)
+        return '75%'     // Center of second card (3/4 of total width)
       default:
-        return '83.33%'
+        return '75%'     // Default to customised
     }
   }
 
