@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Box, Flex, VStack, Text, Textarea, Button } from '@/genie-ui'
 import { Select, SelectItem } from '@/genie-ui/components/select'
 import DocDetailSlider, { DocumentType } from '@/genie-ui/components/docDetailSlider'
-import { FileText, Plus, X } from 'lucide-react'
+import { FileText, Plus, X, Sparkles, Mic, Upload } from 'lucide-react'
 
 interface DocumentFormProps {
   // Form state props
@@ -173,6 +173,42 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
     </Box>
   )
 
+  // Generate document-specific suggestions for "Any other details"
+  const generateDetailSuggestions = (docType: string): string[] => {
+    switch(docType) {
+      case 'Employment Agreement':
+        return [
+          'Salary range £40-50k, hybrid working 2 days/week, reporting to CMO',
+          'Start date, probation period, benefits package details'
+        ]
+      case 'NDA':
+        return [
+          'Specific confidential information to protect',
+          'Duration of confidentiality obligations, permitted disclosures'
+        ]
+      case 'Service Agreement':
+        return [
+          'Scope of services, deliverables, payment schedule',
+          'Service level agreements, performance metrics'
+        ]
+      case 'Investment Agreement':
+        return [
+          'Investment amount, valuation, liquidation preferences',
+          'Board seats, voting rights, anti-dilution provisions'
+        ]
+      case 'Offer Letter':
+        return [
+          'Job title, start date, compensation details',
+          'Benefits, working hours, location requirements'
+        ]
+      default:
+        return [
+          'Key terms and conditions specific to this agreement',
+          'Important dates, milestones, or deliverables'
+        ]
+    }
+  }
+
   return (
     <Box className="p-6 overflow-y-auto relative">
       {/* Multi-layer radial gradient background */}
@@ -341,229 +377,224 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             <VStack spacing={6} align="start" className="w-full">
               {/* Individual Document Sections - One per selected document */}
               {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((doc) => (
-                <Box key={doc} className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                  <Flex align="center" justify="between" className="mb-6">
-                    <Text size="xl" className="font-semibold text-gray-900">{doc}</Text>
+                <Box key={doc} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                  {/* Document Header */}
+                  <Flex align="center" justify="between" className="mb-8">
+                    <Text size="2xl" className="font-semibold text-gray-900">{doc}</Text>
                     <Button
                       variant="solid"
-                      size="sm"
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                      size="md"
+                      className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6 py-3 flex items-center gap-2"
                       onPress={() => onGenerateDocument?.(doc)}
                     >
-                      {generatedDocs?.[doc] ? 'Regenerate document' : 'Generate document'}
+                      <Sparkles className="w-4 h-4" />
+                      Generate document
                     </Button>
                   </Flex>
                   
-                  {/* Template mode shows template selection with controls */}
-                  {documentType === 'template' ? (
-                    <VStack spacing={6} align="start" className="w-full">
-                      {/* Re-use previous document - Full Width */}
-                      {loadingDocuments[doc] ? (
-                        <DocumentLibraryLoading />
-                      ) : (
-                        <Box className="w-full">
-                          <Box className="border rounded-lg bg-white shadow-sm overflow-hidden">
-                            <Box className="border-b bg-gray-50 px-3 py-3">
-                              <Flex align="center" justify="between">
-                                <Text size="md" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
-                                <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
-                                  <Text className="w-20 text-center">Use as template</Text>
-                                  <Text className="w-20 text-center">Use as context</Text>
-                                </Flex>
-                              </Flex>
-                            </Box>
-
-                            {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
-                              <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
-                                <Flex align="center" justify="between">
-                                  <Flex align="center" gap={3} className="flex-1 min-w-0">
-                                    <FileText className="w-4 h-4 text-blue-500" />
-                                    <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
-                                  </Flex>
-                                  <Flex align="center" style={{ width: '140px' }}>
-                                    <Box className="w-20 flex justify-center">
-                                      <input
-                                        type="checkbox"
-                                        defaultChecked={rowIndex === 0}
-                                        onChange={(e) => {
-                                          if (e.target.checked) {
-                                            onGenerateDocument?.(doc)
-                                          }
-                                        }}
-                                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                      />
-                                    </Box>
-                                    <Box className="w-20 flex justify-center">
-                                      <input
-                                        type="checkbox"
-                                        defaultChecked
-                                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                      />
-                                    </Box>
-                                  </Flex>
-                                </Flex>
-                              </Box>
-                            ))}
-                          </Box>
-                        </Box>
-                      )}
-
-                      {/* Bottom Row - 50/50 Split */}
-                      <Box className="w-full grid grid-cols-2 gap-6">
-                        {/* Left Half - Dropdowns */}
-                        <Box className="flex-1">
-                          <VStack spacing={6} align="start">
-                            </VStack>
-                        </Box>
-
-                        {/* Right Half - Sliders */}
-                        <Box className="flex-1">
-                          <VStack spacing={4} className={`w-full ${documentType === 'standard' ? 'mt-6' : ''}`}>
-                            {/* Length Slider */}
-                            <Box className="w-full">
-                              <Text size="sm" className="font-medium mb-2">Length</Text>
-                              <Flex justify="between" className="mb-1">
-                                <Text size="xs" className="text-gray-600">Simple</Text>
-                                <Text size="xs" className="text-gray-600">Comprehensive</Text>
-                              </Flex>
-                              <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={lengthValue}
-                                onChange={(e) => setLengthValue(Number(e.target.value))}
-                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                              />
-                            </Box>
-
-                            {/* Favourability Slider */}
-                            <Box className="w-full">
-                              <Text size="sm" className="font-medium mb-2">Favourability</Text>
-                              <Flex justify="between" className="mb-1">
-                                <Text size="xs" className="text-gray-600">Favours them</Text>
-                                <Text size="xs" className="text-gray-600">Favours me</Text>
-                              </Flex>
-                              <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={favourabilityValue}
-                                onChange={(e) => setFavourabilityValue(Number(e.target.value))}
-                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                              />
-                            </Box>
-
-                            {/* Tone Slider */}
-                            <Box className="w-full">
-                              <Text size="sm" className="font-medium mb-2">Tone</Text>
-                              <Flex justify="between" className="mb-1">
-                                <Text size="xs" className="text-gray-600">Plain English</Text>
-                                <Text size="xs" className="text-gray-600">Formal</Text>
-                              </Flex>
-                              <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={toneValue}
-                                onChange={(e) => setToneValue(Number(e.target.value))}
-                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                              />
-                            </Box>
-                          </VStack>
-                        </Box>
-                      </Box>
-                    </VStack>
-                  ) : (
-                    /* Standard and Customised modes show the full layout */
-                    <Box className="flex gap-6">
-                      {/* Left Column - 30% width */}
-                      <Box className="w-[30%] flex-shrink-0">
-                        <VStack spacing={6} align="start">
-
-                            {/* Sliders */}
-                            <VStack spacing={4} className={`w-full ${documentType === 'standard' || documentType === 'customised' ? 'mt-6' : ''}`}>
-                              {/* Length Slider */}
-                              <Box className="w-full">
-                                <Text size="sm" className="font-medium mb-2">Length</Text>
-                                <Flex justify="between" className="mb-1">
-                                  <Text size="xs" className="text-gray-600">Simple</Text>
-                                  <Text size="xs" className="text-gray-600">Comprehensive</Text>
-                                </Flex>
-                                <input
-                                  type="range"
-                                  min="0"
-                                  max="100"
-                                  value={lengthValue}
-                                  onChange={(e) => setLengthValue(Number(e.target.value))}
-                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                                />
-                              </Box>
-
-                              {/* Favourability Slider */}
-                              <Box className="w-full">
-                                <Text size="sm" className="font-medium mb-2">Favourability</Text>
-                                <Flex justify="between" className="mb-1">
-                                  <Text size="xs" className="text-gray-600">Favours them</Text>
-                                  <Text size="xs" className="text-gray-600">Favours me</Text>
-                                </Flex>
-                                <input
-                                  type="range"
-                                  min="0"
-                                  max="100"
-                                  value={favourabilityValue}
-                                  onChange={(e) => setFavourabilityValue(Number(e.target.value))}
-                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                                />
-                              </Box>
-
-                              {/* Tone Slider */}
-                              <Box className="w-full">
-                                <Text size="sm" className="font-medium mb-2">Tone</Text>
-                                <Flex justify="between" className="mb-1">
-                                  <Text size="xs" className="text-gray-600">Plain English</Text>
-                                  <Text size="xs" className="text-gray-600">Formal</Text>
-                                </Flex>
-                                <input
-                                  type="range"
-                                  min="0"
-                                  max="100"
-                                  value={toneValue}
-                                  onChange={(e) => setToneValue(Number(e.target.value))}
-                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple"
-                                />
-                            </Box>
-                            </VStack>
-                          </VStack>
-                      </Box>
-
-                      {/* Right Column - 70% width */}
-                      <Box className="flex-1">
-                      <VStack spacing={6} align="start" className="w-full">
-                        {/* Re-use previous document for this specific document */}
-                        {loadingDocuments[doc] ? (
-                          <DocumentLibraryLoading />
-                        ) : (
+                  {/* Two-column layout for all modes */}
+                  <Box className="flex gap-8">
+                    {/* LEFT COLUMN: Sliders + Key Clauses */}
+                    <Box className="w-[30%] flex-shrink-0">
+                      <VStack spacing={8} align="start" className="w-full">
+                        {/* Sliders Section */}
+                        <VStack spacing={6} align="start" className="w-full">
+                          {/* Length Slider */}
                           <Box className="w-full">
-                            <Box className="border rounded-lg bg-white shadow-sm overflow-hidden">
-                              <Box className="border-b bg-gray-50 px-3 py-3">
-                                <Flex align="center" justify="between">
-                                  <Text size="md" className="text-gray-900 font-bold truncate">Re-use previous {doc}</Text>
-                                  <Flex align="center" className="text-xs text-gray-600" style={{ width: '140px' }}>
-                                    <Text className="w-20 text-center">Use as template</Text>
-                                    <Text className="w-20 text-center">Use as context</Text>
-                                  </Flex>
-                                </Flex>
+                            <Flex align="center" justify="between" className="mb-2">
+                              <Text size="sm" className="font-semibold text-gray-900">Length</Text>
+                              <Text size="sm" className="font-semibold text-gray-600">{lengthValue}%</Text>
+                            </Flex>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={lengthValue}
+                              onChange={(e) => setLengthValue(Number(e.target.value))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple mb-2"
+                            />
+                            <Flex justify="between">
+                              <Text size="xs" className="text-gray-500">Simple</Text>
+                              <Text size="xs" className="text-gray-500">Comprehensive</Text>
+                            </Flex>
+                          </Box>
+
+                          {/* Tone Slider */}
+                          <Box className="w-full">
+                            <Flex align="center" justify="between" className="mb-2">
+                              <Text size="sm" className="font-semibold text-gray-900">Tone</Text>
+                              <Text size="sm" className="font-semibold text-gray-600">{toneValue}%</Text>
+                            </Flex>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={toneValue}
+                              onChange={(e) => setToneValue(Number(e.target.value))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple mb-2"
+                            />
+                            <Flex justify="between">
+                              <Text size="xs" className="text-gray-500">Plain</Text>
+                              <Text size="xs" className="text-gray-500">Formal</Text>
+                            </Flex>
+                          </Box>
+
+                          {/* Favourability Slider */}
+                          <Box className="w-full">
+                            <Flex align="center" justify="between" className="mb-2">
+                              <Text size="sm" className="font-semibold text-gray-900">Favourability</Text>
+                              <Text size="sm" className="font-semibold text-gray-600">{favourabilityValue}%</Text>
+                            </Flex>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={favourabilityValue}
+                              onChange={(e) => setFavourabilityValue(Number(e.target.value))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple mb-2"
+                            />
+                            <Flex justify="between">
+                              <Text size="xs" className="text-gray-500">Favours me</Text>
+                              <Text size="xs" className="text-gray-500">Favours them</Text>
+                            </Flex>
+                          </Box>
+                        </VStack>
+
+                        {/* Key Clauses Section (only for customised mode) */}
+                        {documentType === 'customised' && (
+                          <Box className="w-full mt-12">
+                            <VStack spacing={4} align="start" className="w-full">
+                              <Box>
+                                <Text size="md" className="font-semibold text-gray-900 mb-1">Key Clauses (Optional)</Text>
+                                <Text size="xs" className="text-gray-500">Customise even further, or leave blank for Genie to create</Text>
                               </Box>
 
-                              {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
-                                <Box key={rowIndex} className={`px-3 py-2 ${rowIndex > 0 ? 'border-t' : ''}`}>
-                                  <Flex align="center" justify="between">
-                                    <Flex align="center" gap={3} className="flex-1 min-w-0">
-                                      <FileText className="w-4 h-4 text-blue-500" />
-                                      <Text size="sm" className="text-gray-900 truncate">{docName}.docx</Text>
+                              {/* Existing key clauses */}
+                              <VStack spacing={3} align="start" className="w-full">
+                                {generateKeyClauses(doc).map((clause, i) => {
+                                  const clauseKey = `${doc}-${i}`
+                                  const isVisible = selectedClauses[clauseKey] !== false
+                                  if (!isVisible) return null
+
+                                  return (
+                                    <Box key={i} className="w-full border border-purple-300 rounded-2xl p-4 bg-white">
+                                      <Flex align="center" justify="between" className="mb-3">
+                                        <Text size="sm" className="font-medium text-gray-900">{clause.name}</Text>
+                                        <button
+                                          onClick={() => {
+                                            setSelectedClauses(prev => ({
+                                              ...prev,
+                                              [clauseKey]: false
+                                            }))
+                                          }}
+                                          className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                        >
+                                          <X className="w-4 h-4" />
+                                        </button>
+                                      </Flex>
+                                      <Box className="relative">
+                                        <Textarea
+                                          minRows={2}
+                                          value={clauseDetailsText[clauseKey] || ''}
+                                          onValueChange={(val) => setClauseDetailsText(prev => ({
+                                            ...prev,
+                                            [clauseKey]: val
+                                          }))}
+                                          placeholder="Requirements..."
+                                          className="w-full"
+                                          classNames={{
+                                            inputWrapper: 'rounded-lg border-0 bg-gray-50',
+                                            input: 'text-gray-900 placeholder:text-gray-400 text-sm pr-10',
+                                          }}
+                                        />
+                                        <button className="absolute bottom-3 right-3 text-gray-400 hover:text-gray-600 transition-colors">
+                                          <Mic className="w-4 h-4" />
+                                        </button>
+                                      </Box>
+                                    </Box>
+                                  )
+                                })}
+
+                                {/* Custom Clauses */}
+                                {(customClauses[doc] || []).map((customClause) => (
+                                  <Box key={customClause.id} className="w-full border border-purple-300 rounded-2xl p-4 bg-white">
+                                    <Flex align="center" justify="between" className="mb-3">
+                                      <Box className="flex-1">
+                                        <input
+                                          type="text"
+                                          value={customClause.name}
+                                          onChange={(e) => updateCustomClauseName(doc, customClause.id, e.target.value)}
+                                          placeholder="Clause name"
+                                          className="w-full text-sm font-medium text-gray-900 placeholder:text-gray-400 bg-transparent border-0 outline-none"
+                                        />
+                                      </Box>
+                                      <button
+                                        onClick={() => removeCustomClause(doc, customClause.id)}
+                                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
                                     </Flex>
-                                    <Flex align="center" style={{ width: '140px' }}>
-                                      <Box className="w-20 flex justify-center">
+                                    <Box className="relative">
+                                      <Textarea
+                                        minRows={2}
+                                        value={customClause.details}
+                                        onValueChange={(val) => updateCustomClauseDetails(doc, customClause.id, val)}
+                                        placeholder="Requirements..."
+                                        className="w-full"
+                                        classNames={{
+                                          inputWrapper: 'rounded-lg border-0 bg-gray-50',
+                                          input: 'text-gray-900 placeholder:text-gray-400 text-sm pr-10',
+                                        }}
+                                      />
+                                      <button className="absolute bottom-3 right-3 text-gray-400 hover:text-gray-600 transition-colors">
+                                        <Mic className="w-4 h-4" />
+                                      </button>
+                                    </Box>
+                                  </Box>
+                                ))}
+
+                                {/* Add clause button */}
+                                <Button
+                                  variant="bordered"
+                                  size="sm"
+                                  onClick={() => addCustomClause(doc)}
+                                  className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-4"
+                                >
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Add clause
+                                </Button>
+                              </VStack>
+                            </VStack>
+                          </Box>
+                        )}
+                      </VStack>
+                    </Box>
+
+                    {/* RIGHT COLUMN: Use documents + Any other details */}
+                    <Box className="flex-1">
+                      <VStack spacing={6} align="start" className="w-full">
+                        {/* Use your documents card */}
+                        {!loadingDocuments[doc] && (
+                          <Box className="w-full">
+                            {/* Purple-outlined container for file list */}
+                            <Box className="border-2 border-purple-400 rounded-2xl p-4 bg-white mb-4">
+                              <VStack spacing={3} align="start" className="w-full">
+                                {/* Header with title and column headers */}
+                                <Flex align="center" justify="between" className="w-full px-2 mb-2">
+                                  <Text size="md" className="font-semibold text-gray-900 flex-1">Use your documents</Text>
+                                  <Flex align="center" gap={8} className="text-xs text-gray-600">
+                                    <Text className="w-24 text-center font-medium">Use as template</Text>
+                                    <Text className="w-24 text-center font-medium">Use as information</Text>
+                                  </Flex>
+                                </Flex>
+
+                                {/* File rows */}
+                                {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
+                                  <Flex key={rowIndex} align="center" justify="between" className="w-full py-2 px-2">
+                                    <Text size="sm" className="flex-1 text-gray-900 truncate">{docName}.docx</Text>
+                                    <Flex align="center" gap={8}>
+                                      <Box className="w-24 flex justify-center">
                                         <input
                                           type="checkbox"
                                           onChange={(e) => {
@@ -571,151 +602,74 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                                               onGenerateDocument?.(doc)
                                             }
                                           }}
-                                          className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                          className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
                                         />
                                       </Box>
-                                      <Box className="w-20 flex justify-center">
+                                      <Box className="w-24 flex justify-center">
                                         <input
                                           type="checkbox"
-                                          className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                          defaultChecked
+                                          className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
                                         />
                                       </Box>
                                     </Flex>
                                   </Flex>
-                                </Box>
-                              ))}
+                                ))}
+                              </VStack>
                             </Box>
+
+                            {/* Upload documents button */}
+                            <Button
+                              variant="bordered"
+                              size="sm"
+                              className="border-purple-200 text-purple-700 hover:bg-purple-50 rounded-full px-4"
+                            >
+                              <Upload className="w-4 h-4 mr-2" />
+                              Upload documents
+                            </Button>
                           </Box>
                         )}
 
-                        {/* Upload documents button */}
-                        <Box className="flex justify-end mb-4">
-                          <Button
-                            variant="bordered"
-                            size="sm"
-                            className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                          >
-                            Upload documents
-                          </Button>
-                        </Box>
+                        {loadingDocuments[doc] && <DocumentLibraryLoading />}
 
-                        {/* Any other details to include for this specific document */}
-                        <Box className="w-full">
-                          <Text size="lg" className="font-medium text-gray-900 mb-4">Any other details to include:</Text>
-                          <Textarea
-                            minRows={4}
-                            value={selectedExistingInputs[`document-details-${doc}`] || ''}
-                            onValueChange={(val) => setSelectedExistingInputs(prev => ({...prev, [`document-details-${doc}`]: val}))}
-                            placeholder="E.g., salary range £40-50k, hybrid working 2 days/week, reporting to CMO"
-                            className="w-full mb-4"
-                            style={{ width: '100%' }}
-                            classNames={{
-                              inputWrapper: 'rounded-lg border border-gray-200',
-                              input: 'text-gray-900 placeholder:text-gray-400',
-                            }}
-                          />
-                        </Box>
+                        {/* Any other details to include */}
+                        <Box className="w-full mt-12">
+                          <Text size="md" className="font-semibold text-gray-900 mb-2">Any other details to include?</Text>
 
-                        {/* Key clauses for this specific document (only for customised type) */}
-                        {documentType === 'customised' && (
-                          <Box className="w-full">
-                            <Text size="lg" className="font-medium text-gray-900 mb-4">Key clauses</Text>
-                            <VStack spacing={4} align="start">
-                              {generateKeyClauses(doc).map((clause, i) => {
-                                const clauseKey = `${doc}-${i}`
-                                const isVisible = selectedClauses[clauseKey] !== false
-                                if (!isVisible) return null
-
-                                return (
-                                  <Box key={i} className="w-full bg-gray-50 rounded-lg p-4">
-                                    <Flex align="center" gap={2} className="mb-2">
-                                      <Text size="sm" className="font-medium text-gray-900">{clause.name}</Text>
-                                      <button
-                                        onClick={() => {
-                                          setSelectedClauses(prev => ({
-                                            ...prev,
-                                            [clauseKey]: false
-                                          }))
-                                        }}
-                                        className="text-gray-400 hover:text-red-500 transition-colors"
-                                      >
-                                        <X className="w-3 h-3" />
-                                      </button>
-                                    </Flex>
-                                    <Textarea
-                                      minRows={2}
-                                      value={clauseDetailsText[clauseKey] || ''}
-                                      onValueChange={(val) => setClauseDetailsText(prev => ({
-                                        ...prev,
-                                        [clauseKey]: val
-                                      }))}
-                                      placeholder="Add specific requirements..."
-                                      className="w-full"
-                                      classNames={{
-                                        inputWrapper: 'rounded-lg border border-gray-200 bg-white',
-                                        input: 'text-gray-900 placeholder:text-gray-400 text-sm',
-                                      }}
-                                    />
-                                  </Box>
-                                )
-                              })}
-
-                              {/* Custom Clauses for this document */}
-                              {(customClauses[doc] || []).map((customClause) => (
-                                <Box key={customClause.id} className="w-full bg-gray-50 rounded-lg p-4">
-                                  <Flex align="center" gap={2} className="mb-2">
-                                    <Box className="flex-1">
-                                      <Textarea
-                                        minRows={1}
-                                        value={customClause.name}
-                                        onValueChange={(val) => updateCustomClauseName(doc, customClause.id, val)}
-                                        placeholder="What clause would you like to add?"
-                                        className="w-full"
-                                        classNames={{
-                                          inputWrapper: 'rounded-lg border border-gray-200 bg-white',
-                                          input: 'text-gray-900 placeholder:text-gray-400 text-sm font-medium',
-                                        }}
-                                      />
-                                    </Box>
-                                    <button
-                                      onClick={() => removeCustomClause(doc, customClause.id)}
-                                      className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </button>
-                                  </Flex>
-                                  <Textarea
-                                    minRows={2}
-                                    value={customClause.details}
-                                    onValueChange={(val) => updateCustomClauseDetails(doc, customClause.id, val)}
-                                    placeholder="Add specific requirements for this clause..."
-                                    className="w-full"
-                                    classNames={{
-                                      inputWrapper: 'rounded-lg border border-gray-200 bg-white',
-                                      input: 'text-gray-900 placeholder:text-gray-400 text-sm',
-                                    }}
-                                  />
-                                </Box>
+                          {/* Example suggestions */}
+                          <Box className="mb-4">
+                            <Text size="xs" className="text-gray-500 mb-1">Eg.</Text>
+                            <VStack spacing={1} align="start">
+                              {generateDetailSuggestions(doc).map((suggestion, i) => (
+                                <Text key={i} size="xs" className="text-gray-500">
+                                  {i + 1}. {suggestion}
+                                </Text>
                               ))}
-
-                              <Box className="w-full flex justify-center">
-                                <Button
-                                  size="sm"
-                                  variant="bordered"
-                                  onClick={() => addCustomClause(doc)}
-                                  className="text-purple-600 border-purple-600 hover:bg-purple-50"
-                                >
-                                  <Plus className="w-4 h-4 mr-2" />
-                                  Add another clause
-                                </Button>
-                              </Box>
                             </VStack>
                           </Box>
-                        )}
-                        </VStack>
-                      </Box>
+
+                          {/* Textarea with mic icon */}
+                          <Box className="relative">
+                            <Textarea
+                              minRows={6}
+                              value={selectedExistingInputs[`document-details-${doc}`] || ''}
+                              onValueChange={(val) => setSelectedExistingInputs(prev => ({...prev, [`document-details-${doc}`]: val}))}
+                              placeholder=""
+                              className="w-full"
+                              classNames={{
+                                inputWrapper: 'rounded-2xl border border-gray-200 bg-white',
+                                input: 'text-gray-900 placeholder:text-gray-400 pr-12',
+                              }}
+                            />
+                            <button className="absolute bottom-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                              <Mic className="w-5 h-5" />
+                            </button>
+                          </Box>
+                        </Box>
+                      </VStack>
                     </Box>
-                  )}
+                  </Box>
+
                 </Box>
               ))}
 
