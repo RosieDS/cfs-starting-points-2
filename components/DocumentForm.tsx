@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Box, Flex, VStack, Text, Textarea, Button } from '@/genie-ui'
 import { Select, SelectItem } from '@/genie-ui/components/select'
 import DocDetailSlider, { DocumentType } from '@/genie-ui/components/docDetailSlider'
-import { FileText, Plus, X, Sparkles, Mic, Upload } from 'lucide-react'
+import { FileText, Plus, X, Sparkles, Mic, Upload, ArrowDown } from 'lucide-react'
 
 interface DocumentFormProps {
   // Form state props
@@ -116,14 +116,18 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   const [loadingDocuments, setLoadingDocuments] = useState<Record<string, boolean>>({})
   const [previousSelectedDocs, setPreviousSelectedDocs] = useState<Record<string, boolean>>({})
 
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false)
+  const [toastDocumentName, setToastDocumentName] = useState('')
+
   // Effect to trigger loading when documents are selected/deselected
   useEffect(() => {
     const currentSelected = Object.keys(selectedDocs).filter(doc => selectedDocs[doc])
     const previousSelected = Object.keys(previousSelectedDocs).filter(doc => previousSelectedDocs[doc])
-    
+
     // Find newly selected documents
     const newlySelected = currentSelected.filter(doc => !previousSelected.includes(doc))
-    
+
     if (newlySelected.length > 0) {
       // Set loading state for newly selected documents
       const newLoadingState = { ...loadingDocuments }
@@ -140,6 +144,19 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             [doc]: false
           }))
         }, 2000)
+      })
+
+      // Show toast for newly selected documents if there's already at least one document selected
+      newlySelected.forEach(doc => {
+        if (previousSelected.length >= 1) {
+          setToastDocumentName(doc)
+          setShowToast(true)
+
+          // Hide toast after 3 seconds
+          setTimeout(() => {
+            setShowToast(false)
+          }, 3000)
+        }
       })
     }
 
@@ -373,7 +390,32 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
 
         {/* New Layout for Standard, Customised, and Template Document Types */}
         {(documentType === 'standard' || documentType === 'customised' || documentType === 'template') && (
-          <Box className="w-full">
+          <Box className="w-full relative">
+            {/* Toast Notification */}
+            {showToast && (
+              <Box
+                className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300"
+                style={{ maxWidth: '600px' }}
+              >
+                <Flex
+                  align="center"
+                  gap={3}
+                  className="bg-[#E8D5FF] text-[#6B46C1] px-6 py-4 rounded-full shadow-lg"
+                >
+                  <ArrowDown className="w-5 h-5 flex-shrink-0" />
+                  <Text size="sm" className="font-semibold text-[#6B46C1]">
+                    Configure your {toastDocumentName} below
+                  </Text>
+                  <button
+                    onClick={() => setShowToast(false)}
+                    className="ml-2 text-[#6B46C1] hover:text-[#553C9A] transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </Flex>
+              </Box>
+            )}
+
             <VStack spacing={6} align="start" className="w-full">
               {/* Individual Document Sections - One per selected document */}
               {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((doc) => (
@@ -388,12 +430,78 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                       onPress={() => onGenerateDocument?.(doc)}
                     >
                       <Sparkles className="w-4 h-4" />
-                      Generate document
+                      {documentType === 'template' ? 'Generate template' : 'Generate document'}
                     </Button>
                   </Flex>
-                  
-                  {/* Two-column layout for all modes */}
-                  <Box className="flex gap-8">
+
+                  {/* TEMPLATE MODE: Horizontal three-slider layout */}
+                  {documentType === 'template' ? (
+                    <Box className="w-full">
+                      <Flex gap={12} justify="between" className="w-full">
+                        {/* Length Slider */}
+                        <Box className="flex-1">
+                          <Text size="lg" className="font-semibold text-gray-900 mb-4">Length</Text>
+                          <Box className="w-full">
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={lengthValue}
+                              onChange={(e) => setLengthValue(Number(e.target.value))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple mb-3"
+                            />
+                            <Flex justify="between" align="center" className="relative">
+                              <Text size="sm" className="text-gray-400">Simple</Text>
+                              <Text size="lg" className="font-semibold text-gray-500 absolute left-1/2 transform -translate-x-1/2">{lengthValue}%</Text>
+                              <Text size="sm" className="text-gray-400">Comprehensive</Text>
+                            </Flex>
+                          </Box>
+                        </Box>
+
+                        {/* Tone Slider */}
+                        <Box className="flex-1">
+                          <Text size="lg" className="font-semibold text-gray-900 mb-4">Tone</Text>
+                          <Box className="w-full">
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={toneValue}
+                              onChange={(e) => setToneValue(Number(e.target.value))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple mb-3"
+                            />
+                            <Flex justify="between" align="center" className="relative">
+                              <Text size="sm" className="text-gray-400">Plain</Text>
+                              <Text size="lg" className="font-semibold text-gray-500 absolute left-1/2 transform -translate-x-1/2">{toneValue}%</Text>
+                              <Text size="sm" className="text-gray-400">Formal</Text>
+                            </Flex>
+                          </Box>
+                        </Box>
+
+                        {/* Favourability Slider */}
+                        <Box className="flex-1">
+                          <Text size="lg" className="font-semibold text-gray-900 mb-4">Favourability</Text>
+                          <Box className="w-full">
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={favourabilityValue}
+                              onChange={(e) => setFavourabilityValue(Number(e.target.value))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-purple mb-3"
+                            />
+                            <Flex justify="between" align="center" className="relative">
+                              <Text size="sm" className="text-gray-400">Favours me</Text>
+                              <Text size="lg" className="font-semibold text-gray-500 absolute left-1/2 transform -translate-x-1/2">{favourabilityValue}%</Text>
+                              <Text size="sm" className="text-gray-400">Favours them</Text>
+                            </Flex>
+                          </Box>
+                        </Box>
+                      </Flex>
+                    </Box>
+                  ) : (
+                    /* Two-column layout for standard and customised modes */
+                    <Box className="flex gap-8">
                     {/* LEFT COLUMN: Sliders + Key Clauses */}
                     <Box className="w-[30%] flex-shrink-0">
                       <VStack spacing={8} align="start" className="w-full">
@@ -669,6 +777,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                       </VStack>
                     </Box>
                   </Box>
+                  )}
 
                 </Box>
               ))}
