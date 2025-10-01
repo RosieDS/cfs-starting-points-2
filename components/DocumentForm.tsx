@@ -104,11 +104,11 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   const getBackgroundColor = () => {
     switch (documentType) {
       case 'customised':
-        return 'bg-[#F2E7FE]'
+        return 'bg-gradient-to-br from-[#F2E7FE] via-[#F8F3FF] to-[#FDFCFF]'
       case 'standard':
-        return 'bg-[#EDEFFF]'
+        return 'bg-gradient-to-br from-[#EDEFFF] via-[#F5F6FF] to-[#FDFCFF]'
       default:
-        return 'bg-gray-50'
+        return 'bg-gradient-to-br from-gray-50 via-white to-gray-50'
     }
   }
 
@@ -174,8 +174,15 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   )
 
   return (
-    <Box className={`p-6 overflow-y-auto ${getBackgroundColor()}`}>
-      <VStack spacing={8} align="start" className="w-full">
+    <Box className="p-6 overflow-y-auto relative">
+      {/* Multi-layer radial gradient background */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-radial from-[#E8D5FF] via-transparent to-transparent opacity-40" style={{ backgroundImage: 'radial-gradient(circle at 20% 20%, #E8D5FF 0%, transparent 50%)' }}></div>
+        <div className="absolute top-0 right-0 w-full h-full bg-gradient-radial from-[#F0E6FF] via-transparent to-transparent opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 80% 30%, #F0E6FF 0%, transparent 60%)' }}></div>
+        <div className="absolute bottom-0 left-1/2 w-full h-full bg-gradient-radial from-[#F8F3FF] via-transparent to-transparent opacity-25" style={{ backgroundImage: 'radial-gradient(circle at 50% 80%, #F8F3FF 0%, transparent 70%)' }}></div>
+        <div className="absolute inset-0 bg-[#FDFCFF]" style={{ mixBlendMode: 'normal', opacity: 0.5 }}></div>
+      </div>
+      <VStack spacing={8} align="start" className="w-full relative z-10">
         {/* Doc Detail Slider */}
         <Box className="w-full">
           <DocDetailSlider
