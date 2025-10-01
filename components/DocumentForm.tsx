@@ -47,7 +47,9 @@ interface DocumentFormProps {
   removeCustomClause: (docType: string, clauseId: string) => void
   generateKeyClauses: (docType: string) => Array<{name: string, explainer: string}>
   generateDetailQuestions: () => string[]
-  
+  onGenerateDocument?: (docType: string) => void
+  generatedDocs?: Record<string, boolean>
+
   // Optional floating button
   floatingButton?: React.ReactNode
 }
@@ -94,6 +96,8 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   removeCustomClause,
   generateKeyClauses,
   generateDetailQuestions,
+  onGenerateDocument,
+  generatedDocs,
   floatingButton
 }) => {
 
@@ -284,7 +288,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
               )}
             </Box>
 
-            <Box>
+            <Box className="flex flex-col justify-end h-full">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {suggestedDocs.map((doc, i) => (
                   <Box key={i} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 w-full">
@@ -331,7 +335,17 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
               {/* Individual Document Sections - One per selected document */}
               {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((doc) => (
                 <Box key={doc} className="w-full bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                  <Text size="xl" className="font-semibold text-gray-900 mb-6">{doc}</Text>
+                  <Flex align="center" justify="between" className="mb-6">
+                    <Text size="xl" className="font-semibold text-gray-900">{doc}</Text>
+                    <Button
+                      variant="solid"
+                      size="sm"
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                      onPress={() => onGenerateDocument?.(doc)}
+                    >
+                      {generatedDocs?.[doc] ? 'Regenerate document' : 'Generate document'}
+                    </Button>
+                  </Flex>
                   
                   {/* Template mode shows template selection with controls */}
                   {documentType === 'template' ? (
@@ -364,6 +378,11 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                                       <input
                                         type="checkbox"
                                         defaultChecked={rowIndex === 0}
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            onGenerateDocument?.(doc)
+                                          }
+                                        }}
                                         className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                                       />
                                     </Box>
@@ -540,14 +559,17 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                                       <Box className="w-20 flex justify-center">
                                         <input
                                           type="checkbox"
-                                          defaultChecked={rowIndex === 0}
+                                          onChange={(e) => {
+                                            if (e.target.checked) {
+                                              onGenerateDocument?.(doc)
+                                            }
+                                          }}
                                           className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                                         />
                                       </Box>
                                       <Box className="w-20 flex justify-center">
                                         <input
                                           type="checkbox"
-                                          defaultChecked
                                           className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                                         />
                                       </Box>
@@ -558,6 +580,17 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                             </Box>
                           </Box>
                         )}
+
+                        {/* Upload documents button */}
+                        <Box className="flex justify-end mb-4">
+                          <Button
+                            variant="bordered"
+                            size="sm"
+                            className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                          >
+                            Upload documents
+                          </Button>
+                        </Box>
 
                         {/* Any other details to include for this specific document */}
                         <Box className="w-full">
@@ -574,15 +607,6 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                               input: 'text-gray-900 placeholder:text-gray-400',
                             }}
                           />
-                          <Box className="flex justify-end">
-                            <Button
-                              variant="bordered"
-                              size="sm"
-                              className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                            >
-                              Upload documents
-                            </Button>
-                          </Box>
                         </Box>
 
                         {/* Key clauses for this specific document (only for customised type) */}

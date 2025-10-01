@@ -68,6 +68,8 @@ export default function Home() {
   const [customClauses, setCustomClauses] = useState<Record<string, Array<{name: string, details: string, id: string}>>>({})
   const [activeTab, setActiveTab] = useState<'documents' | 'context' | 'rules'>('documents')
   const [expandedDocs, setExpandedDocs] = useState<Record<string, boolean>>({})
+  const [generatedDocs, setGeneratedDocs] = useState<Record<string, boolean>>({})
+  const [loadingDocs, setLoadingDocs] = useState<Record<string, boolean>>({})
 
   // Set first document as expanded by default when createDocs changes
   useEffect(() => {
@@ -399,6 +401,16 @@ By: _________________`
       ...prev,
       [docType]: (prev[docType] || []).filter(clause => clause.id !== clauseId)
     }))
+  }
+
+  // Helper function to trigger document generation
+  const handleGenerateDocument = (docType: string) => {
+    setLoadingDocs(prev => ({ ...prev, [docType]: true }))
+    // Simulate loading time
+    setTimeout(() => {
+      setLoadingDocs(prev => ({ ...prev, [docType]: false }))
+      setGeneratedDocs(prev => ({ ...prev, [docType]: true }))
+    }, 1500) // 1.5 second loading time
   }
 
   // Generate key clauses for each document type
@@ -752,6 +764,8 @@ By: _________________`
                                 removeCustomClause={removeCustomClause}
                                 generateKeyClauses={generateKeyClauses}
                                 generateDetailQuestions={generateDetailQuestions}
+                                onGenerateDocument={handleGenerateDocument}
+                                generatedDocs={generatedDocs}
                               />
                             </Box>
                           </FormArtifactPanel>
@@ -981,13 +995,22 @@ By: _________________`
                                   {/* Expanded Content */}
                                   {isExpanded && (
                                     <Box className="border-t p-4">
-                                      <Box 
-                                        className="bg-gray-50 p-4 rounded text-sm font-mono leading-relaxed overflow-y-auto"
+                                      <Box
+                                        className="bg-gray-50 p-4 rounded text-sm font-mono leading-relaxed overflow-y-auto flex items-center justify-center"
                                         style={{ height: '700px' }}
                                       >
-                                        <pre className="whitespace-pre-wrap text-gray-800">
-                                          {generateDummyContent(doc)}
-                                        </pre>
+                                        {loadingDocs[doc] ? (
+                                          <VStack spacing={3} align="center">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                                            <Text size="sm" className="text-gray-600">Generating document...</Text>
+                                          </VStack>
+                                        ) : generatedDocs[doc] ? (
+                                          <pre className="whitespace-pre-wrap text-gray-800 w-full">
+                                            {generateDummyContent(doc)}
+                                          </pre>
+                                        ) : (
+                                          <Text size="md" className="text-gray-500">Your document will appear here</Text>
+                                        )}
                                       </Box>
                                     </Box>
                                   )}
