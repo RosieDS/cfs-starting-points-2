@@ -19,7 +19,7 @@ interface DocDetailSliderProps {
 const documentTypeOptions: DocumentTypeOption[] = [
   {
     id: 'template',
-    title: 'Template',
+    title: 'Simple document',
     description: 'A quick standard template'
   },
   {

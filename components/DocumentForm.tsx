@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Box, Flex, VStack, Text, Textarea, Button } from '@/genie-ui'
 import { Select, SelectItem } from '@/genie-ui/components/select'
 import DocDetailSlider, { DocumentType } from '@/genie-ui/components/docDetailSlider'
-import { FileText, Plus, X, Sparkles, Mic, Upload, ArrowDown } from 'lucide-react'
+import { FileText, Plus, X, Sparkles, Mic, Upload } from 'lucide-react'
 
 interface DocumentFormProps {
   // Form state props
@@ -122,10 +122,6 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   const [loadingDocuments, setLoadingDocuments] = useState<Record<string, boolean>>({})
   const [previousSelectedDocs, setPreviousSelectedDocs] = useState<Record<string, boolean>>({})
 
-  // Toast notification state
-  const [showToast, setShowToast] = useState(false)
-  const [toastDocumentName, setToastDocumentName] = useState('')
-
   // Tooltip state for "Use as template" and "Use as information"
   const [showTooltip, setShowTooltip] = useState<'template' | 'information' | null>(null)
 
@@ -153,19 +149,6 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             [doc]: false
           }))
         }, 2000)
-      })
-
-      // Show toast for newly selected documents if there's already at least one document selected
-      newlySelected.forEach(doc => {
-        if (previousSelected.length >= 1) {
-          setToastDocumentName(doc)
-          setShowToast(true)
-
-          // Hide toast after 3 seconds
-          setTimeout(() => {
-            setShowToast(false)
-          }, 3000)
-        }
       })
     }
 
@@ -400,31 +383,6 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
         {/* New Layout for Standard, Customised, and Template Document Types */}
         {(documentType === 'standard' || documentType === 'customised' || documentType === 'template') && (
           <Box className="w-full relative">
-            {/* Toast Notification */}
-            {showToast && (
-              <Box
-                className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300"
-                style={{ maxWidth: '600px' }}
-              >
-                <Flex
-                  align="center"
-                  gap={3}
-                  className="bg-[#E8D5FF] text-[#6B46C1] px-6 py-4 rounded-full shadow-lg"
-                >
-                  <ArrowDown className="w-5 h-5 flex-shrink-0" />
-                  <Text size="sm" className="font-semibold text-[#6B46C1]">
-                    Configure your {toastDocumentName} below
-                  </Text>
-                  <button
-                    onClick={() => setShowToast(false)}
-                    className="ml-2 text-[#6B46C1] hover:text-[#553C9A] transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </Flex>
-              </Box>
-            )}
-
             <VStack spacing={6} align="start" className="w-full">
               {/* Individual Document Sections - Show only current document */}
               {(() => {
@@ -445,8 +403,8 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                     >
                       <Sparkles className="w-4 h-4" />
                       {generatedDocs?.[currentDoc]
-                        ? (documentType === 'template' ? 'Regenerate template' : 'Regenerate document')
-                        : (documentType === 'template' ? 'Generate template' : 'Generate document')
+                        ? 'Regenerate document'
+                        : 'Generate document'
                       }
                     </Button>
                   </Flex>

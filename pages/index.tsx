@@ -992,6 +992,20 @@ By: _________________`
                                     </Box>
                                   </Box>
                                 </Box>
+
+                                {/* Review and edit doc button - shown after document is generated */}
+                                {generatedDocs[doc] && (
+                                  <Box className="mt-4">
+                                    <Button
+                                      variant="solid"
+                                      size="md"
+                                      className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6 py-4 flex items-center gap-2"
+                                    >
+                                      <FileText className="w-5 h-5" />
+                                      Review and edit doc
+                                    </Button>
+                                  </Box>
+                                )}
                               </Box>
                             )
                           })()}
