@@ -70,6 +70,7 @@ export default function Home() {
   const [expandedDocs, setExpandedDocs] = useState<Record<string, boolean>>({})
   const [generatedDocs, setGeneratedDocs] = useState<Record<string, boolean>>({})
   const [loadingDocs, setLoadingDocs] = useState<Record<string, boolean>>({})
+  const [currentDocIndex, setCurrentDocIndex] = useState(0)
 
   // Set first document as expanded by default when createDocs changes
   useEffect(() => {
@@ -725,6 +726,9 @@ By: _________________`
                                 )
                               }
                             }}
+                            currentDocIndex={currentDocIndex}
+                            setCurrentDocIndex={setCurrentDocIndex}
+                            selectedDocs={selectedDocs}
                           >
                             <Box className="relative h-full">
                               <DocumentForm
@@ -766,6 +770,8 @@ By: _________________`
                                 generateDetailQuestions={generateDetailQuestions}
                                 onGenerateDocument={handleGenerateDocument}
                                 generatedDocs={generatedDocs}
+                                currentDocIndex={currentDocIndex}
+                                setCurrentDocIndex={setCurrentDocIndex}
                               />
                             </Box>
                           </FormArtifactPanel>
@@ -941,22 +947,20 @@ By: _________________`
                     {/* Content */}
                     <Box className="flex-1 p-6 overflow-y-auto h-0">
                       {activeTab === 'documents' && (
-                        <VStack spacing={6} align="start" className="w-full">
-                          {/* Accordion-style document list where multiple can be expanded */}
-                          {createDocs.map((doc, i) => {
-                            const isExpanded = expandedDocs[doc]
-                            const toggleExpanded = () => {
-                              setExpandedDocs(prev => ({
-                                ...prev,
-                                [doc]: !prev[doc]
-                              }))
-                            }
+                        <VStack spacing={6} align="start" className="w-full h-full">
+                          {/* Show only current document at full height */}
+                          {(() => {
+                            const currentDoc = createDocs[currentDocIndex]
+                            if (!currentDoc) return null
+
+                            const i = currentDocIndex
+                            const doc = currentDoc
 
                             return (
-                              <Box key={`doc-${i}`} className="w-full">
+                              <Box key={`doc-${i}`} className="w-full h-full flex flex-col">
                                 <Text size="lg" className="mb-4 text-gray-900 font-semibold">Creating document {i + 1}:</Text>
-                                <Box className="border rounded-lg bg-white shadow-sm">
-                                  <Flex align="center" justify="between" className="p-3 cursor-pointer" onClick={toggleExpanded}>
+                                <Box className="border rounded-lg bg-white shadow-sm flex-1 flex flex-col">
+                                  <Flex align="center" justify="between" className="p-3 border-b">
                                     <Flex align="center" gap={3}>
                                       <FileText className="w-4 h-4 text-blue-500" />
                                       <Text size="sm" className="text-gray-900">{doc}.docx</Text>
@@ -965,59 +969,32 @@ By: _________________`
                                       <Text size="xs" className="text-purple-600 bg-purple-100 px-2 py-1 rounded-md animate-pulse">
                                         Genie editing...
                                       </Text>
-                                      {/* Expand/Contract Icon */}
-                                      <Box className="flex flex-col items-center justify-center w-4 h-4">
-                                        {isExpanded ? (
-                                          // Contract icon (arrows pointing toward each other)
-                                          <>
-                                            <svg className="w-3 h-1.5" viewBox="0 0 12 6" fill="none">
-                                              <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                            </svg>
-                                            <svg className="w-3 h-1.5 rotate-180" viewBox="0 0 12 6" fill="none">
-                                              <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                            </svg>
-                                          </>
-                                        ) : (
-                                          // Expand icon (arrows pointing away from each other)
-                                          <>
-                                            <svg className="w-3 h-1.5 rotate-180" viewBox="0 0 12 6" fill="none">
-                                              <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                            </svg>
-                                            <svg className="w-3 h-1.5" viewBox="0 0 12 6" fill="none">
-                                              <path d="M2 1L6 5L10 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                            </svg>
-                                          </>
-                                        )}
-                                      </Box>
                                     </Flex>
                                   </Flex>
-                                  
-                                  {/* Expanded Content */}
-                                  {isExpanded && (
-                                    <Box className="border-t p-4">
-                                      <Box
-                                        className="bg-gray-50 p-4 rounded text-sm font-mono leading-relaxed overflow-y-auto flex items-center justify-center"
-                                        style={{ height: '700px' }}
-                                      >
-                                        {loadingDocs[doc] ? (
-                                          <VStack spacing={3} align="center">
-                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                                            <Text size="sm" className="text-gray-600">Generating document...</Text>
-                                          </VStack>
-                                        ) : generatedDocs[doc] ? (
-                                          <pre className="whitespace-pre-wrap text-gray-800 w-full">
-                                            {generateDummyContent(doc)}
-                                          </pre>
-                                        ) : (
-                                          <Text size="md" className="text-gray-500">Your document will appear here</Text>
-                                        )}
-                                      </Box>
+
+                                  {/* Document Content - Always visible at full height */}
+                                  <Box className="flex-1 p-4 overflow-hidden">
+                                    <Box
+                                      className="bg-gray-50 p-4 rounded text-sm font-mono leading-relaxed overflow-y-auto flex items-center justify-center h-full"
+                                    >
+                                      {loadingDocs[doc] ? (
+                                        <VStack spacing={3} align="center">
+                                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                                          <Text size="sm" className="text-gray-600">Generating document...</Text>
+                                        </VStack>
+                                      ) : generatedDocs[doc] ? (
+                                        <pre className="whitespace-pre-wrap text-gray-800 w-full">
+                                          {generateDummyContent(doc)}
+                                        </pre>
+                                      ) : (
+                                        <Text size="md" className="text-gray-500">Your document will appear here</Text>
+                                      )}
                                     </Box>
-                                  )}
+                                  </Box>
                                 </Box>
                               </Box>
                             )
-                          })}
+                          })()}
                         </VStack>
                       )}
 

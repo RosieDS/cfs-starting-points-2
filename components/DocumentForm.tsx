@@ -52,6 +52,10 @@ interface DocumentFormProps {
 
   // Optional floating button
   floatingButton?: React.ReactNode
+
+  // Current document index for navigation
+  currentDocIndex?: number
+  setCurrentDocIndex?: (index: number) => void
 }
 
 /**
@@ -98,7 +102,9 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   generateDetailQuestions,
   onGenerateDocument,
   generatedDocs,
-  floatingButton
+  floatingButton,
+  currentDocIndex = 0,
+  setCurrentDocIndex
 }) => {
 
   const getBackgroundColor = () => {
@@ -119,6 +125,9 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   // Toast notification state
   const [showToast, setShowToast] = useState(false)
   const [toastDocumentName, setToastDocumentName] = useState('')
+
+  // Tooltip state for "Use as template" and "Use as information"
+  const [showTooltip, setShowTooltip] = useState<'template' | 'information' | null>(null)
 
   // Effect to trigger loading when documents are selected/deselected
   useEffect(() => {
@@ -417,20 +426,28 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             )}
 
             <VStack spacing={6} align="start" className="w-full">
-              {/* Individual Document Sections - One per selected document */}
-              {Object.keys(selectedDocs).filter(doc => selectedDocs[doc]).map((doc) => (
-                <Box key={doc} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+              {/* Individual Document Sections - Show only current document */}
+              {(() => {
+                const selectedDocsList = Object.keys(selectedDocs).filter(doc => selectedDocs[doc])
+                const currentDoc = selectedDocsList[currentDocIndex]
+                if (!currentDoc) return null
+
+                return (
+                <Box key={currentDoc} className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
                   {/* Document Header */}
                   <Flex align="center" justify="between" className="mb-8">
-                    <Text size="2xl" className="font-semibold text-gray-900">{doc}</Text>
+                    <Text size="2xl" className="font-semibold text-gray-900">{currentDoc}</Text>
                     <Button
                       variant="solid"
                       size="md"
                       className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6 py-3 flex items-center gap-2"
-                      onPress={() => onGenerateDocument?.(doc)}
+                      onPress={() => onGenerateDocument?.(currentDoc)}
                     >
                       <Sparkles className="w-4 h-4" />
-                      {documentType === 'template' ? 'Generate template' : 'Generate document'}
+                      {generatedDocs?.[currentDoc]
+                        ? (documentType === 'template' ? 'Regenerate template' : 'Regenerate document')
+                        : (documentType === 'template' ? 'Generate template' : 'Generate document')
+                      }
                     </Button>
                   </Flex>
 
@@ -579,8 +596,8 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
 
                               {/* Existing key clauses */}
                               <VStack spacing={3} align="start" className="w-full">
-                                {generateKeyClauses(doc).map((clause, i) => {
-                                  const clauseKey = `${doc}-${i}`
+                                {generateKeyClauses(currentDoc).map((clause, i) => {
+                                  const clauseKey = `${currentDoc}-${i}`
                                   const isVisible = selectedClauses[clauseKey] !== false
                                   if (!isVisible) return null
 
@@ -624,20 +641,20 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                                 })}
 
                                 {/* Custom Clauses */}
-                                {(customClauses[doc] || []).map((customClause) => (
+                                {(customClauses[currentDoc] || []).map((customClause) => (
                                   <Box key={customClause.id} className="w-full border border-purple-300 rounded-2xl p-4 bg-white">
                                     <Flex align="center" justify="between" className="mb-3">
                                       <Box className="flex-1">
                                         <input
                                           type="text"
                                           value={customClause.name}
-                                          onChange={(e) => updateCustomClauseName(doc, customClause.id, e.target.value)}
+                                          onChange={(e) => updateCustomClauseName(currentDoc, customClause.id, e.target.value)}
                                           placeholder="Clause name"
                                           className="w-full text-sm font-medium text-gray-900 placeholder:text-gray-400 bg-transparent border-0 outline-none"
                                         />
                                       </Box>
                                       <button
-                                        onClick={() => removeCustomClause(doc, customClause.id)}
+                                        onClick={() => removeCustomClause(currentDoc, customClause.id)}
                                         className="text-gray-400 hover:text-red-500 transition-colors p-1"
                                       >
                                         <X className="w-4 h-4" />
@@ -647,7 +664,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                                       <Textarea
                                         minRows={2}
                                         value={customClause.details}
-                                        onValueChange={(val) => updateCustomClauseDetails(doc, customClause.id, val)}
+                                        onValueChange={(val) => updateCustomClauseDetails(currentDoc, customClause.id, val)}
                                         placeholder="Requirements..."
                                         className="w-full"
                                         classNames={{
@@ -666,7 +683,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                                 <Button
                                   variant="bordered"
                                   size="sm"
-                                  onClick={() => addCustomClause(doc)}
+                                  onClick={() => addCustomClause(currentDoc)}
                                   className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-4"
                                 >
                                   <Plus className="w-4 h-4 mr-2" />
@@ -680,25 +697,68 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                     </Box>
 
                     {/* RIGHT COLUMN: Use documents + Any other details */}
-                    <Box className="flex-1">
+                    <Box className="flex-1 min-w-0">
                       <VStack spacing={6} align="start" className="w-full">
                         {/* Use your documents card */}
-                        {!loadingDocuments[doc] && (
-                          <Box className="w-full">
+                        {!loadingDocuments[currentDoc] && (
+                          <Box className="w-full overflow-hidden">
                             {/* Purple-outlined container for file list */}
-                            <Box className="border-2 border-purple-400 rounded-2xl p-4 bg-white mb-4">
+                            <Box className="border-2 border-purple-400 rounded-2xl p-4 bg-white mb-4 overflow-hidden max-w-[379px]">
                               <VStack spacing={3} align="start" className="w-full">
                                 {/* Header with title and column headers */}
                                 <Flex align="center" justify="between" className="w-full px-2 mb-2">
                                   <Text size="md" className="font-semibold text-gray-900 flex-1">Use your documents</Text>
-                                  <Flex align="center" gap={8} className="text-xs text-gray-600">
-                                    <Text className="w-24 text-center font-medium">Use as template</Text>
-                                    <Text className="w-24 text-center font-medium">Use as information</Text>
+                                  <Flex align="center" gap={8} className="text-xs">
+                                    {/* Use as template - with tooltip */}
+                                    <Box className="w-24 relative">
+                                      <button
+                                        className="w-full text-center font-medium text-black underline cursor-pointer hover:text-gray-700"
+                                        onMouseEnter={() => setShowTooltip('template')}
+                                        onMouseLeave={() => setShowTooltip(null)}
+                                        onClick={() => setShowTooltip(showTooltip === 'template' ? null : 'template')}
+                                      >
+                                        Use as template
+                                      </button>
+                                      {showTooltip === 'template' && (
+                                        <Box className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
+                                          <Box className="bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg whitespace-nowrap text-xs">
+                                            This document becomes your starting template
+                                            {/* Arrow pointing down */}
+                                            <Box className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                                              <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-purple-600"></div>
+                                            </Box>
+                                          </Box>
+                                        </Box>
+                                      )}
+                                    </Box>
+
+                                    {/* Use as information - with tooltip */}
+                                    <Box className="w-24 relative">
+                                      <button
+                                        className="w-full text-center font-medium text-black underline cursor-pointer hover:text-gray-700"
+                                        onMouseEnter={() => setShowTooltip('information')}
+                                        onMouseLeave={() => setShowTooltip(null)}
+                                        onClick={() => setShowTooltip(showTooltip === 'information' ? null : 'information')}
+                                      >
+                                        Use as information
+                                      </button>
+                                      {showTooltip === 'information' && (
+                                        <Box className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
+                                          <Box className="bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg whitespace-nowrap text-xs">
+                                            Genie will factor this information in when creating your document
+                                            {/* Arrow pointing down */}
+                                            <Box className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                                              <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-purple-600"></div>
+                                            </Box>
+                                          </Box>
+                                        </Box>
+                                      )}
+                                    </Box>
                                   </Flex>
                                 </Flex>
 
                                 {/* File rows */}
-                                {[`${doc}_document_type_1`, `${doc}_document_type_2`].map((docName, rowIndex) => (
+                                {[`${currentDoc}_document_type_1`, `${currentDoc}_document_type_2`].map((docName, rowIndex) => (
                                   <Flex key={rowIndex} align="center" justify="between" className="w-full py-2 px-2">
                                     <Text size="sm" className="flex-1 text-gray-900 truncate">{docName}.docx</Text>
                                     <Flex align="center" gap={8}>
@@ -707,7 +767,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                                           type="checkbox"
                                           onChange={(e) => {
                                             if (e.target.checked) {
-                                              onGenerateDocument?.(doc)
+                                              onGenerateDocument?.(currentDoc)
                                             }
                                           }}
                                           className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
@@ -738,17 +798,17 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                           </Box>
                         )}
 
-                        {loadingDocuments[doc] && <DocumentLibraryLoading />}
+                        {loadingDocuments[currentDoc] && <DocumentLibraryLoading />}
 
                         {/* Any other details to include */}
-                        <Box className="w-full mt-12">
+                        <Box className="w-full mt-12 overflow-hidden">
                           <Text size="md" className="font-semibold text-gray-900 mb-2">Any other details to include?</Text>
 
                           {/* Example suggestions */}
                           <Box className="mb-4">
                             <Text size="xs" className="text-gray-500 mb-1">Eg.</Text>
                             <VStack spacing={1} align="start">
-                              {generateDetailSuggestions(doc).map((suggestion, i) => (
+                              {generateDetailSuggestions(currentDoc).map((suggestion, i) => (
                                 <Text key={i} size="xs" className="text-gray-500">
                                   {i + 1}. {suggestion}
                                 </Text>
@@ -760,8 +820,8 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                           <Box className="relative">
                             <Textarea
                               minRows={6}
-                              value={selectedExistingInputs[`document-details-${doc}`] || ''}
-                              onValueChange={(val) => setSelectedExistingInputs(prev => ({...prev, [`document-details-${doc}`]: val}))}
+                              value={selectedExistingInputs[`document-details-${currentDoc}`] || ''}
+                              onValueChange={(val) => setSelectedExistingInputs(prev => ({...prev, [`document-details-${currentDoc}`]: val}))}
                               placeholder=""
                               className="w-full"
                               classNames={{
@@ -780,7 +840,8 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                   )}
 
                 </Box>
-              ))}
+                )
+              })()}
 
               {/* Show message if no documents selected */}
               {!Object.values(selectedDocs).some(v => v) && (
